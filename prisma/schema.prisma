@@ -1,0 +1,375 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model audit_log {
+  id        String  @id
+  user_id   String?
+  action    String
+  entity    String
+  entity_id String?
+  detail    String?
+  at        String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  users     users?  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "audit_log_user_id_users_id_fk")
+
+  @@index([at], map: "idx_audit_at")
+  @@index([user_id], map: "idx_audit_user")
+}
+
+model authors {
+  id         String      @id
+  name       String
+  name_ml    String?
+  phone      String?
+  email      String?
+  address    String?
+  pan        String?
+  notes      String?
+  created_at String      @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  contracts  contracts[]
+  payouts    payouts[]
+  titles     titles[]
+
+  @@index([name], map: "idx_authors_name")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model contracts {
+  id            String  @id
+  title_id      String  @unique(map: "contracts_title_id_unique")
+  author_id     String
+  royalty_pct   Float   @default(10) @db.Real
+  basis         String  @default("mrp")
+  advance_paise Int     @default(0)
+  signed_on     String?
+  term_notes    String?
+  created_at    String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  authors       authors @relation(fields: [author_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "contracts_author_id_authors_id_fk")
+  titles        titles  @relation(fields: [title_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "contracts_title_id_titles_id_fk")
+
+  @@index([author_id], map: "idx_contracts_author")
+}
+
+model counters {
+  name  String @id
+  value Int    @default(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model dealers {
+  id                 String  @id
+  name               String
+  contact            String?
+  phone              String?
+  gstin              String?
+  address            String?
+  discount_pct       Float   @default(30) @db.Real
+  credit_limit_paise Int     @default(0)
+  created_at         String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  sales              sales[]
+}
+
+model login_attempts {
+  email           String  @id
+  failed_count    Int     @default(0)
+  first_failed_at String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  last_failed_at  String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  locked_until    String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payouts {
+  id          String  @id
+  author_id   String
+  gross_paise Int
+  tds_paise   Int     @default(0)
+  net_paise   Int
+  paid_on     String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD'::text)"))
+  method      String?
+  reference   String?
+  note        String?
+  created_by  String?
+  created_at  String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  authors     authors @relation(fields: [author_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "payouts_author_id_authors_id_fk")
+  users       users?  @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payouts_created_by_users_id_fk")
+
+  @@index([author_id], map: "idx_payouts_author")
+  @@index([created_by], map: "idx_payouts_created_by")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model print_jobs {
+  id                  String                @id
+  job_no              String                @unique(map: "print_jobs_job_no_unique")
+  title_id            String
+  qty                 Int
+  paper               String?
+  binding             String?
+  vendor              String?
+  cost_paise          Int                   @default(0)
+  status              String                @default("pending")
+  raised_on           String                @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD'::text)"))
+  received_on         String?
+  notes               String?
+  created_by          String?
+  created_at          String                @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  users               users?                @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "print_jobs_created_by_users_id_fk")
+  titles              titles                @relation(fields: [title_id], references: [id], onUpdate: NoAction, map: "print_jobs_title_id_titles_id_fk")
+  production_projects production_projects[]
+
+  @@index([created_by], map: "idx_printjobs_created_by")
+  @@index([status], map: "idx_printjobs_status")
+  @@index([title_id], map: "idx_printjobs_title")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sale_lines {
+  id               String @id
+  sale_id          String
+  title_id         String
+  qty              Int
+  unit_price_paise Int
+  discount_pct     Float  @default(0) @db.Real
+  line_total_paise Int
+  sales            sales  @relation(fields: [sale_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sale_lines_sale_id_sales_id_fk")
+  titles           titles @relation(fields: [title_id], references: [id], onUpdate: NoAction, map: "sale_lines_title_id_titles_id_fk")
+
+  @@index([sale_id], map: "idx_salelines_sale")
+  @@index([title_id], map: "idx_salelines_title")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sales {
+  id                String       @id
+  doc_no            String       @unique(map: "sales_doc_no_unique")
+  type              String       @default("sale")
+  channel           String
+  dealer_id         String?
+  customer_name     String
+  event_name        String?
+  discount_pct      Float        @default(0) @db.Real
+  subtotal_paise    Int          @default(0)
+  discount_paise    Int          @default(0)
+  total_paise       Int          @default(0)
+  payment_mode      String?
+  sold_on           String       @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD'::text)"))
+  return_of_sale_id String?
+  notes             String?
+  created_by        String?
+  created_at        String       @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  sale_lines        sale_lines[]
+  users             users?       @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "sales_created_by_users_id_fk")
+  dealers           dealers?     @relation(fields: [dealer_id], references: [id], onUpdate: NoAction, map: "sales_dealer_id_dealers_id_fk")
+  sales             sales?       @relation("salesTosales", fields: [return_of_sale_id], references: [id], onUpdate: NoAction, map: "sales_return_of_sale_id_sales_id_fk")
+  other_sales       sales[]      @relation("salesTosales")
+
+  @@index([channel], map: "idx_sales_channel")
+  @@index([created_by], map: "idx_sales_created_by")
+  @@index([sold_on], map: "idx_sales_date")
+  @@index([dealer_id], map: "idx_sales_dealer")
+  @@index([return_of_sale_id], map: "idx_sales_return_of")
+}
+
+model sessions {
+  id           String @id
+  user_id      String
+  token_hash   String @unique(map: "sessions_token_hash_unique")
+  expires_at   String
+  created_at   String @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  last_seen_at String @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  users        users  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sessions_user_id_users_id_fk")
+
+  @@index([expires_at], map: "idx_sessions_expires")
+  @@index([user_id], map: "idx_sessions_user")
+}
+
+model settings {
+  key        String  @id
+  value      String
+  updated_at String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  updated_by String?
+  users      users?  @relation(fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "settings_updated_by_users_id_fk")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model stock_movements {
+  id            String  @id
+  title_id      String
+  qty_delta     Int
+  reason        String
+  ref_type      String?
+  ref_id        String?
+  balance_after Int
+  note          String?
+  user_id       String?
+  at            String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  titles        titles  @relation(fields: [title_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "stock_movements_title_id_titles_id_fk")
+  users         users?  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "stock_movements_user_id_users_id_fk")
+
+  @@index([title_id, at], map: "idx_moves_title")
+  @@index([user_id], map: "idx_moves_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model titles {
+  id                  String               @id
+  isbn                String?              @unique(map: "titles_isbn_unique")
+  name                String
+  name_ml             String?
+  author_id           String?
+  category            String?
+  language            String               @default("Malayalam")
+  edition             String               @default("1st")
+  edition_no          Int                  @default(1)
+  parent_title_id     String?
+  mrp_paise           Int                  @default(0)
+  unit_cost_paise     Int                  @default(0)
+  pages               Int?
+  binding             String?
+  reorder_level       Int                  @default(30)
+  stock               Int                  @default(0)
+  status              String               @default("active")
+  created_at          String               @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  contracts           contracts?
+  print_jobs          print_jobs[]
+  production_projects production_projects?
+  sale_lines          sale_lines[]
+  stock_movements     stock_movements[]
+  authors             authors?             @relation(fields: [author_id], references: [id], onUpdate: NoAction, map: "titles_author_id_authors_id_fk")
+  titles              titles?              @relation("titlesTotitles", fields: [parent_title_id], references: [id], onUpdate: NoAction, map: "titles_parent_title_id_titles_id_fk")
+  other_titles        titles[]             @relation("titlesTotitles")
+
+  @@index([author_id], map: "idx_titles_author")
+  @@index([name], map: "idx_titles_name")
+  @@index([parent_title_id], map: "idx_titles_parent")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                                                                 String                @id
+  email                                                              String                @unique(map: "users_email_unique")
+  name                                                               String
+  password_hash                                                      String
+  role                                                               String
+  active                                                             Boolean               @default(true)
+  created_at                                                         String                @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  audit_log                                                          audit_log[]
+  payouts                                                            payouts[]
+  print_jobs                                                         print_jobs[]
+  production_projects_production_projects_cover_assigned_toTousers   production_projects[] @relation("production_projects_cover_assigned_toTousers")
+  production_projects_production_projects_dtp_assigned_toTousers     production_projects[] @relation("production_projects_dtp_assigned_toTousers")
+  production_projects_production_projects_editing_assigned_toTousers production_projects[] @relation("production_projects_editing_assigned_toTousers")
+  production_projects_production_projects_isbn_assigned_toTousers    production_projects[] @relation("production_projects_isbn_assigned_toTousers")
+  production_projects_production_projects_proof_assigned_toTousers   production_projects[] @relation("production_projects_proof_assigned_toTousers")
+  sales                                                              sales[]
+  sessions                                                           sessions[]
+  settings                                                           settings[]
+  stock_movements                                                    stock_movements[]
+  submissions                                                        submissions[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model email_outbox {
+  id         String  @id
+  to_email   String
+  to_name    String?
+  subject    String
+  body_text  String
+  body_html  String?
+  template   String?
+  ref_type   String?
+  ref_id     String?
+  status     String  @default("pending")
+  attempts   Int     @default(0)
+  last_error String?
+  created_at String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  sent_at    String?
+
+  @@index([status, created_at], map: "idx_outbox_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model submission_throttle {
+  ip_hash      String @id
+  count        Int    @default(0)
+  window_start String @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  last_at      String @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model submissions {
+  id                  String  @id
+  ref_no              String  @unique(map: "submissions_ref_no_unique")
+  author_name         String
+  author_name_ml      String?
+  email               String
+  phone               String?
+  place               String?
+  title               String
+  title_ml            String?
+  genre               String
+  language            String  @default("Malayalam")
+  synopsis            String
+  manuscript_path     String?
+  manuscript_filename String?
+  manuscript_size     Int?
+  manuscript_mime     String?
+  status              String  @default("new")
+  source              String  @default("web")
+  reviewed_by         String?
+  review_notes        String?
+  decided_on          String?
+  submitted_at        String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  updated_at          String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  publishing_type     String?
+  assigned_at         String?
+  users               users?  @relation(fields: [reviewed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "submissions_reviewed_by_users_id_fk")
+
+  @@index([submitted_at], map: "idx_submissions_at")
+  @@index([email], map: "idx_submissions_email")
+  @@index([reviewed_by], map: "idx_submissions_reviewed_by")
+  @@index([status], map: "idx_submissions_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model production_projects {
+  id                                                   String      @id
+  title_id                                             String      @unique
+  status                                               String      @default("under_contract")
+  dtp_assigned_to                                      String?
+  dtp_deadline                                         String?
+  dtp_completed_at                                     String?
+  editing_assigned_to                                  String?
+  editing_deadline                                     String?
+  editing_completed_at                                 String?
+  cover_assigned_to                                    String?
+  cover_deadline                                       String?
+  cover_completed_at                                   String?
+  isbn_assigned_to                                     String?
+  isbn_deadline                                        String?
+  isbn_completed_at                                    String?
+  isbn_registered                                      String?
+  proof_assigned_to                                    String?
+  proof_deadline                                       String?
+  proof_completed_at                                   String?
+  proof_feedback                                       String?
+  proof_approved_at                                    String?
+  print_job_id                                         String?
+  print_completed_at                                   String?
+  created_at                                           String
+  updated_at                                           String
+  final_layout_path                                    String?
+  final_cover_path                                     String?
+  users_production_projects_cover_assigned_toTousers   users?      @relation("production_projects_cover_assigned_toTousers", fields: [cover_assigned_to], references: [id], onUpdate: NoAction)
+  users_production_projects_dtp_assigned_toTousers     users?      @relation("production_projects_dtp_assigned_toTousers", fields: [dtp_assigned_to], references: [id], onUpdate: NoAction)
+  users_production_projects_editing_assigned_toTousers users?      @relation("production_projects_editing_assigned_toTousers", fields: [editing_assigned_to], references: [id], onUpdate: NoAction)
+  users_production_projects_isbn_assigned_toTousers    users?      @relation("production_projects_isbn_assigned_toTousers", fields: [isbn_assigned_to], references: [id], onUpdate: NoAction)
+  print_jobs                                           print_jobs? @relation(fields: [print_job_id], references: [id], onUpdate: NoAction)
+  users_production_projects_proof_assigned_toTousers   users?      @relation("production_projects_proof_assigned_toTousers", fields: [proof_assigned_to], references: [id], onUpdate: NoAction)
+  titles                                               titles      @relation(fields: [title_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}

@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kairali PMS
 
-## Getting Started
+Publisher management system for Kairali Books — titles, authors, royalty
+contracts, dealers, sales, stock and print jobs.
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router + Route Handlers) · React 19 · Tailwind 4 ·
+PostgreSQL 17 · Prisma 7 (`@prisma/adapter-pg`) · TypeScript
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app expects a local PostgreSQL database named `kairali_pms`. Connection and
+secrets live in `.env` (untracked):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+DATABASE_URL="postgresql://<user>@localhost:5432/kairali_pms?schema=public"
+JWT_SECRET="..."           # reserved; sessions are DB-backed
+SESSION_COOKIE_NAME="kairali_session"
+SESSION_TTL_HOURS="12"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Signing in
 
-## Learn More
+Four accounts already exist (`owner@`, `accounts@`, `store@`, `press@`
+`kairalibooks.in`). If you don't know a password, set one:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run user:set -- owner@kairalibooks.in "Radhika Menon" owner "your-password"
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+That command creates the user if missing, otherwise resets the password — and
+revokes existing sessions and any lockout.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Dev server |
+| `npm run build` | Production build |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run db:pull` | Re-introspect the DB and regenerate the Prisma client |
+| `npm run db:studio` | Prisma Studio |
+| `npm run user:set` | Create a user / reset a password |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Layout
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+  app/
+    (app)/            authenticated shell — sidebar, header, dashboard
+    login/            sign-in page
+    api/auth/         login · logout · me
+  components/         shared UI
+  lib/
+    prisma.ts         Prisma client singleton (pg adapter)
+    auth.ts           credential check, lockout, route guards
+    session.ts        opaque-token sessions (SHA-256 in DB)
+    roles.ts          roles → capabilities
+    money.ts          integer-paise helpers
+    time.ts           UTC string timestamps + IST display
+    api.ts            route-handler error wrapper
+    audit.ts          activity trail
+    nav.ts            sidebar model
+  proxy.ts            edge cookie gate (Next 16 successor to middleware)
+```
+
+## Working on this codebase
+
+Read `AGENTS.md` first. The database schema predates the app and holds real
+data — it is adopted by introspection, so **do not run Prisma migrations**
+against it without a deliberate decision. Money is integer paise, timestamps
+are UTC strings, and stock changes must always append a `stock_movements` row.
