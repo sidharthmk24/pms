@@ -16,7 +16,7 @@ export const ACCEPT_ATTR = ".pdf,.doc,.docx,.odt";
 export const ALLOWED_LABEL = "PDF, DOC, DOCX or ODT";
 
 function storageRoot(): string {
-  return process.env.SUBMISSION_STORAGE_DIR || path.join(process.cwd(), "storage", "submissions");
+  return process.env.SUBMISSION_STORAGE_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "storage", "submissions");
 }
 
 export type StoredFile = {
@@ -47,9 +47,9 @@ export async function storeManuscript(file: File): Promise<StoredFile> {
   }
 
   const now = new Date();
-  const dir = path.join(String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, "0"));
-  const relativePath = path.join(dir, `${randomUUID()}.${ext}`);
-  const absolutePath = path.join(storageRoot(), relativePath);
+  const dir = path.join(/*turbopackIgnore: true*/ String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, "0"));
+  const relativePath = path.join(/*turbopackIgnore: true*/ dir, `${randomUUID()}.${ext}`);
+  const absolutePath = path.join(/*turbopackIgnore: true*/ storageRoot(), relativePath);
 
   await mkdir(path.dirname(absolutePath), { recursive: true });
   await writeFile(absolutePath, Buffer.from(await file.arrayBuffer()));
@@ -72,7 +72,7 @@ export async function discardManuscript(absolutePath: string): Promise<void> {
 export function resolveManuscript(relativePath: string): string {
   const root = storageRoot();
   const full = path.resolve(root, relativePath);
-  if (!full.startsWith(path.resolve(root))) throw new Error("Path traversal blocked");
+  if (!full.startsWith(path.resolve(/*turbopackIgnore: true*/ root))) throw new Error("Path traversal blocked");
   return full;
 }
 
@@ -94,9 +94,9 @@ export async function storeProductionFile(
   }
 
   const now = new Date();
-  const dir = path.join("production", String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, "0"));
-  const relativePath = path.join(dir, `${randomUUID()}.${ext}`);
-  const absolutePath = path.join(storageRoot(), relativePath);
+  const dir = path.join(/*turbopackIgnore: true*/ "production", String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, "0"));
+  const relativePath = path.join(/*turbopackIgnore: true*/ dir, `${randomUUID()}.${ext}`);
+  const absolutePath = path.join(/*turbopackIgnore: true*/ storageRoot(), relativePath);
 
   await mkdir(path.dirname(absolutePath), { recursive: true });
   await writeFile(absolutePath, Buffer.from(await file.arrayBuffer()));
