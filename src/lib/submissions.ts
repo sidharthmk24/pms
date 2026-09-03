@@ -8,7 +8,9 @@ import type { SubmissionInput } from "@/lib/submission-fields";
 
 export * from "@/lib/submission-fields";
 
-const THROTTLE_MAX = 3;
+const THROTTLE_MAX = process.env.SUBMISSION_THROTTLE_MAX
+  ? parseInt(process.env.SUBMISSION_THROTTLE_MAX, 10)
+  : 20;
 const THROTTLE_WINDOW_HOURS = 24;
 
 function hashIp(ip: string): string {
