@@ -236,6 +236,7 @@ h3, h4 { font-weight: 600; line-height: 1.2; }
     page-break-inside: auto;
     break-inside: auto;
   }
+  
 
   .printable-contract .signature-box,
   .printable-contract .parties-box {
