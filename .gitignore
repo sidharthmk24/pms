@@ -48,6 +48,5 @@ next-env.d.ts
 # prisma generated client
 /src/generated/
 
-# uploaded files storage
-/storage/*
-!/storage/.gitkeep
+# uploaded files storage (tracked so files exist in production deployments)
+storage/temp/

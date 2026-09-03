@@ -67,7 +67,26 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
   const filePath = type === "cover" ? proj.final_cover_path : proj.final_layout_path;
   if (!filePath) return fail(404, "File not uploaded yet");
 
+  const isStaff = sessionUser && (sessionUser.role === "owner" || sessionUser.role === "production");
+
   try {
+    if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+      const res = await fetch(filePath);
+      if (!res.ok) return fail(404, "Proof file not found at remote storage");
+      const filename = filePath.split("/").pop() || (type === "cover" ? "cover" : "layout");
+      const contentDisposition = isStaff && mode === "download"
+        ? `attachment; filename="${encodeURIComponent(filename)}"`
+        : `inline; filename="${encodeURIComponent(filename)}"`;
+      return new Response(res.body, {
+        headers: {
+          "Content-Type": res.headers.get("Content-Type") || (type === "cover" ? "image/jpeg" : "application/pdf"),
+          "Content-Disposition": contentDisposition,
+          "Cache-Control": "no-store, no-cache, must-revalidate, private",
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
+    }
+
     const fullPath = resolveManuscript(filePath);
     const fileStats = await stat(fullPath);
     const filename = filePath.split("/").pop() || filePath.split("\\").pop() || (type === "cover" ? "cover" : "layout");
@@ -92,8 +111,7 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
     else if (ext === "webp") mime = "image/webp";
 
     // Authors and public viewers are strictly restricted to inline viewing; downloads disallowed
-    const isStaff = sessionUser && (sessionUser.role === "owner" || sessionUser.role === "production");
-    const contentDisposition = isStaff && mode === "download"
+    const disposition = isStaff && mode === "download"
       ? `attachment; filename="${encodeURIComponent(filename)}"`
       : `inline; filename="${encodeURIComponent(filename)}"`;
 
@@ -101,7 +119,7 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
       headers: {
         "Content-Type": mime,
         "Content-Length": fileStats.size.toString(),
-        "Content-Disposition": contentDisposition,
+        "Content-Disposition": disposition,
         "Cache-Control": "no-store, no-cache, must-revalidate, private",
         "X-Content-Type-Options": "nosniff",
       },
