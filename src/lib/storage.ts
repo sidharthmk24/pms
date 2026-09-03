@@ -1,5 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -16,7 +17,18 @@ export const ACCEPT_ATTR = ".pdf,.doc,.docx,.odt";
 export const ALLOWED_LABEL = "PDF, DOC, DOCX or ODT";
 
 function storageRoot(): string {
-  return process.env.SUBMISSION_STORAGE_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "storage", "submissions");
+  if (process.env.SUBMISSION_STORAGE_DIR) {
+    return process.env.SUBMISSION_STORAGE_DIR;
+  }
+  const candidates = [
+    path.join(process.cwd(), "storage", "submissions"),
+    path.resolve("/var/task", "storage", "submissions"),
+    path.resolve(process.cwd(), "..", "storage", "submissions"),
+  ];
+  for (const c of candidates) {
+    if (existsSync(c)) return c;
+  }
+  return path.join(process.cwd(), "storage", "submissions");
 }
 
 export type StoredFile = {
@@ -47,9 +59,10 @@ export async function storeManuscript(file: File): Promise<StoredFile> {
   }
 
   const now = new Date();
-  const dir = path.join(/*turbopackIgnore: true*/ String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, "0"));
-  const relativePath = path.join(/*turbopackIgnore: true*/ dir, `${randomUUID()}.${ext}`);
-  const absolutePath = path.join(/*turbopackIgnore: true*/ storageRoot(), relativePath);
+  const year = String(now.getUTCFullYear());
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const relativePath = `${year}/${month}/${randomUUID()}.${ext}`;
+  const absolutePath = path.join(storageRoot(), ...relativePath.split("/"));
 
   await mkdir(path.dirname(absolutePath), { recursive: true });
   await writeFile(absolutePath, Buffer.from(await file.arrayBuffer()));
@@ -70,9 +83,14 @@ export async function discardManuscript(absolutePath: string): Promise<void> {
 
 /** Resolve a stored relative path for later staff download (Flow 8a). */
 export function resolveManuscript(relativePath: string): string {
+  const normalized = relativePath.replace(/\\/g, "/").replace(/^\/+/, "");
   const root = storageRoot();
-  const full = path.resolve(root, relativePath);
-  if (!full.startsWith(path.resolve(/*turbopackIgnore: true*/ root))) throw new Error("Path traversal blocked");
+  const segments = normalized.split("/").filter(Boolean);
+  const full = path.resolve(root, ...segments);
+  const resolvedRoot = path.resolve(root);
+  if (!full.startsWith(resolvedRoot)) {
+    throw new Error("Path traversal blocked");
+  }
   return full;
 }
 
@@ -94,9 +112,10 @@ export async function storeProductionFile(
   }
 
   const now = new Date();
-  const dir = path.join(/*turbopackIgnore: true*/ "production", String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, "0"));
-  const relativePath = path.join(/*turbopackIgnore: true*/ dir, `${randomUUID()}.${ext}`);
-  const absolutePath = path.join(/*turbopackIgnore: true*/ storageRoot(), relativePath);
+  const year = String(now.getUTCFullYear());
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const relativePath = `production/${year}/${month}/${randomUUID()}.${ext}`;
+  const absolutePath = path.join(storageRoot(), ...relativePath.split("/"));
 
   await mkdir(path.dirname(absolutePath), { recursive: true });
   await writeFile(absolutePath, Buffer.from(await file.arrayBuffer()));
