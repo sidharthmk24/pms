@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { put, del } from "@vercel/blob";
 
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB
 
@@ -16,17 +17,17 @@ const ALLOWED: Record<string, string[]> = {
 export const ACCEPT_ATTR = ".pdf,.doc,.docx,.odt";
 export const ALLOWED_LABEL = "PDF, DOC, DOCX or ODT";
 
-function storageRoot(): string {
+/**
+ * Returns a directory where files can safely be written.
+ * On Vercel / AWS Lambda, the application bundle (/var/task) is strictly read-only.
+ * /tmp is the only writable local disk location in serverless environments.
+ */
+function getWritableStorageRoot(): string {
   if (process.env.SUBMISSION_STORAGE_DIR) {
     return process.env.SUBMISSION_STORAGE_DIR;
   }
-  const candidates = [
-    path.join(process.cwd(), "storage", "submissions"),
-    path.resolve("/var/task", "storage", "submissions"),
-    path.resolve(process.cwd(), "..", "storage", "submissions"),
-  ];
-  for (const c of candidates) {
-    if (existsSync(c)) return c;
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return "/tmp/storage/submissions";
   }
   return path.join(process.cwd(), "storage", "submissions");
 }
@@ -42,9 +43,9 @@ export type StoredFile = {
 export class UploadError extends Error {}
 
 /**
- * Validates and writes a manuscript to disk under storage/submissions/YYYY/MM/.
- * The stored name is a UUID — an author-supplied filename never touches the
- * filesystem path, only the database record.
+ * Validates and writes a manuscript.
+ * - If BLOB_READ_WRITE_TOKEN is set (Vercel Blob), uploads directly to cloud storage.
+ * - Otherwise, writes to disk (using /tmp on Vercel to avoid read-only filesystem errors).
  */
 export async function storeManuscript(file: File): Promise<StoredFile> {
   if (file.size === 0) throw new UploadError("The manuscript file is empty.");
@@ -62,7 +63,21 @@ export async function storeManuscript(file: File): Promise<StoredFile> {
   const year = String(now.getUTCFullYear());
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
   const relativePath = `${year}/${month}/${randomUUID()}.${ext}`;
-  const absolutePath = path.join(storageRoot(), ...relativePath.split("/"));
+
+  // If Vercel Blob is configured, upload to cloud storage
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(relativePath, file, { access: "public" });
+    return {
+      relativePath: blob.url,
+      absolutePath: blob.url,
+      filename: file.name.slice(0, 200),
+      size: file.size,
+      mime: file.type,
+    };
+  }
+
+  const writableRoot = getWritableStorageRoot();
+  const absolutePath = path.join(/*turbopackIgnore: true*/ writableRoot, ...relativePath.split("/"));
 
   await mkdir(path.dirname(absolutePath), { recursive: true });
   await writeFile(absolutePath, Buffer.from(await file.arrayBuffer()));
@@ -77,21 +92,39 @@ export async function storeManuscript(file: File): Promise<StoredFile> {
 }
 
 /** Best-effort cleanup when the surrounding transaction fails. */
-export async function discardManuscript(absolutePath: string): Promise<void> {
-  await unlink(absolutePath).catch(() => {});
+export async function discardManuscript(pathOrUrl: string): Promise<void> {
+  if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) {
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      await del(pathOrUrl).catch(() => {});
+    }
+    return;
+  }
+  await unlink(pathOrUrl).catch(() => {});
 }
 
-/** Resolve a stored relative path for later staff download (Flow 8a). */
+/** Resolve a stored relative path or URL for downloads. */
 export function resolveManuscript(relativePath: string): string {
-  const normalized = relativePath.replace(/\\/g, "/").replace(/^\/+/, "");
-  const root = storageRoot();
-  const segments = normalized.split("/").filter(Boolean);
-  const full = path.resolve(root, ...segments);
-  const resolvedRoot = path.resolve(root);
-  if (!full.startsWith(resolvedRoot)) {
-    throw new Error("Path traversal blocked");
+  if (relativePath.startsWith("http://") || relativePath.startsWith("https://")) {
+    return relativePath;
   }
-  return full;
+
+  const normalized = relativePath.replace(/\\/g, "/").replace(/^\/+/, "");
+  const segments = normalized.split("/").filter(Boolean);
+
+  // Check candidate read locations
+  const candidates = [
+    ...(process.env.SUBMISSION_STORAGE_DIR ? [path.resolve(process.env.SUBMISSION_STORAGE_DIR, ...segments)] : []),
+    path.resolve(process.cwd(), "storage", "submissions", ...segments),
+    path.resolve("/var/task", "storage", "submissions", ...segments),
+    path.resolve("/tmp", "storage", "submissions", ...segments),
+    path.resolve(process.cwd(), "..", "storage", "submissions", ...segments),
+  ];
+
+  for (const c of candidates) {
+    if (existsSync(c)) return c;
+  }
+
+  return path.resolve(getWritableStorageRoot(), ...segments);
 }
 
 export async function storeProductionFile(
@@ -115,7 +148,14 @@ export async function storeProductionFile(
   const year = String(now.getUTCFullYear());
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
   const relativePath = `production/${year}/${month}/${randomUUID()}.${ext}`;
-  const absolutePath = path.join(storageRoot(), ...relativePath.split("/"));
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(relativePath, file, { access: "public" });
+    return blob.url;
+  }
+
+  const writableRoot = getWritableStorageRoot();
+  const absolutePath = path.join(/*turbopackIgnore: true*/ writableRoot, ...relativePath.split("/"));
 
   await mkdir(path.dirname(absolutePath), { recursive: true });
   await writeFile(absolutePath, Buffer.from(await file.arrayBuffer()));

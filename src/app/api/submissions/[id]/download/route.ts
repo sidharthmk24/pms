@@ -14,6 +14,22 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
   });
   if (!sub || !sub.manuscript_path) return fail(404, "Manuscript file not found");
 
+  if (sub.manuscript_path.startsWith("http://") || sub.manuscript_path.startsWith("https://")) {
+    try {
+      const res = await fetch(sub.manuscript_path);
+      if (!res.ok) return fail(404, "Manuscript file not found in remote storage");
+      return new Response(res.body, {
+        headers: {
+          "Content-Type": sub.manuscript_mime || res.headers.get("Content-Type") || "application/octet-stream",
+          "Content-Disposition": `attachment; filename="${encodeURIComponent(sub.manuscript_filename || "manuscript")}"`,
+        },
+      });
+    } catch (err) {
+      console.error("[download] remote fetch error", err);
+      return fail(500, "Failed to download manuscript file from remote storage");
+    }
+  }
+
   try {
     const fullPath = resolveManuscript(sub.manuscript_path);
     const fileStats = await stat(fullPath);

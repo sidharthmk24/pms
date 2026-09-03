@@ -59,6 +59,7 @@ export const POST = handler(async (req: Request) => {
   try {
     stored = await storeManuscript(file);
   } catch (err) {
+    console.error("[public-submissions] storeManuscript failed:", err);
     if (err instanceof UploadError) {
       throw new ZodError([{ code: "custom", path: ["manuscript"], message: err.message }]);
     }
@@ -76,6 +77,7 @@ export const POST = handler(async (req: Request) => {
   try {
     created = await createSubmission(fields, manuscript);
   } catch (err) {
+    console.error("[public-submissions] createSubmission failed:", err);
     // Never leave an orphaned file behind a failed insert.
     await discardManuscript(stored.absolutePath);
     throw err;
