@@ -1,73 +1,45 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
  * Kairali Books Brand Guidelines V1.0 — Design Tokens
  *
  * PRIMARY palette ONLY: Black #040706 · White #ffffff
- * All UI states are expressed as tints/shades/opacities of these two colours.
+ * Clean white background with high-contrast brand black typography.
  * Typeface: Anek Malayalam (ExtraLight → ExtraBold)
  */
 
-/* ── Light mode ─────────────────────────────────────────────────── */
 :root {
-  /* Surfaces — white & very light grey */
-  --background:         #f5f5f5;
+  /* Surfaces — pure white & subtle clean tint */
+  --background:         #ffffff;
   --surface:            #ffffff;
-  --surface-muted:      #ebebeb;
+  --surface-muted:      #f9fafb;
 
-  /* Brand near-black text */
+  /* Brand black text */
   --foreground:         #040706;
-  --muted-foreground:   #5c5c5c;
+  --muted-foreground:   #525252;
 
-  /* Borders — light grey lines */
-  --border:             #d4d4d4;
+  /* Borders — clean subtle light grey lines */
+  --border:             #e5e7eb;
 
   /* Primary CTA — brand black, white text */
   --primary:            #040706;
   --primary-hover:      #1a1a1a;
   --primary-foreground: #ffffff;
 
-  /* Accent — dark grey (80% black) for secondary actions */
+  /* Accent — dark grey for secondary actions */
   --accent:             #333333;
   --accent-foreground:  #ffffff;
 
-  /* Status — all black/grey tones, differentiated by opacity */
-  --success:            #1a1a1a;   /* near-black  */
-  --warning:            #555555;   /* mid grey    */
-  --danger:             #040706;   /* brand black */
-  --info:               #404040;   /* dark grey   */
+  /* Status */
+  --success:            #040706;
+  --warning:            #525252;
+  --danger:             #040706;
+  --info:               #404040;
 
   /* Focus ring — brand black */
   --ring:               #040706;
-}
-
-/* ── Dark mode ──────────────────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Invert: black surfaces, white text */
-    --background:         #040706;
-    --surface:            #111110;
-    --surface-muted:      #1c1c1b;
-
-    --foreground:         #ffffff;
-    --muted-foreground:   #a3a3a3;
-    --border:             #2e2e2e;
-
-    /* Primary CTA — white on dark */
-    --primary:            #ffffff;
-    --primary-hover:      #e5e5e5;
-    --primary-foreground: #040706;
-
-    --accent:             #cccccc;
-    --accent-foreground:  #040706;
-
-    --success:            #e5e5e5;
-    --warning:            #aaaaaa;
-    --danger:             #ffffff;
-    --info:               #c0c0c0;
-
-    --ring:               #ffffff;
-  }
 }
 
 /* ── Tailwind v4 theme bridge ───────────────────────────────────── */
