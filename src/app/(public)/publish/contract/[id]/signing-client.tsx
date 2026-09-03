@@ -495,9 +495,9 @@ export default function SigningClient({ contract }: { contract: ContractData }) 
           </form>
         ) : (
           /* Sealed Author Stamp */
-          <div className="border-t border-black/[0.06] bg-black/[0.015] p-8 dark:border-white/[0.08] dark:bg-white/[0.015]">
+          <div className="border-t border-black/[0.06] bg-black/[0.015] p-8 dark:border-white/[0.08] dark:bg-white/[0.015] space-y-6">
             <div className="rounded-2xl border border-success/20 bg-success/5 p-5">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <span className="text-xs font-bold text-success uppercase tracking-wider">
                     Author Digital Signature Verified
@@ -507,7 +507,7 @@ export default function SigningClient({ contract }: { contract: ContractData }) 
                     PAN: {meta.author_pan || pan || "On File"} · IP: {meta.author_signer_ip || "Verified"}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="sm:text-right">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success">
                     <span className="h-2 w-2 rounded-full bg-success" />
                     Legally Executed
@@ -516,6 +516,30 @@ export default function SigningClient({ contract }: { contract: ContractData }) 
                     {signedDate ? signedDate.slice(0, 16) : "Timestamp Certified"}
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Author Portal Invitation Card */}
+            <div className="rounded-2xl border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary mb-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    Author Portal Setup
+                  </div>
+                  <h4 className="text-base font-black text-foreground">
+                    Activate Your Author Account & Track Production
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
+                    Create your password to monitor real-time typesetting, proofing feedback, ISBN registration, and royalty payouts on your dedicated Author Dashboard.
+                  </p>
+                </div>
+                <Link
+                  href={`/author/setup?email=${encodeURIComponent(contract.authors.email || "")}&contract=${contract.id}`}
+                  className="apple-button inline-flex items-center justify-center gap-2 rounded-xl bg-foreground px-5 py-3 text-xs font-extrabold text-background shadow-xs hover:opacity-90 shrink-0"
+                >
+                  <span>Set Up Author Portal &rarr;</span>
+                </Link>
               </div>
             </div>
           </div>

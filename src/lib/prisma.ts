@@ -22,6 +22,9 @@ function createClient() {
   });
 }
 
-export const prisma = globalForPrisma.prisma ?? createClient();
+// Invalidate stale client on hot-reload
+delete globalForPrisma.prisma;
+
+export const prisma = createClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
  * Kairali Books Brand Guidelines V1.0 — Design Tokens
  *
@@ -11,63 +13,34 @@
 /* ── Light mode ─────────────────────────────────────────────────── */
 :root {
   /* Surfaces — white & very light grey */
-  --background:         #f5f5f5;
+  --background:         #ffffff;
   --surface:            #ffffff;
-  --surface-muted:      #ebebeb;
+  --surface-muted:      #f9fafb;
 
-  /* Brand near-black text */
-  --foreground:         #040706;
-  --muted-foreground:   #5c5c5c;
+  /* Brand black text */
+  --foreground:         #000000;
+  --muted-foreground:   #4b5563;
 
   /* Borders — light grey lines */
-  --border:             #d4d4d4;
+  --border:             #e5e7eb;
 
   /* Primary CTA — brand black, white text */
-  --primary:            #040706;
-  --primary-hover:      #1a1a1a;
+  --primary:            #000000;
+  --primary-hover:      #1f2937;
   --primary-foreground: #ffffff;
 
-  /* Accent — dark grey (80% black) for secondary actions */
-  --accent:             #333333;
+  /* Accent — dark grey for secondary actions */
+  --accent:             #1f2937;
   --accent-foreground:  #ffffff;
 
   /* Status — all black/grey tones, differentiated by opacity */
-  --success:            #1a1a1a;   /* near-black  */
-  --warning:            #555555;   /* mid grey    */
-  --danger:             #040706;   /* brand black */
-  --info:               #404040;   /* dark grey   */
+  --success:            #000000;
+  --warning:            #4b5563;
+  --danger:             #000000;
+  --info:               #374151;
 
   /* Focus ring — brand black */
-  --ring:               #040706;
-}
-
-/* ── Dark mode ──────────────────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Invert: black surfaces, white text */
-    --background:         #040706;
-    --surface:            #111110;
-    --surface-muted:      #1c1c1b;
-
-    --foreground:         #ffffff;
-    --muted-foreground:   #a3a3a3;
-    --border:             #2e2e2e;
-
-    /* Primary CTA — white on dark */
-    --primary:            #ffffff;
-    --primary-hover:      #e5e5e5;
-    --primary-foreground: #040706;
-
-    --accent:             #cccccc;
-    --accent-foreground:  #040706;
-
-    --success:            #e5e5e5;
-    --warning:            #aaaaaa;
-    --danger:             #ffffff;
-    --info:               #c0c0c0;
-
-    --ring:               #ffffff;
-  }
+  --ring:               #000000;
 }
 
 /* ── Tailwind v4 theme bridge ───────────────────────────────────── */
@@ -87,7 +60,7 @@
   --color-warning:            var(--warning);
   --color-danger:             var(--danger);
   --color-info:               var(--info);
-  --font-sans:                var(--font-anek);
+  --font-sans:                var(--font-red-hat);
   --font-mono:                var(--font-geist-mono);
 }
 
@@ -95,7 +68,7 @@
 body {
   background:              var(--background);
   color:                   var(--foreground);
-  font-family:             var(--font-anek), "Anek Malayalam", ui-sans-serif, system-ui, sans-serif;
+  font-family:             var(--font-red-hat), var(--font-anek), "Red Hat Display", "Anek Malayalam", ui-sans-serif, system-ui, sans-serif;
   font-weight:             400;
   -webkit-font-smoothing:  antialiased;
   -moz-osx-font-smoothing: grayscale;

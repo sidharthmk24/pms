@@ -1,5 +1,5 @@
 /** Roles are enforced by a DB check constraint: users_role_valid. */
-export const ROLES = ["owner", "editor", "production", "accounts", "store"] as const;
+export const ROLES = ["owner", "editor", "production", "accounts", "store", "author"] as const;
 export type Role = (typeof ROLES)[number];
 
 export function isRole(v: string): v is Role {
@@ -12,6 +12,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   production: "Production",
   accounts: "Accounts",
   store: "Store",
+  author: "Author",
 };
 
 /**
@@ -31,6 +32,7 @@ export const CAPABILITIES = [
   "users.manage", "settings.manage",
   "submissions.read", "submissions.review", "submissions.manage",
   "production_pipeline.read", "production_pipeline.write", "production_pipeline.manage",
+  "author_portal.access",
 ] as const;
 export type Capability = (typeof CAPABILITIES)[number];
 
@@ -39,15 +41,14 @@ const ROLE_CAPS: Record<Role, readonly Capability[]> = {
   editor: [
     "titles.read", "authors.read",
     "submissions.read", "submissions.review",
-    "production_pipeline.read",
+    "production_pipeline.read", "production_pipeline.write", "production_pipeline.manage",
   ],
   production: [
     "titles.read", "authors.read",
     "stock.read", "stock.write",
     "print.read", "print.write",
     "reports.read",
-    "submissions.read", "submissions.review",
-    "production_pipeline.read", "production_pipeline.write",
+    "production_pipeline.read", "production_pipeline.write", "production_pipeline.manage",
   ],
   accounts: [
     "titles.read", "authors.read", "authors.write",
@@ -57,7 +58,6 @@ const ROLE_CAPS: Record<Role, readonly Capability[]> = {
     "stock.read", "print.read",
     "payouts.read", "payouts.write",
     "reports.read",
-    "submissions.read", "submissions.review",
     "production_pipeline.read", "production_pipeline.write",
   ],
   store: [
@@ -66,11 +66,14 @@ const ROLE_CAPS: Record<Role, readonly Capability[]> = {
     "sales.read", "sales.write",
     "stock.read", "stock.write",
     "print.read", "reports.read",
-    "submissions.read", "submissions.review",
     "production_pipeline.read", "production_pipeline.write",
+  ],
+  author: [
+    "author_portal.access",
   ],
 };
 
 export function can(role: Role, cap: Capability): boolean {
-  return ROLE_CAPS[role].includes(cap);
+  return ROLE_CAPS[role]?.includes(cap) ?? false;
 }
+

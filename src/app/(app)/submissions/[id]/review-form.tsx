@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { SmoothDropdown } from "@/components/dropdown";
 
 type ActionType = "decline" | "revision" | "accept";
 
@@ -144,30 +145,30 @@ export default function ReviewForm({ submissionId }: { submissionId: string }) {
               <label htmlFor="publishingType" className="mb-1.5 block text-xs font-bold text-foreground">
                 Publishing Model Track
               </label>
-              <select
+              <SmoothDropdown
                 id="publishingType"
                 value={publishingType}
-                onChange={(e) => setPublishingType(e.target.value as any)}
-                className="w-full rounded-xl border border-black/12 bg-surface px-3 py-2 text-sm font-semibold text-foreground outline-none transition-all dark:border-white/15"
-              >
-                <option value="kairali_funded">Traditional (Kairali-Funded)</option>
-                <option value="self_publishing">Self-Publishing (Author-Funded)</option>
-              </select>
+                onChange={(val) => setPublishingType(val as any)}
+                options={[
+                  { value: "kairali_funded", label: "Kairali Books Publishing" },
+                  { value: "self_publishing", label: "Self-Publishing (Author-Funded)" },
+                ]}
+              />
             </div>
 
             <div>
               <label htmlFor="basis" className="mb-1.5 block text-xs font-bold text-foreground">
                 Royalty Calculation Basis
               </label>
-              <select
+              <SmoothDropdown
                 id="basis"
                 value={basis}
-                onChange={(e) => setBasis(e.target.value as any)}
-                className="w-full rounded-xl border border-black/12 bg-surface px-3 py-2 text-sm font-semibold text-foreground outline-none transition-all dark:border-white/15"
-              >
-                <option value="mrp">Printed MRP Basis</option>
-                <option value="net">Net Realized Receipts Basis</option>
-              </select>
+                onChange={(val) => setBasis(val as any)}
+                options={[
+                  { value: "mrp", label: "Printed MRP Basis" },
+                  { value: "net", label: "Net Realized Receipts Basis" },
+                ]}
+              />
             </div>
 
             <div>
@@ -239,16 +240,16 @@ export default function ReviewForm({ submissionId }: { submissionId: string }) {
               <label htmlFor="termYears" className="mb-1.5 block text-xs font-bold text-foreground">
                 Contract Term (Years)
               </label>
-              <select
+              <SmoothDropdown
                 id="termYears"
                 value={termYears}
-                onChange={(e) => setTermYears(Number(e.target.value))}
-                className="w-full rounded-xl border border-black/12 bg-surface px-3 py-2 text-sm font-semibold text-foreground outline-none transition-all dark:border-white/15"
-              >
-                <option value={3}>3 Years (Standard)</option>
-                <option value={5}>5 Years</option>
-                <option value={10}>10 Years</option>
-              </select>
+                onChange={(val) => setTermYears(Number(val))}
+                options={[
+                  { value: 3, label: "3 Years (Standard)" },
+                  { value: 5, label: "5 Years" },
+                  { value: 10, label: "10 Years" },
+                ]}
+              />
             </div>
 
             {publishingType === "self_publishing" && (

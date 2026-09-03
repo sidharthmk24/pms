@@ -43,7 +43,10 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
   });
   if (!sub) return fail(404, "Submission not found");
 
-  // Validate that current user is either the assigned editor or the owner (manager)
+  // Validate that current user has an editor or owner role, and is the assigned editor or owner
+  if (user.role !== "editor" && user.role !== "owner") {
+    return fail(403, "Only an editor or owner can review submissions");
+  }
   if (sub.reviewed_by !== user.id && user.role !== "owner") {
     return fail(403, "You are not the assigned editor for this submission");
   }
@@ -128,14 +131,25 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
   if (data.action === "accept") {
     let authorId = "";
     let titleId = "";
+    let contractId = "";
+    let isExistingContractedAuthor = false;
 
     await prisma.$transaction(async (tx) => {
       // 1. Resolve author (create if email doesn't exist)
       let author = await tx.authors.findFirst({
-        where: { email: sub.email },
+        where: { email: { equals: sub.email, mode: "insensitive" } },
+        include: { contracts: true },
       });
 
-      if (!author) {
+      if (author) {
+        const hasSignedContract = author.contracts.some((c) => c.signed_on !== null);
+        const hasUserAccount = !!(await tx.users.findFirst({
+          where: { email: { equals: sub.email, mode: "insensitive" }, role: "author" },
+        }));
+        if (hasSignedContract || hasUserAccount) {
+          isExistingContractedAuthor = true;
+        }
+      } else {
         author = await tx.authors.create({
           data: {
             id: randomUUID(),
@@ -145,6 +159,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
             notes: `Created from accepted submission ${sub.ref_no}`,
             created_at: now,
           },
+          include: { contracts: true },
         });
       }
       authorId = author.id;
@@ -165,7 +180,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       titleId = title.id;
 
       // 3. Create contract with full terms
-      const contractId = randomUUID();
+      contractId = randomUUID();
       const contractNotes = encodeContractNotes({
         contract_ref: `CON-${new Date().getFullYear()}-${sub.ref_no.replace(/[^0-9]/g, "").slice(-4) || "0001"}`,
         publishing_type: data.publishingType,
@@ -177,6 +192,13 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         publisher_signatory: user.name,
         publisher_signed_at: now,
         publisher_signature: "Digitally Authorized by Kairali Books",
+        ...(isExistingContractedAuthor
+          ? {
+              author_signed_at: now,
+              author_signer_name: sub.author_name,
+              author_signature: "Executed Under Master Author Agreement",
+            }
+          : {}),
       });
 
       await tx.contracts.create({
@@ -187,12 +209,26 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
           royalty_pct: data.royaltyPct,
           basis: data.basis,
           advance_paise: rupeesToPaise(data.advanceRupees),
+          signed_on: isExistingContractedAuthor ? now : null,
           term_notes: contractNotes,
           created_at: now,
         },
       });
 
-      // 4. Update submission
+      // 4. If existing author, auto-enroll into production pipeline immediately
+      if (isExistingContractedAuthor) {
+        await tx.production_projects.create({
+          data: {
+            id: randomUUID(),
+            title_id: title.id,
+            status: "under_contract",
+            created_at: now,
+            updated_at: now,
+          },
+        });
+      }
+
+      // 5. Update submission
       await tx.submissions.update({
         where: { id },
         data: {
@@ -204,11 +240,14 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       });
     });
 
+    const authorContractUrl = `${protocol}://${host}/publish/contract/${contractId}`;
     const mail = acceptEmail({
       authorName: sub.author_name,
       refNo: sub.ref_no,
       title: sub.title,
-      trackingUrl,
+      contractUrl: isExistingContractedAuthor ? undefined : authorContractUrl,
+      trackingUrl: isExistingContractedAuthor ? undefined : trackingUrl,
+      isExistingAuthor: isExistingContractedAuthor,
     });
     await queueEmail({
       to: sub.email,
@@ -216,7 +255,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       subject: mail.subject,
       text: mail.text,
       html: mail.html,
-      template: "submission_accepted",
+      template: isExistingContractedAuthor ? "submission_accepted_existing_author" : "submission_accepted",
       refType: "submission",
       refId: id,
     });
@@ -226,7 +265,14 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       action: "accept_submission",
       entity: "submission",
       entityId: id,
-      detail: { ref_no: sub.ref_no, title: sub.title, author_id: authorId, title_id: titleId },
+      detail: {
+        ref_no: sub.ref_no,
+        title: sub.title,
+        author_id: authorId,
+        title_id: titleId,
+        contract_id: contractId,
+        is_existing_author: isExistingContractedAuthor,
+      },
     });
 
     return ok({ success: true });

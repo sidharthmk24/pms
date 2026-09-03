@@ -29,7 +29,8 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
         setPending(false);
         return;
       }
-      router.replace(nextPath);
+      const targetPath = body.user?.role === "author" ? "/author" : nextPath;
+      router.replace(targetPath);
       router.refresh();
     } catch {
       setError("Cannot reach the server. Check your connection.");

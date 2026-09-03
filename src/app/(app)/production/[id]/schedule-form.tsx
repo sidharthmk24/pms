@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { MultiSelectDropdown, type DropdownOption } from "@/components/dropdown";
 
 type UserOption = {
   id: string;
@@ -13,16 +14,28 @@ type ProjectData = {
   id: string;
   status: string;
   dtp_assigned_to: string | null;
+  dtp_assignees?: string | null;
   dtp_deadline: string | null;
   editing_assigned_to: string | null;
+  editing_assignees?: string | null;
   editing_deadline: string | null;
   cover_assigned_to: string | null;
+  cover_assignees?: string | null;
   cover_deadline: string | null;
   isbn_assigned_to: string | null;
+  isbn_assignees?: string | null;
   isbn_deadline: string | null;
   proof_assigned_to: string | null;
+  proof_assignees?: string | null;
   proof_deadline: string | null;
 };
+
+function initialAssignees(assignedTo: string | null, assignees?: string | null): string[] {
+  if (assignees) {
+    return assignees.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  return assignedTo ? [assignedTo] : [];
+}
 
 export default function ScheduleForm({
   project,
@@ -35,16 +48,30 @@ export default function ScheduleForm({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // States
-  const [dtpUser, setDtpUser] = useState(project.dtp_assigned_to ?? "");
+  // Multi-Assignee States
+  const [dtpUsers, setDtpUsers] = useState<string[]>(() =>
+    initialAssignees(project.dtp_assigned_to, project.dtp_assignees)
+  );
   const [dtpDate, setDtpDate] = useState(project.dtp_deadline ?? "");
-  const [editingUser, setEditingUser] = useState(project.editing_assigned_to ?? "");
+
+  const [editingUsers, setEditingUsers] = useState<string[]>(() =>
+    initialAssignees(project.editing_assigned_to, project.editing_assignees)
+  );
   const [editingDate, setEditingDate] = useState(project.editing_deadline ?? "");
-  const [coverUser, setCoverUser] = useState(project.cover_assigned_to ?? "");
+
+  const [coverUsers, setCoverUsers] = useState<string[]>(() =>
+    initialAssignees(project.cover_assigned_to, project.cover_assignees)
+  );
   const [coverDate, setCoverDate] = useState(project.cover_deadline ?? "");
-  const [isbnUser, setIsbnUser] = useState(project.isbn_assigned_to ?? "");
+
+  const [isbnUsers, setIsbnUsers] = useState<string[]>(() =>
+    initialAssignees(project.isbn_assigned_to, project.isbn_assignees)
+  );
   const [isbnDate, setIsbnDate] = useState(project.isbn_deadline ?? "");
-  const [proofUser, setProofUser] = useState(project.proof_assigned_to ?? "");
+
+  const [proofUsers, setProofUsers] = useState<string[]>(() =>
+    initialAssignees(project.proof_assigned_to, project.proof_assignees)
+  );
   const [proofDate, setProofDate] = useState(project.proof_deadline ?? "");
 
   async function onSubmit(e: React.FormEvent) {
@@ -53,15 +80,15 @@ export default function ScheduleForm({
     setError(null);
 
     const payload = {
-      dtpAssignedTo: dtpUser || null,
+      dtpAssignedTo: dtpUsers,
       dtpDeadline: dtpDate || null,
-      editingAssignedTo: editingUser || null,
+      editingAssignedTo: editingUsers,
       editingDeadline: editingDate || null,
-      coverAssignedTo: coverUser || null,
+      coverAssignedTo: coverUsers,
       coverDeadline: coverDate || null,
-      isbnAssignedTo: isbnUser || null,
+      isbnAssignedTo: isbnUsers,
       isbnDeadline: isbnDate || null,
-      proofAssignedTo: proofUser || null,
+      proofAssignedTo: proofUsers,
       proofDeadline: proofDate || null,
     };
 
@@ -84,12 +111,18 @@ export default function ScheduleForm({
     }
   }
 
+  const userOptions: DropdownOption[] = users.map((u) => ({
+    value: u.id,
+    label: u.name,
+    description: u.role.charAt(0).toUpperCase() + u.role.slice(1),
+  }));
+
   return (
     <form onSubmit={onSubmit} className="rounded-xl border border-border bg-surface p-5 space-y-6">
       <div>
         <h2 className="text-base font-semibold text-foreground">Production Schedule & Assignments</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Define stage assignees and deadlines. Saving will transition an "Under Contract" project to active DTP stage.
+          Assign one or more staff members and deadlines for each stage. Saving will transition an "Under Contract" project to active DTP stage.
         </p>
       </div>
 
@@ -98,20 +131,16 @@ export default function ScheduleForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              DTP / Typesetting Assignee
+              DTP / Typesetting Assignees
             </label>
-            <select
-              value={dtpUser}
-              onChange={(e) => setDtpUser(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
-            >
-              <option value="">Unassigned</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.role})
-                </option>
-              ))}
-            </select>
+            <MultiSelectDropdown
+              size="sm"
+              values={dtpUsers}
+              onChange={(vals) => setDtpUsers(vals)}
+              options={userOptions}
+              placeholder="Select DTP assignees…"
+              ariaLabel="Select DTP assignees"
+            />
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
@@ -121,7 +150,7 @@ export default function ScheduleForm({
               type="date"
               value={dtpDate}
               onChange={(e) => setDtpDate(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
+              className="w-full rounded-xl border border-black/12 bg-surface px-3 py-1.5 text-sm dark:border-white/15"
             />
           </div>
         </div>
@@ -130,20 +159,16 @@ export default function ScheduleForm({
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              Editing Assignee
+              Editing Assignees
             </label>
-            <select
-              value={editingUser}
-              onChange={(e) => setEditingUser(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
-            >
-              <option value="">Unassigned</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.role})
-                </option>
-              ))}
-            </select>
+            <MultiSelectDropdown
+              size="sm"
+              values={editingUsers}
+              onChange={(vals) => setEditingUsers(vals)}
+              options={userOptions}
+              placeholder="Select editing assignees…"
+              ariaLabel="Select editing assignees"
+            />
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
@@ -153,7 +178,7 @@ export default function ScheduleForm({
               type="date"
               value={editingDate}
               onChange={(e) => setEditingDate(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
+              className="w-full rounded-xl border border-black/12 bg-surface px-3 py-1.5 text-sm dark:border-white/15"
             />
           </div>
         </div>
@@ -162,20 +187,16 @@ export default function ScheduleForm({
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              Cover Design Assignee
+              Cover Design Assignees
             </label>
-            <select
-              value={coverUser}
-              onChange={(e) => setCoverUser(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
-            >
-              <option value="">Unassigned</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.role})
-                </option>
-              ))}
-            </select>
+            <MultiSelectDropdown
+              size="sm"
+              values={coverUsers}
+              onChange={(vals) => setCoverUsers(vals)}
+              options={userOptions}
+              placeholder="Select cover design assignees…"
+              ariaLabel="Select cover design assignees"
+            />
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
@@ -185,7 +206,7 @@ export default function ScheduleForm({
               type="date"
               value={coverDate}
               onChange={(e) => setCoverDate(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
+              className="w-full rounded-xl border border-black/12 bg-surface px-3 py-1.5 text-sm dark:border-white/15"
             />
           </div>
         </div>
@@ -194,20 +215,16 @@ export default function ScheduleForm({
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              ISBN Registration Assignee
+              ISBN Registration Assignees
             </label>
-            <select
-              value={isbnUser}
-              onChange={(e) => setIsbnUser(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
-            >
-              <option value="">Unassigned</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.role})
-                </option>
-              ))}
-            </select>
+            <MultiSelectDropdown
+              size="sm"
+              values={isbnUsers}
+              onChange={(vals) => setIsbnUsers(vals)}
+              options={userOptions}
+              placeholder="Select ISBN assignees…"
+              ariaLabel="Select ISBN assignees"
+            />
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
@@ -217,7 +234,7 @@ export default function ScheduleForm({
               type="date"
               value={isbnDate}
               onChange={(e) => setIsbnDate(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
+              className="w-full rounded-xl border border-black/12 bg-surface px-3 py-1.5 text-sm dark:border-white/15"
             />
           </div>
         </div>
@@ -226,20 +243,16 @@ export default function ScheduleForm({
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              Final Proof Assignee
+              Final Proof Assignees
             </label>
-            <select
-              value={proofUser}
-              onChange={(e) => setProofUser(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
-            >
-              <option value="">Unassigned</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.role})
-                </option>
-              ))}
-            </select>
+            <MultiSelectDropdown
+              size="sm"
+              values={proofUsers}
+              onChange={(vals) => setProofUsers(vals)}
+              options={userOptions}
+              placeholder="Select proof assignees…"
+              ariaLabel="Select proof assignees"
+            />
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">

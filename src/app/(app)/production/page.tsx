@@ -33,17 +33,17 @@ const STATUS_BADGE_STYLES: Record<string, string> = {
 
 export default async function ProductionListPage() {
   const user = await requireCapability("production_pipeline.read");
-  const isManager = user.role === "owner" || user.role === "accounts";
+  const isManager = user.role === "owner" || user.role === "accounts" || user.role === "production";
 
   const whereClause = isManager
     ? {}
     : {
         OR: [
-          { AND: [{ status: "dtp" }, { dtp_assigned_to: user.id }] },
-          { AND: [{ status: "editing" }, { editing_assigned_to: user.id }] },
-          { AND: [{ status: "cover_design" }, { cover_assigned_to: user.id }] },
-          { AND: [{ status: "isbn_registration" }, { isbn_assigned_to: user.id }] },
-          { AND: [{ status: "final_proof" }, { proof_assigned_to: user.id }] },
+          { AND: [{ status: "dtp" }, { OR: [{ dtp_assigned_to: user.id }, { dtp_assignees: { contains: user.id } }] }] },
+          { AND: [{ status: "editing" }, { OR: [{ editing_assigned_to: user.id }, { editing_assignees: { contains: user.id } }] }] },
+          { AND: [{ status: "cover_design" }, { OR: [{ cover_assigned_to: user.id }, { cover_assignees: { contains: user.id } }] }] },
+          { AND: [{ status: "isbn_registration" }, { OR: [{ isbn_assigned_to: user.id }, { isbn_assignees: { contains: user.id } }] }] },
+          { AND: [{ status: "final_proof" }, { OR: [{ proof_assigned_to: user.id }, { proof_assignees: { contains: user.id } }] }] },
         ],
       };
 

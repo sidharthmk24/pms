@@ -16,7 +16,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         <div className="flex flex-col">
           {/* Logo & Brand Header */}
           <Link
-            href="/dashboard"
+            href={user.role === "author" ? "/author" : "/dashboard"}
             className="apple-button mb-6 flex flex-col gap-2 rounded-2xl p-2.5 transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.05]"
           >
             <div className="flex items-center justify-between">
@@ -30,7 +30,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
               />
             </div>
             <span className="text-[11px] font-medium text-muted-foreground pl-0.5">
-              Publisher Management System
+              {user.role === "author" ? "Author Publishing Portal" : "Publisher Management System"}
             </span>
           </Link>
 
@@ -54,7 +54,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         {/* Top Navbar */}
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-black/[0.06] bg-surface/80 px-4 backdrop-blur-xl dark:border-white/[0.08] dark:bg-surface/75 md:px-8">
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="flex items-center md:hidden">
+            <Link href={user.role === "author" ? "/author" : "/dashboard"} className="flex items-center md:hidden">
               <Image
                 src="/logo.png"
                 alt="Kairali Books"

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useEffect } from "react";
+import { SmoothDropdown } from "@/components/dropdown";
 import { formatPaise } from "@/lib/money";
 import {
   parseContractNotes,
@@ -152,7 +153,7 @@ export default function ContractsClient({
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative z-20 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
@@ -163,23 +164,25 @@ export default function ContractsClient({
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <select
+        <div className="flex items-center gap-2 min-w-[170px]">
+          <SmoothDropdown
+            size="sm"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            aria-label="Filter by status"
-            className="rounded-xl border border-black/12 bg-surface px-3 py-2 text-xs font-bold text-foreground outline-none dark:border-white/15"
-          >
-            <option value="all">All Statuses</option>
-            <option value="signed">Fully Signed</option>
-            <option value="awaiting_author">Awaiting Author</option>
-            <option value="awaiting_publisher">Awaiting Publisher</option>
-          </select>
+            onChange={(val) => setStatusFilter(val as any)}
+            ariaLabel="Filter by status"
+            align="right"
+            options={[
+              { value: "all", label: "All Statuses" },
+              { value: "signed", label: "Fully Signed" },
+              { value: "awaiting_author", label: "Awaiting Author" },
+              { value: "awaiting_publisher", label: "Awaiting Publisher" },
+            ]}
+          />
         </div>
       </div>
 
       {/* Contracts Table */}
-      <section className="overflow-hidden rounded-3xl border border-black/10 bg-surface dark:border-white/10">
+      <section className="relative z-10 overflow-hidden rounded-3xl border border-black/10 bg-surface dark:border-white/10">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-black/[0.06] bg-black/[0.02] text-xs font-bold uppercase tracking-wider text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.02]">
@@ -247,7 +250,6 @@ export default function ContractsClient({
                       <td className="px-6 py-4">
                         {isSigned && (
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
-                            <span className="h-1.5 w-1.5 rounded-full bg-success" />
                             Dual-Signed
                           </span>
                         )}
@@ -373,7 +375,7 @@ export default function ContractsClient({
                 <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 2 — Commercial & Royalty Terms</h4>
                 <ul className="list-disc pl-5 space-y-1.5 font-sans text-xs">
                   <li>
-                    <strong>Publishing Model Track:</strong> {viewingContract.meta.publishing_type === "self_publishing" ? "Author-Funded Self-Publishing" : "Traditional Kairali-Funded Publishing"}.
+                    <strong>Publishing Model Track:</strong> {viewingContract.meta.publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali Books Publishing"}.
                   </li>
                   <li>
                     <strong>Royalty Rate:</strong> <strong>{viewingContract.royalty_pct}%</strong> calculated on the <strong>{viewingContract.basis.toUpperCase()}</strong> of all printed copies sold.

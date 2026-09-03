@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useRef, useState, type FormEvent } from "react";
 import { GENRES, LANGUAGES } from "@/lib/submission-fields";
+import { SmoothDropdown } from "@/components/dropdown";
 
 const ACCEPT = ".pdf,.doc,.docx,.odt";
 const MAX_MB = 25;
@@ -10,7 +12,23 @@ const SYNOPSIS_MIN = 100;
 
 type FieldErrors = Record<string, string>;
 
-export default function SubmissionForm() {
+export interface SubmissionFormProps {
+  initialAuthorName?: string;
+  initialEmail?: string;
+  initialPhone?: string;
+  initialPlace?: string;
+  isAuthorPortal?: boolean;
+  onSuccessRedirect?: string;
+}
+
+export default function SubmissionForm({
+  initialAuthorName = "",
+  initialEmail = "",
+  initialPhone = "",
+  initialPlace = "",
+  isAuthorPortal = false,
+  onSuccessRedirect,
+}: SubmissionFormProps = {}) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -18,6 +36,18 @@ export default function SubmissionForm() {
   const [pending, setPending] = useState(false);
   const [synopsis, setSynopsis] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
+  const [submittedData, setSubmittedData] = useState<{ refNo: string; title: string } | null>(null);
+
+  function resetForm() {
+    setSubmittedData(null);
+    setSynopsis("");
+    setFileName(null);
+    setErrors({});
+    setFormError(null);
+    if (formRef.current) {
+      formRef.current.reset();
+    }
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,10 +55,13 @@ export default function SubmissionForm() {
     setFormError(null);
     setPending(true);
 
+    const formData = new FormData(e.currentTarget);
+    const bookTitle = (formData.get("title") as string) || "";
+
     try {
       const res = await fetch("/api/public/submissions", {
         method: "POST",
-        body: new FormData(e.currentTarget),
+        body: formData,
       });
       const body = await res.json();
 
@@ -48,6 +81,15 @@ export default function SubmissionForm() {
         return;
       }
 
+      if (isAuthorPortal) {
+        setSubmittedData({
+          refNo: body.data.refNo,
+          title: bookTitle,
+        });
+        setPending(false);
+        return;
+      }
+
       const params = new URLSearchParams({
         ref: body.data.refNo,
         weeks: String(body.data.responseWeeks),
@@ -57,6 +99,73 @@ export default function SubmissionForm() {
       setFormError("We could not reach the server. Check your connection and try again.");
       setPending(false);
     }
+  }
+
+  if (submittedData) {
+    return (
+      <div className="rounded-[28px] border border-black/10 bg-surface p-8 shadow-sm backdrop-blur-xl dark:border-white/10 sm:p-10 text-center animate-in fade-in zoom-in-95 duration-200">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-success/15 text-success mb-5">
+          <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success mb-3">
+          <span className="h-1.5 w-1.5 rounded-full bg-success" />
+          Manuscript Received
+        </span>
+
+        <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl font-serif">
+          Manuscript Submitted Successfully!
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+          {submittedData.title ? `"${submittedData.title}" has` : "Your manuscript has"} been received and queued for editorial evaluation.
+        </p>
+
+        {/* Reference Details Box */}
+        <div className="mt-6 mx-auto max-w-md rounded-2xl border border-black/8 bg-black/[0.02] p-5 text-left dark:border-white/10 dark:bg-white/[0.02] space-y-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground font-medium">Tracking Reference:</span>
+            <span className="font-mono font-bold text-foreground text-sm">{submittedData.refNo}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground font-medium">Status:</span>
+            <span className="inline-flex items-center gap-1 font-bold text-primary">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Pending Editorial Review
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs pt-2 border-t border-black/[0.04] dark:border-white/[0.04]">
+            <span className="text-muted-foreground font-medium">Estimated Review Time:</span>
+            <span className="font-semibold text-foreground">~3 – 4 weeks</span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto">
+          <Link
+            href="/author"
+            className="apple-button w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-foreground px-6 py-3 text-xs font-extrabold text-background shadow-xs hover:opacity-90 transition-all"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span>Go to Author Dashboard</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={resetForm}
+            className="apple-button w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-black/15 bg-surface px-5 py-3 text-xs font-bold text-foreground shadow-xs hover:bg-black/5 dark:border-white/15 dark:bg-surface-muted/60 transition-all"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Write &amp; Submit New One</span>
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const synopsisShort = synopsis.trim().length > 0 && synopsis.trim().length < SYNOPSIS_MIN;
@@ -76,10 +185,10 @@ export default function SubmissionForm() {
             </div>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Full Name" name="author_name" required error={errors.author_name} className="sm:col-span-2" placeholder="e.g. A. R. Rahman" />
-            <Field label="Email Address" name="email" type="email" required error={errors.email} hint="We will send correspondence here" placeholder="author@example.com" />
-            <Field label="Phone Number" name="phone" type="tel" error={errors.phone} hint="Optional for WhatsApp / calling" placeholder="+91 98765 43210" />
-            <Field label="Town / District" name="place" error={errors.place} hint="Optional (e.g. Kozhikode, Thrissur)" placeholder="e.g. Kozhikode" className="sm:col-span-2" />
+            <Field label="Full Name" name="author_name" required defaultValue={initialAuthorName} error={errors.author_name} className="sm:col-span-2" placeholder="e.g. A. R. Rahman" />
+            <Field label="Email Address" name="email" type="email" required defaultValue={initialEmail} error={errors.email} hint="We will send correspondence here" placeholder="author@example.com" />
+            <Field label="Phone Number" name="phone" type="tel" defaultValue={initialPhone} error={errors.phone} hint="Optional for WhatsApp / calling" placeholder="+91 98765 43210" />
+            <Field label="Town / District" name="place" defaultValue={initialPlace} error={errors.place} hint="Optional (e.g. Kozhikode, Thrissur)" placeholder="e.g. Kozhikode" className="sm:col-span-2" />
           </div>
         </section>
 
@@ -99,46 +208,34 @@ export default function SubmissionForm() {
 
             <div>
               <Label htmlFor="genre" required>Genre</Label>
-              <div className="relative flex items-center">
-                <select
-                  id="genre"
-                  name="genre"
-                  defaultValue=""
-                  className="apple-button w-full appearance-none rounded-xl border border-black/15 bg-background/90 py-3 pl-4 pr-9 text-base font-semibold text-foreground outline-none transition-colors hover:border-black/30 focus:border-foreground dark:border-white/15 dark:bg-surface-muted/80 dark:hover:border-white/30"
-                >
-                  <option value="" disabled>Choose a genre…</option>
-                  {GENRES.map((g) => (
-                    <option key={g.value} value={g.value}>{g.en}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-3 flex items-center text-muted-foreground">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+              <SmoothDropdown
+                id="genre"
+                name="genre"
+                size="lg"
+                defaultValue=""
+                placeholder="Choose a genre…"
+                options={GENRES.map((g) => ({
+                  value: g.value,
+                  label: g.en,
+                  description: g.ml,
+                }))}
+              />
               <ErrorText message={errors.genre} />
             </div>
 
             <div>
               <Label htmlFor="language">Language</Label>
-              <div className="relative flex items-center">
-                <select
-                  id="language"
-                  name="language"
-                  defaultValue="Malayalam"
-                  className="apple-button w-full appearance-none rounded-xl border border-black/15 bg-background/90 py-3 pl-4 pr-9 text-base font-semibold text-foreground outline-none transition-colors hover:border-black/30 focus:border-foreground dark:border-white/15 dark:bg-surface-muted/80 dark:hover:border-white/30"
-                >
-                  {LANGUAGES.map((l) => (
-                    <option key={l.value} value={l.value}>{l.en}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-3 flex items-center text-muted-foreground">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+              <SmoothDropdown
+                id="language"
+                name="language"
+                size="lg"
+                defaultValue="Malayalam"
+                options={LANGUAGES.map((l) => ({
+                  value: l.value,
+                  label: l.en,
+                  description: l.ml,
+                }))}
+              />
               <ErrorText message={errors.language} />
             </div>
 
@@ -243,10 +340,10 @@ function ErrorText({ message }: { message?: string }) {
 }
 
 function Field({
-  label, name, type = "text", required, hint, error, malayalam, className, placeholder,
+  label, name, type = "text", required, hint, error, malayalam, className, placeholder, defaultValue,
 }: {
   label: string; name: string; type?: string; required?: boolean;
-  hint?: string; error?: string; malayalam?: boolean; className?: string; placeholder?: string;
+  hint?: string; error?: string; malayalam?: boolean; className?: string; placeholder?: string; defaultValue?: string;
 }) {
   return (
     <div className={className}>
@@ -255,6 +352,7 @@ function Field({
         id={name}
         name={name}
         type={type}
+        defaultValue={defaultValue}
         placeholder={placeholder}
         className={`w-full rounded-xl border border-black/15 bg-background/90 px-4 py-3 text-base font-semibold text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-foreground dark:border-white/15 dark:bg-surface-muted/80 ${malayalam ? "font-ml" : ""}`}
       />

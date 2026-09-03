@@ -9,11 +9,18 @@ export type NavItem = {
   ready: boolean;
 };
 
+export const AUTHOR_NAV: NavItem[] = [
+  { label: "Author Dashboard", href: "/author", capability: "author_portal.access", ready: true },
+  { label: "My Published Books", href: "/author/books", capability: "author_portal.access", ready: true },
+  { label: "Submit Manuscript", href: "/author/submit", capability: "author_portal.access", ready: true },
+  { label: "User Guide", href: "/guide", capability: null, ready: true },
+];
+
 export const NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", capability: null, ready: true },
   { label: "Submissions", href: "/submissions", capability: "submissions.read", ready: true },
   { label: "Production", href: "/production", capability: "production_pipeline.read", ready: true },
-  { label: "Titles", href: "/titles", capability: "titles.read", ready: false },
+  { label: "Published Books", href: "/titles", capability: "titles.read", ready: true },
   { label: "Authors", href: "/authors", capability: "authors.read", ready: false },
   { label: "Contracts", href: "/contracts", capability: "contracts.read", ready: true },
   { label: "Sales", href: "/sales", capability: "sales.read", ready: false },
@@ -28,7 +35,11 @@ export const NAV: NavItem[] = [
 ];
 
 export function navFor(role: Role): NavItem[] {
+  if (role === "author") {
+    return AUTHOR_NAV;
+  }
   return NAV.filter(
     (item) => item.ready && (item.capability === null || can(role, item.capability))
   );
 }
+

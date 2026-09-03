@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { requireCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatIST } from "@/lib/time";
+import { can } from "@/lib/roles";
 import ReviewForm from "./review-form";
+import ReassignSelect from "../reassign-select";
 
 export const metadata: Metadata = { title: "Submission Review" };
 export const dynamic = "force-dynamic";
@@ -47,9 +49,19 @@ export default async function SubmissionDetailPage({ params }: PageProps<"/submi
 
   if (!sub) notFound();
 
+  const isManager = can(user.role, "submissions.manage");
+  const isEditorOrOwner = user.role === "editor" || user.role === "owner";
   const isAssignedEditor = sub.reviewed_by === user.id;
-  const isOwner = user.role === "owner";
-  const canReview = (isAssignedEditor || isOwner) && ["new", "pending_review", "under_review", "needs_revision"].includes(sub.status);
+  const canReview = isEditorOrOwner && (isAssignedEditor || user.role === "owner") && ["new", "pending_review", "under_review", "needs_revision"].includes(sub.status);
+
+  let editors: { id: string; name: string; role: string }[] = [];
+  if (isManager) {
+    editors = await prisma.users.findMany({
+      where: { active: true, role: "editor" },
+      select: { id: true, name: true, role: true },
+      orderBy: { name: "asc" },
+    });
+  }
 
   // If accepted, retrieve contract if it exists for additional context
   let contract = null;
@@ -154,12 +166,23 @@ export default async function SubmissionDetailPage({ params }: PageProps<"/submi
                 <dd className="font-medium text-foreground">{sub.language}</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Assigned Editor</dt>
-                <dd className="font-medium text-foreground">
-                  {sub.users?.name ?? "Unassigned"}
-                </dd>
+                <dt className="text-xs text-muted-foreground mb-1">Assigned Editor</dt>
+                {isManager && ["new", "pending_review", "under_review", "needs_revision"].includes(sub.status) ? (
+                  <div className="mt-1">
+                    <ReassignSelect
+                      submissionId={sub.id}
+                      currentEditorId={sub.reviewed_by}
+                      currentEditorName={sub.users?.name}
+                      editors={editors}
+                    />
+                  </div>
+                ) : (
+                  <dd className="font-medium text-foreground">
+                    {sub.users?.name ?? "Unassigned"}
+                  </dd>
+                )}
                 {sub.assigned_at && (
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="block text-[10px] text-muted-foreground mt-0.5">
                     Assigned: {formatIST(sub.assigned_at)}
                   </span>
                 )}
@@ -231,7 +254,7 @@ export default async function SubmissionDetailPage({ params }: PageProps<"/submi
                     ₹{new Intl.NumberFormat("en-IN").format(contract.advance_paise / 100)}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 pt-1">
+                <div className="grid grid-cols-2 pt-1 border-b border-success/10 pb-2">
                   <span className="text-muted-foreground">Author Digital Signature</span>
                   <span className="font-semibold">
                     {contract.signed_on ? (
@@ -240,6 +263,20 @@ export default async function SubmissionDetailPage({ params }: PageProps<"/submi
                       <span className="text-warning">Pending Author Signature</span>
                     )}
                   </span>
+                </div>
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground font-medium">Author Agreement Link</span>
+                  <a
+                    href={`/publish/contract/${contract.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-success hover:underline"
+                  >
+                    <span>Open Author Signing Link</span>
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
                 </div>
               </div>
             </div>

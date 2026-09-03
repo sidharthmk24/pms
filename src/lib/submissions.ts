@@ -67,12 +67,12 @@ export async function createSubmission(
     const refNo = await nextDocNo(tx, "submission", "SUB");
     const now = stamp();
 
-    const activeUsers = await tx.users.findMany({
-      where: { active: true, role: { in: ["editor", "production", "owner"] } },
+    const activeEditors = await tx.users.findMany({
+      where: { active: true, role: "editor" },
       orderBy: { email: "asc" },
     });
     const subCount = await tx.submissions.count();
-    const editorId = activeUsers.length > 0 ? activeUsers[subCount % activeUsers.length].id : null;
+    const editorId = activeEditors.length > 0 ? activeEditors[subCount % activeEditors.length].id : null;
     const assignedAt = editorId ? now : null;
 
     const row = await tx.submissions.create({

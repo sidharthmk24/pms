@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { DocumentPreviewModal } from "@/components/document-preview-modal";
 
 type Submission = {
   id: string;
@@ -15,6 +17,7 @@ type Submission = {
 };
 
 type Contract = {
+  id: string;
   royalty_pct: number;
   basis: string;
   advance_paise: number;
@@ -27,6 +30,8 @@ type Production = {
   proof_feedback: string | null;
   proof_approved_at: string | null;
   isbn_registered: string | null;
+  isbn_requested_at?: string | null;
+  isbn_request_ref?: string | null;
   final_layout_path: string | null;
   final_cover_path: string | null;
 };
@@ -68,6 +73,8 @@ export default function TrackingDashboard({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewType, setPreviewType] = useState<"layout" | "cover">("layout");
 
   const statusClass = {
     new: "bg-foreground text-background",
@@ -329,21 +336,32 @@ export default function TrackingDashboard({
             {!contract.signed_on ? (
               <div className="space-y-3">
                 <p className="text-xs text-muted-foreground">
-                  By clicking "Sign Contract", you digitally agree to the terms listed above and authorize 
-                  publication under Kairali Books.
+                  Please review and digitally sign your legal publishing agreement to authorize publication and start book production.
                 </p>
-                <button
-                  type="button"
-                  onClick={onSign}
-                  disabled={pending}
-                  className="w-full rounded-lg bg-success py-2.5 text-sm font-semibold text-white transition hover:bg-success-hover disabled:opacity-60"
+                <Link
+                  href={`/publish/contract/${contract.id}`}
+                  className="apple-button flex w-full items-center justify-center gap-2 rounded-lg bg-success py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-success-hover"
                 >
-                  {pending ? "Signing..." : "Sign Contract"}
-                </button>
+                  <span>Review &amp; Digitally Sign Contract</span>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </Link>
               </div>
             ) : (
-              <div className="rounded-lg bg-success/10 p-4 border border-success/20 text-xs text-success text-center">
-                Thank you! The contract is signed. Your book has successfully moved to our production pipeline (Flow 8b).
+              <div className="space-y-3">
+                <div className="rounded-lg bg-success/10 p-4 border border-success/20 text-xs text-success text-center">
+                  Thank you! The contract is signed. Your book has successfully moved to our production pipeline.
+                </div>
+                <Link
+                  href={`/publish/contract/${contract.id}`}
+                  className="apple-button flex w-full items-center justify-center gap-2 rounded-lg border border-black/10 bg-surface py-2 text-xs font-bold text-foreground transition hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
+                >
+                  <span>View / Print Sealed Agreement</span>
+                  <svg className="h-3.5 w-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </Link>
               </div>
             )}
           </div>
@@ -401,13 +419,37 @@ export default function TrackingDashboard({
                   <p>Our desktop publishing staff is actively formatting layout templates and typesetting your pages.</p>
                 )}
                 {production.status === "editing" && (
-                  <p>Your manuscript pages are currently undergoing spelling, syntax, and editorial proofreading.</p>
+                  <div className="space-y-2">
+                    <p>
+                      {production.proof_feedback
+                        ? "Your manuscript has been returned to the editorial team for revisions and re-typesetting based on proof review feedback."
+                        : "Your manuscript pages are currently undergoing spelling, syntax, and editorial proofreading."}
+                    </p>
+                    {production.proof_feedback && (
+                      <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-foreground">
+                        <span className="font-bold text-warning block mb-1">Active Revision Notes:</span>
+                        <span className="whitespace-pre-wrap">{production.proof_feedback}</span>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {production.status === "cover_design" && (
                   <p>Our design team is creating and formatting custom front-and-back cover illustrations.</p>
                 )}
                 {production.status === "isbn_registration" && (
-                  <p>We are registering your publication details and metadata with the ISBN registration office.</p>
+                  <div>
+                    {production.isbn_requested_at ? (
+                      <div className="flex items-center gap-2 text-primary font-semibold">
+                        <span>🔵</span>
+                        <span>
+                          ISBN Application submitted to National Agency ({production.isbn_requested_at.split(" ")[0]})
+                          {production.isbn_request_ref ? ` · Ref: ${production.isbn_request_ref}` : ""}. Awaiting allocation.
+                        </span>
+                      </div>
+                    ) : (
+                      <p>We are preparing and submitting your publication metadata to the Raja Rammohun Roy National Agency for ISBN registration.</p>
+                    )}
+                  </div>
                 )}
                 {production.status === "printing" && (
                   <p>Your signed copy has been approved! Mass print run is active, and copies will be received at our warehouse shortly.</p>
@@ -428,25 +470,38 @@ export default function TrackingDashboard({
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Files For Review</h4>
                       <div className="flex flex-wrap gap-3">
                         {production.final_layout_path ? (
-                          <a
-                            href={`/api/public/production/${production.id}/download?type=layout&ref=${submission.ref_no}&email=${encodeURIComponent(submission.email)}`}
-                            download
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition"
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPreviewType("layout");
+                              setPreviewModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition cursor-pointer"
                           >
-                            📄 Download Typeset Layout (PDF)
-                          </a>
+                            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span>View Typeset Layout (PDF)</span>
+                          </button>
                         ) : (
                           <span className="text-xs text-muted-foreground italic">Layout PDF not uploaded yet</span>
                         )}
 
                         {production.final_cover_path ? (
-                          <a
-                            href={`/api/public/production/${production.id}/download?type=cover&ref=${submission.ref_no}&email=${encodeURIComponent(submission.email)}`}
-                            download
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition"
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPreviewType("cover");
+                              setPreviewModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition cursor-pointer"
                           >
-                            🎨 Download Book Cover File
-                          </a>
+                            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span>View Book Cover Artwork</span>
+                          </button>
                         ) : (
                           <span className="text-xs text-muted-foreground italic">Cover design not uploaded yet</span>
                         )}
@@ -497,6 +552,20 @@ export default function TrackingDashboard({
             </div>
           )}
         </div>
+      )}
+
+      {production && (
+        <DocumentPreviewModal
+          isOpen={previewModalOpen}
+          onClose={() => setPreviewModalOpen(false)}
+          title={submission.title}
+          projectId={production.id}
+          initialType={previewType}
+          hasLayout={Boolean(production.final_layout_path)}
+          hasCover={Boolean(production.final_cover_path)}
+          refNo={submission.ref_no}
+          email={submission.email}
+        />
       )}
     </div>
   );

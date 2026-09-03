@@ -21,14 +21,27 @@ export function handler<Args extends unknown[]>(
     try {
       return await fn(...args);
     } catch (err) {
-      if (err instanceof HttpError) return fail(err.status, err.message);
+      if (
+        err instanceof HttpError ||
+        (typeof err === "object" &&
+          err !== null &&
+          "status" in err &&
+          typeof (err as { status: unknown }).status === "number")
+      ) {
+        const httpErr = err as { status: number; message: string };
+        return fail(httpErr.status, httpErr.message || "Request failed");
+      }
       if (err instanceof ZodError) {
         return fail(422, "Validation failed", {
           issues: err.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
         });
       }
       console.error("[api] unhandled error", err);
-      return fail(500, "Something went wrong");
+      try {
+        const { appendFileSync } = await import("node:fs");
+        appendFileSync("api-errors.log", `[${new Date().toISOString()}] ${String((err as any)?.stack || err)}\n\n`);
+      } catch {}
+      return fail(500, err instanceof Error ? err.message : "Something went wrong");
     }
   };
 }

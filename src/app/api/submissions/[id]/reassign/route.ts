@@ -23,9 +23,9 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
 
   if (editorId) {
     const editor = await prisma.users.findFirst({
-      where: { id: editorId, active: true },
+      where: { id: editorId, active: true, role: "editor" },
     });
-    if (!editor) return fail(422, "Invalid editor selected");
+    if (!editor) return fail(422, "Invalid editor selected: user must have an active Editor account");
   }
 
   const now = stamp();

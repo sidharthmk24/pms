@@ -185,6 +185,9 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
           where: { id: proj.id },
           data: {
             status: "editing",
+            editing_completed_at: null,
+            proof_approved_at: null,
+            proof_completed_at: null,
             proof_feedback: comment,
             updated_at: now,
           },

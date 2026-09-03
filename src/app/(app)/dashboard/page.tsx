@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatIST } from "@/lib/time";
@@ -14,6 +15,9 @@ type StockValueRow = { value: bigint | number | null };
 
 export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const user = await requireUser();
+  if (user.role === "author") {
+    redirect("/author");
+  }
   const { denied } = await searchParams;
   const month = new Date().toISOString().slice(0, 7); // YYYY-MM, UTC
 

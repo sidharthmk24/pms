@@ -261,11 +261,6 @@ model users {
   audit_log                                                          audit_log[]
   payouts                                                            payouts[]
   print_jobs                                                         print_jobs[]
-  production_projects_production_projects_cover_assigned_toTousers   production_projects[] @relation("production_projects_cover_assigned_toTousers")
-  production_projects_production_projects_dtp_assigned_toTousers     production_projects[] @relation("production_projects_dtp_assigned_toTousers")
-  production_projects_production_projects_editing_assigned_toTousers production_projects[] @relation("production_projects_editing_assigned_toTousers")
-  production_projects_production_projects_isbn_assigned_toTousers    production_projects[] @relation("production_projects_isbn_assigned_toTousers")
-  production_projects_production_projects_proof_assigned_toTousers   production_projects[] @relation("production_projects_proof_assigned_toTousers")
   sales                                                              sales[]
   sessions                                                           sessions[]
   settings                                                           settings[]
@@ -354,9 +349,16 @@ model production_projects {
   isbn_deadline                                        String?
   isbn_completed_at                                    String?
   isbn_registered                                      String?
+  isbn_requested_at                                    String?
+  isbn_request_ref                                     String?
   proof_assigned_to                                    String?
   proof_deadline                                       String?
   proof_completed_at                                   String?
+  dtp_assignees                                        String?
+  editing_assignees                                    String?
+  cover_assignees                                      String?
+  isbn_assignees                                       String?
+  proof_assignees                                      String?
   proof_feedback                                       String?
   proof_approved_at                                    String?
   print_job_id                                         String?
@@ -365,11 +367,15 @@ model production_projects {
   updated_at                                           String
   final_layout_path                                    String?
   final_cover_path                                     String?
-  users_production_projects_cover_assigned_toTousers   users?      @relation("production_projects_cover_assigned_toTousers", fields: [cover_assigned_to], references: [id], onUpdate: NoAction)
-  users_production_projects_dtp_assigned_toTousers     users?      @relation("production_projects_dtp_assigned_toTousers", fields: [dtp_assigned_to], references: [id], onUpdate: NoAction)
-  users_production_projects_editing_assigned_toTousers users?      @relation("production_projects_editing_assigned_toTousers", fields: [editing_assigned_to], references: [id], onUpdate: NoAction)
-  users_production_projects_isbn_assigned_toTousers    users?      @relation("production_projects_isbn_assigned_toTousers", fields: [isbn_assigned_to], references: [id], onUpdate: NoAction)
+  qc_passed_at                                         String?
+  qc_notes                                             String?
+  damaged_qty                                          Int?        @default(0)
+  author_copies_qty                                    Int?        @default(0)
+  author_copies_dispatched_at                          String?
+  author_dispatch_tracking                             String?
+  warehouse_received_qty                               Int?        @default(0)
+  channels_activated                                   String?     @default("retail,dealer,fair,online")
+  handover_completed_at                                String?
   print_jobs                                           print_jobs? @relation(fields: [print_job_id], references: [id], onUpdate: NoAction)
-  users_production_projects_proof_assigned_toTousers   users?      @relation("production_projects_proof_assigned_toTousers", fields: [proof_assigned_to], references: [id], onUpdate: NoAction)
   titles                                               titles      @relation(fields: [title_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }

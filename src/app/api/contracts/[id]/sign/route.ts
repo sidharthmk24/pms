@@ -1,6 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { fail, handler, ok } from "@/lib/api";
 import { audit } from "@/lib/audit";
+import { queueEmail } from "@/lib/mail";
 import { getSessionUser } from "@/lib/session";
 import { encodeContractNotes, parseContractNotes } from "@/lib/contracts";
 import { prisma } from "@/lib/prisma";
@@ -99,6 +101,51 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     },
   });
 
+  // Seamless pipeline transition when contract is dual signed
+  if (isDualSigned) {
+    const existingProject = await prisma.production_projects.findFirst({
+      where: { title_id: contract.title_id },
+    });
+
+    if (!existingProject) {
+      await prisma.production_projects.create({
+        data: {
+          id: randomUUID(),
+          title_id: contract.title_id,
+          status: "under_contract",
+          created_at: now,
+          updated_at: now,
+        },
+      });
+    }
+
+    // Send execution confirmation email to author
+    if (data.party === "author" && contract.authors?.email) {
+      const host = req.headers.get("host") || "localhost:3000";
+      const protocol = req.headers.get("x-forwarded-proto") || "http";
+      const contractUrl = `${protocol}://${host}/publish/contract/${id}`;
+      const setupUrl = `${protocol}://${host}/author/setup?email=${encodeURIComponent(contract.authors.email)}&contract=${id}`;
+
+      await queueEmail({
+        to: contract.authors.email,
+        toName: contract.authors.name,
+        subject: `Contract Executed — ${contract.titles.name} (${currentMeta.contract_ref || "Kairali Books"})`,
+        text: `Dear ${contract.authors.name},\n\nThank you for digitally signing the publishing agreement for "${contract.titles.name}".\n\nThe agreement is now legally executed and sealed by both parties. Your book has entered our Production & DTP Typesetting Pipeline.\n\nWarm regards,\nKairali Books Editorial Team`,
+        html: `
+<div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1c1a17;max-width:520px">
+  <p>Dear ${contract.authors.name},</p>
+  <p>Thank you for digitally signing the publishing agreement for "<strong>${contract.titles.name}</strong>".</p>
+  <p>The contract is now legally executed and sealed by both parties. Your book has officially moved into our <strong>Production &amp; DTP Pipeline</strong>.</p>
+  <p>Our editorial and design teams will begin typesetting and layout formatting. You can monitor progress on your Author Dashboard.</p>
+  <p style="color:#6b6559;margin-top:24px">Warm regards,<br><strong>Kairali Books Editorial Team</strong></p>
+</div>`.trim(),
+        template: "contract_signed",
+        refType: "contract",
+        refId: id,
+      });
+    }
+  }
+
   return ok({
     success: true,
     contract: updated,
@@ -106,3 +153,4 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     status: isDualSigned ? "signed" : data.party === "publisher" ? "awaiting_author" : "awaiting_publisher",
   });
 });
+

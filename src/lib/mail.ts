@@ -242,17 +242,52 @@ export function acceptEmail(input: {
   authorName: string;
   refNo: string;
   title: string;
-  trackingUrl: string;
+  contractUrl?: string;
+  trackingUrl?: string;
+  isExistingAuthor?: boolean;
 }): { subject: string; text: string; html: string } {
-  const { authorName, refNo, title, trackingUrl } = input;
+  const { authorName, refNo, title, trackingUrl, isExistingAuthor } = input;
+  const primarySigningUrl = input.contractUrl || trackingUrl || "#";
+
+  if (isExistingAuthor) {
+    const subject = `Manuscript Approved & in Production — ${refNo}`;
+    const text = [
+      `Dear ${authorName},`,
+      ``,
+      `We are pleased to inform you that your new manuscript "${title}" (Reference: ${refNo}) has been approved and accepted by Kairali Books!`,
+      ``,
+      `As an existing contracted author, your work has been seamlessly added under your publishing portfolio and moved directly into our Production & DTP Pipeline.`,
+      ``,
+      `You can monitor typesetting, cover design, and printing updates anytime on your Author Dashboard.`,
+      ``,
+      `Congratulations once again!`,
+      ``,
+      `Sincerely,`,
+      `Kairali Books`,
+    ].join("\n");
+
+    const html = `
+<div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1c1a17;max-width:520px">
+  <p>Dear ${escapeHtml(authorName)},</p>
+  <p>We are pleased to inform you that your new manuscript "<strong>${escapeHtml(title)}</strong>" (Reference: ${escapeHtml(refNo)}) has been approved and accepted by Kairali Books!</p>
+  <p>As an existing author with an active agreement, your work has been seamlessly enrolled into our <strong>Production &amp; DTP Pipeline</strong>.</p>
+  <p>Our team has commenced typesetting and layout design. You can track real-time milestones on your Author Dashboard.</p>
+  <p>Congratulations once again!</p>
+  <p style="color:#6b6559;margin-top:24px">Sincerely,<br><strong>Kairali Books Editorial Team</strong></p>
+</div>`.trim();
+
+    return { subject, text, html };
+  }
+
   const subject = `Congratulations! Your manuscript has been accepted — ${refNo}`;
   const text = [
     `Dear ${authorName},`,
     ``,
     `We are thrilled to inform you that your manuscript "${title}" (Reference: ${refNo}) has been accepted for publication by Kairali Books!`,
     ``,
-    `We have generated your contract and publishing terms. Please log into your author portal to review the terms and digitally sign the contract:`,
-    trackingUrl,
+    `We have generated your contract and publishing terms. Please review the terms and digitally sign your publishing agreement:`,
+    primarySigningUrl,
+    ...(trackingUrl ? [``, `You can also track your manuscript status anytime at:`, trackingUrl] : []),
     ``,
     `Once signed, your manuscript will transition to our production pipeline. We are excited to partner with you to bring your book to readers.`,
     ``,
@@ -266,8 +301,9 @@ export function acceptEmail(input: {
 <div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1c1a17;max-width:520px">
   <p>Dear ${escapeHtml(authorName)},</p>
   <p>We are thrilled to inform you that your manuscript "<strong>${escapeHtml(title)}</strong>" (Reference: ${escapeHtml(refNo)}) has been accepted for publication by Kairali Books!</p>
-  <p>We have generated your contract and publishing terms. Please log into your author portal to review the terms and digitally sign the contract:</p>
-  <p><a href="${escapeHtml(trackingUrl)}" style="display:inline-block;background:#0f5d55;color:#ffffff;padding:10px 18px;text-decoration:none;border-radius:6px;font-weight:500">Review & Sign Contract</a></p>
+  <p>We have generated your contract and publishing terms. Please review the terms and digitally sign your publishing agreement:</p>
+  <p><a href="${escapeHtml(primarySigningUrl)}" style="display:inline-block;background:#0f5d55;color:#ffffff;padding:10px 18px;text-decoration:none;border-radius:6px;font-weight:500">Review &amp; Sign Contract</a></p>
+  ${trackingUrl ? `<p style="font-size:13px;color:#6b6559">You can also track your submission anytime on the <a href="${escapeHtml(trackingUrl)}" style="color:#0f5d55">Author Tracking Portal</a>.</p>` : ""}
   <p>Once signed, your manuscript will transition to our production pipeline. We are excited to partner with you to bring your book to readers.</p>
   <p>Congratulations once again!</p>
   <p style="color:#6b6559">Sincerely,<br>Kairali Books</p>
@@ -275,3 +311,4 @@ export function acceptEmail(input: {
 
   return { subject, text, html };
 }
+

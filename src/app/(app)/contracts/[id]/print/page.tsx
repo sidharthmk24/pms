@@ -83,7 +83,7 @@ export default async function ContractPrintPage({
             </h2>
             <ul className="list-disc pl-5 space-y-1.5 font-sans text-xs">
               <li>
-                <strong>Publishing Model:</strong> {meta.publishing_type === "self_publishing" ? "Author-Funded Self-Publishing" : "Traditional Kairali-Funded Publishing"}.
+                <strong>Publishing Model:</strong> {meta.publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali Books Publishing"}.
               </li>
               <li>
                 <strong>Royalty Rate:</strong> <strong>{contract.royalty_pct}%</strong> calculated on the <strong>{contract.basis.toUpperCase()}</strong> of all printed copies sold.
