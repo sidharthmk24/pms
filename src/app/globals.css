@@ -6,22 +6,21 @@
  * Kairali Books Brand Guidelines V1.0 — Design Tokens
  *
  * PRIMARY palette ONLY: Black #040706 · White #ffffff
- * All UI states are expressed as tints/shades/opacities of these two colours.
+ * Clean white background with high-contrast brand black typography.
  * Typeface: Anek Malayalam (ExtraLight → ExtraBold)
  */
 
-/* ── Light mode ─────────────────────────────────────────────────── */
 :root {
-  /* Surfaces — white & very light grey */
+  /* Surfaces — pure white & subtle clean tint */
   --background:         #ffffff;
   --surface:            #ffffff;
   --surface-muted:      #f9fafb;
 
   /* Brand black text */
-  --foreground:         #000000;
-  --muted-foreground:   #4b5563;
+  --foreground:         #040706;
+  --muted-foreground:   #525252;
 
-  /* Borders — light grey lines */
+  /* Borders — clean subtle light grey lines */
   --border:             #e5e7eb;
 
   /* Primary CTA — brand black, white text */
@@ -30,17 +29,17 @@
   --primary-foreground: #ffffff;
 
   /* Accent — dark grey for secondary actions */
-  --accent:             #1f2937;
+  --accent:             #333333;
   --accent-foreground:  #ffffff;
 
-  /* Status — all black/grey tones, differentiated by opacity */
-  --success:            #000000;
-  --warning:            #4b5563;
-  --danger:             #000000;
-  --info:               #374151;
+  /* Status */
+  --success:            #040706;
+  --warning:            #525252;
+  --danger:             #040706;
+  --info:               #404040;
 
   /* Focus ring — brand black */
-  --ring:               #000000;
+  --ring:               #040706;
 }
 
 /* ── Tailwind v4 theme bridge ───────────────────────────────────── */
