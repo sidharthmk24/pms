@@ -266,18 +266,20 @@ export default async function AuthorDashboardPage({
                 "isbn_registration",
                 "final_proof",
                 "printing",
+                "post_production",
                 "completed",
               ];
               const currentStageIdx = PIPELINE_ORDER.indexOf(project.status);
 
               const stages = [
                 { key: "under_contract", name: "Contract Signed" },
-                { key: "dtp", name: "DTP / Typesetting" },
+                { key: "dtp", name: "DTP / Typeset" },
                 { key: "editing", name: "Editorial Review" },
                 { key: "cover_design", name: "Cover Design" },
                 { key: "isbn_registration", name: "ISBN Assigned", extra: project.isbn_registered },
                 { key: "final_proof", name: "Final Proof" },
-                { key: "printing", name: "Print & Release" },
+                { key: "printing", name: "Printing Run" },
+                { key: "post_production", name: "Intake & Courier" },
               ].map((st) => {
                 const stepIdx = PIPELINE_ORDER.indexOf(st.key);
                 const done = stepIdx < currentStageIdx;
@@ -311,7 +313,7 @@ export default async function AuthorDashboardPage({
                   </div>
 
                   {/* Visual Stepper */}
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-7 pt-3">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-8 pt-3">
                     {stages.map((st, idx) => (
                       <div
                         key={st.name}
@@ -395,6 +397,32 @@ export default async function AuthorDashboardPage({
                             proofApprovedAt={project.proof_approved_at}
                           />
                         </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Author Copies & Courier Tracking Docket Block */}
+                  {project.author_dispatch_tracking && (
+                    <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 dark:border-primary/20 space-y-2">
+                      <div className="flex items-center gap-2 text-xs font-bold text-primary">
+                        <span>📦</span>
+                        <span>Author Copies Courier Handover &amp; Dispatch</span>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">Courier / Tracking Docket: </span>
+                          <span className="font-mono font-bold text-foreground">{project.author_dispatch_tracking}</span>
+                        </div>
+                        {project.author_copies_qty && (
+                          <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary">
+                            {project.author_copies_qty} Complimentary Copies
+                          </span>
+                        )}
+                      </div>
+                      {project.author_copies_dispatched_at && (
+                        <p className="text-[11px] text-muted-foreground">
+                          Dispatched on {project.author_copies_dispatched_at.split(" ")[0]}
+                        </p>
                       )}
                     </div>
                   )}

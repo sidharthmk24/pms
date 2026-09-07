@@ -55,6 +55,7 @@ const PROD_STAGE_LABELS: Record<string, string> = {
   isbn_registration: "ISBN Registration",
   final_proof: "Author Review",
   printing: "Mass Print Run",
+  post_production: "Post-Production Intake",
   completed: "Live in Inventory",
 };
 
@@ -386,11 +387,12 @@ export default function TrackingDashboard({
                   { key: "isbn_registration", label: "ISBN" },
                   { key: "final_proof", label: "Proof" },
                   { key: "printing", label: "Printing" },
+                  { key: "post_production", label: "Intake" },
                   { key: "completed", label: "Live" },
                 ].map((s) => {
                   const isActive = production.status === s.key;
                   // Simple check if it's already completed
-                  const list = ["under_contract", "dtp", "editing", "cover_design", "isbn_registration", "final_proof", "printing", "completed"];
+                  const list = ["under_contract", "dtp", "editing", "cover_design", "isbn_registration", "final_proof", "printing", "post_production", "completed"];
                   const isDone = list.indexOf(production.status) > list.indexOf(s.key);
 
                   return (
@@ -453,6 +455,9 @@ export default function TrackingDashboard({
                 )}
                 {production.status === "printing" && (
                   <p>Your signed copy has been approved! Mass print run is active, and copies will be received at our warehouse shortly.</p>
+                )}
+                {production.status === "post_production" && (
+                  <p className="text-primary font-medium">Physical printed copies have arrived at our central warehouse for damage check, quality inspection, and author copies courier dispatch.</p>
                 )}
                 {production.status === "completed" && (
                   <p className="text-success font-semibold">✓ Live in Inventory! Your book is officially published and live in Kairali Books warehouse catalog.</p>

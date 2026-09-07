@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const STAGE_VERBS: Record<string, string> = {
-  dtp: "Typesetting & Layout",
-  editing: "Editing & Proofreading",
+  dtp: "Typesetting & Layout (Upload Proofreading PDF)",
+  editing: "Editing & Proofreading Review",
   cover_design: "Cover Design",
   isbn_registration: "ISBN Application & Registration",
   final_proof: "Author & Editorial Final Proof Sign-Off",
+  post_production: "Post-Production Intake & Handover",
 };
 
 export default function TaskAdvance({
@@ -17,12 +18,16 @@ export default function TaskAdvance({
   isbnRequestedAt,
   isbnRequestRef,
   proofApprovedAt,
+  proofEmailSentAt,
+  hasLayout,
 }: {
   projectId: string;
   status: string;
   isbnRequestedAt?: string | null;
   isbnRequestRef?: string | null;
   proofApprovedAt?: string | null;
+  proofEmailSentAt?: string | null;
+  hasLayout?: boolean;
 }) {
   const router = useRouter();
   const [isbn, setIsbn] = useState("");
@@ -32,10 +37,35 @@ export default function TaskAdvance({
   const [reworkNotes, setReworkNotes] = useState("");
   const [showRework, setShowRework] = useState(false);
   const [pending, setPending] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Determine current sub-step for ISBN
   const isIsbnStep1 = status === "isbn_registration" && !isbnRequestedAt;
+
+  async function onResendProofEmail() {
+    setSendingEmail(true);
+    setEmailStatus(null);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/production/${projectId}/send-proof-email`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setError(data?.error || "Failed to send proof approval email.");
+      } else {
+        setEmailStatus(`✓ Proof email dispatched to ${data.email} with layout PDF attached!`);
+        router.refresh();
+      }
+    } catch {
+      setError("Failed to connect to email service.");
+    } finally {
+      setSendingEmail(false);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent, customAction?: "approve" | "rework") {
     e.preventDefault();
@@ -56,7 +86,7 @@ export default function TaskAdvance({
       if (customAction === "rework") {
         fd.append("rework_notes", reworkNotes);
       }
-    } else if (status === "dtp" && file) {
+    } else if ((status === "dtp" || status === "editing") && file) {
       fd.append("layout_file", file);
     } else if (status === "cover_design" && file) {
       fd.append("cover_file", file);
@@ -85,11 +115,13 @@ export default function TaskAdvance({
   const isFormValid =
     status === "isbn_registration"
       ? isIsbnStep1
-        ? true // applicationRef is optional
+        ? true
         : isbn.trim().length >= 5
       : status === "final_proof"
       ? Boolean(proofApprovedAt || authorConsentVerified)
-      : status === "dtp" || status === "cover_design"
+      : status === "dtp"
+      ? file !== null || Boolean(hasLayout)
+      : status === "cover_design"
       ? file !== null
       : true;
 
@@ -114,12 +146,16 @@ export default function TaskAdvance({
           )}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {status === "isbn_registration"
+          {status === "dtp"
+            ? "Upload the typeset proofreading PDF manuscript to set the active proof deliverables."
+            : status === "editing"
+            ? "Inspect proofreading corrections. You may optionally upload a revised typeset PDF if adjustments were made."
+            : status === "isbn_registration"
             ? isIsbnStep1
               ? "Send the official ISBN allocation request to the Raja Rammohun Roy National Agency."
-              : "Enter the officially allocated 13-digit ISBN once received from the national agency."
+              : "Enter the allocated 13-digit ISBN. Advancing will automatically email the author with the proofreading PDF attached."
             : status === "final_proof"
-            ? "Inspect proof deliverables. Author approval is required before queueing for printing."
+            ? "Author digital sign-off is required before the offset press run can commence."
             : "Upload deliverables and complete this stage."}
         </p>
       </div>
@@ -127,23 +163,44 @@ export default function TaskAdvance({
       {status === "dtp" && (
         <div className="space-y-1">
           <label htmlFor="layout_file" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Typeset Manuscript Layout PDF
+            Proofreading Manuscript Layout PDF <span className="text-danger">*</span>
           </label>
           <input
             id="layout_file"
             type="file"
-            required
+            required={!hasLayout}
             accept=".pdf,.doc,.docx"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
             className="w-full max-w-sm text-sm font-medium mt-1"
           />
+          <p className="text-[11px] text-muted-foreground">
+            This PDF will be used as the proofreading file and attached to the author's final sign-off email.
+          </p>
+        </div>
+      )}
+
+      {status === "editing" && (
+        <div className="space-y-1.5 rounded-lg border border-border bg-background/50 p-3">
+          <label htmlFor="layout_file_edit" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Upload Revised Proofreading PDF (Optional)
+          </label>
+          <input
+            id="layout_file_edit"
+            type="file"
+            accept=".pdf,.doc,.docx"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className="w-full max-w-sm text-sm font-medium mt-1"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            If corrections were made to the layout or text during editing, upload the updated PDF here to replace the active proof deliverable.
+          </p>
         </div>
       )}
 
       {status === "cover_design" && (
         <div className="space-y-1">
           <label htmlFor="cover_file" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Book Cover Design File (Image/PDF)
+            Book Cover Design File (Image/PDF) <span className="text-danger">*</span>
           </label>
           <input
             id="cover_file"
@@ -172,7 +229,7 @@ export default function TaskAdvance({
                 className="w-full max-w-sm rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
               />
               <p className="text-[11px] text-muted-foreground">
-                Clicking the button below records that the ISBN request has been submitted to the National Agency.
+                Clicking below records that the ISBN request has been submitted to the National Agency and notifies the author.
               </p>
             </div>
           ) : (
@@ -198,7 +255,7 @@ export default function TaskAdvance({
                   className="w-full max-w-sm rounded-lg border border-border bg-background px-3 py-1.5 text-sm mt-1"
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Saving the allocated ISBN will update the title record and advance the pipeline to Author Final Proof.
+                  Saving the allocated ISBN will advance the pipeline to Author Final Proof and automatically email the author with the proofreading PDF attached.
                 </p>
               </div>
             </div>
@@ -213,17 +270,35 @@ export default function TaskAdvance({
               <span className="text-base">✓</span>
               <div>
                 <p className="font-bold">Author Digital Sign-Off Confirmed ({proofApprovedAt.split(" ")[0]})</p>
-                <p className="text-[11px] opacity-80">The author has authenticated and approved the final proof files.</p>
+                <p className="text-[11px] opacity-80">The author has reviewed and approved the proof deliverables.</p>
               </div>
             </div>
           ) : (
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 space-y-2.5">
-              <div className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400">
-                <span>⏳</span>
-                <span>Author Digital Sign-Off Pending</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400">
+                  <span>⏳</span>
+                  <span>Author Digital Sign-Off Pending</span>
+                </div>
+                <button
+                  type="button"
+                  disabled={sendingEmail}
+                  onClick={onResendProofEmail}
+                  className="rounded-lg bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-500/30 transition cursor-pointer border border-amber-500/30"
+                >
+                  {sendingEmail ? "Sending..." : "📧 Resend Proof Email with PDF Attachment"}
+                </button>
               </div>
+              {proofEmailSentAt && (
+                <p className="text-[10px] text-muted-foreground">
+                  Proof email last sent to author: {proofEmailSentAt}
+                </p>
+              )}
+              {emailStatus && (
+                <p className="text-xs font-semibold text-success animate-in fade-in">{emailStatus}</p>
+              )}
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                The author has access to review galley proof files on their Author Portal. The title cannot be sent to press without author approval.
+                The author received an email with the proofreading PDF attached and a 1-click digital approval link. If verbal/written consent was received offline, you may check below:
               </p>
               <label className="flex items-start gap-2.5 pt-1.5 cursor-pointer">
                 <input
@@ -233,7 +308,7 @@ export default function TaskAdvance({
                   className="mt-0.5 rounded border-border text-primary focus:ring-primary"
                 />
                 <span className="text-xs text-foreground font-medium leading-tight">
-                  I confirm that the author has reviewed and provided formal approval (written/verbal) to proceed with the printing press run.
+                  I confirm that the author has reviewed the proof deliverables and provided formal sign-off (written/verbal) to proceed with offset printing.
                 </span>
               </label>
             </div>
@@ -297,7 +372,7 @@ export default function TaskAdvance({
             : status === "isbn_registration"
             ? isIsbnStep1
               ? "Mark ISBN Request Sent to Agency →"
-              : "Confirm Allocation & Advance to Final Proof →"
+              : "Confirm Allocation & Dispatch Proof Email to Author →"
             : status === "final_proof"
             ? "✓ Approve Final Proof & Send to Printing Press →"
             : `Complete ${verb}`}
