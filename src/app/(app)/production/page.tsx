@@ -15,6 +15,7 @@ const STATUS_LABELS: Record<string, string> = {
   isbn_registration: "ISBN Registration",
   final_proof: "Author Final Proof",
   printing: "Printing Run",
+  post_production: "Post-Production Intake",
   completed: "Completed / Live",
   cancelled: "Cancelled",
 };
@@ -27,6 +28,7 @@ const STATUS_BADGE_STYLES: Record<string, string> = {
   isbn_registration: "bg-danger/10 text-danger border border-danger/20",
   final_proof: "bg-warning/15 text-warning border border-warning/30",
   printing: "bg-foreground/[0.08] text-foreground border border-foreground/20 font-semibold",
+  post_production: "bg-primary/15 text-primary border border-primary/30 font-bold",
   completed: "bg-foreground text-background font-semibold",
   cancelled: "bg-danger/10 text-danger border border-danger/20",
 };

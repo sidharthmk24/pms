@@ -39,10 +39,16 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
     }
   }
 
+  // Check token authorization (e.g. from 1-click proof approval email)
+  const token = searchParams.get("token") || "";
+  if (token && proj.proof_token && token === proj.proof_token) {
+    isAuthorized = true;
+  }
+
   // Fallback to public ref + email verification if not session-authenticated
   if (!isAuthorized) {
     if (!ref || !email) {
-      return fail(401, "Sign in or provide submission ref & email to download proof files");
+      return fail(401, "Sign in or provide valid proof token or submission ref & email to download proof files");
     }
 
     const contract = await prisma.contracts.findFirst({

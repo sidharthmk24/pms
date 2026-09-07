@@ -13,6 +13,12 @@ export type QueuedEmail = {
   template?: string;
   refType?: string;
   refId?: string;
+  attachments?: Array<{
+    filename: string;
+    path?: string;
+    content?: Buffer | string;
+    contentType?: string;
+  }>;
 };
 
 /**
@@ -73,6 +79,7 @@ export async function queueEmail(msg: QueuedEmail): Promise<string | null> {
           subject: msg.subject,
           text: msg.text,
           html: msg.html,
+          attachments: msg.attachments,
         });
 
         await prisma.email_outbox.update({
@@ -311,4 +318,222 @@ export function acceptEmail(input: {
 
   return { subject, text, html };
 }
+
+/**
+ * Triggered automatically when each production stage completes.
+ */
+export function productionStageCompletedEmail(input: {
+  authorName: string;
+  title: string;
+  completedStageName: string;
+  nextStageName: string;
+  stageNote?: string;
+  trackingUrl: string;
+}): { subject: string; text: string; html: string } {
+  const { authorName, title, completedStageName, nextStageName, stageNote, trackingUrl } = input;
+  const subject = `Production Update: "${title}" — ${completedStageName} Completed`;
+
+  const text = [
+    `Dear ${authorName},`,
+    ``,
+    `We are pleased to update you that your book "${title}" has successfully completed the "${completedStageName}" stage in our production pipeline.`,
+    ``,
+    stageNote ? `Note: ${stageNote}\n` : ``,
+    `Next Stage: ${nextStageName}`,
+    ``,
+    `You can track the live progress and milestones of your book anytime at:`,
+    trackingUrl,
+    ``,
+    `Warm regards,`,
+    `Production Department`,
+    `Kairali Books · കൈരളി ബുക്സ്`,
+  ].filter(Boolean).join("\n");
+
+  const html = `
+<div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1c1a17;max-width:540px;background:#ffffff;padding:24px;border:1px solid #e8e6e1;border-radius:12px">
+  <div style="border-bottom:2px solid #0f5d55;padding-bottom:12px;margin-bottom:18px">
+    <span style="font-size:18px;font-weight:700;color:#0f5d55">Kairali Books</span>
+    <span style="font-size:14px;color:#6b6559;margin-left:8px">കൈരളി ബുക്സ് · Production Department</span>
+  </div>
+  <p>Dear ${escapeHtml(authorName)},</p>
+  <p>We are delighted to inform you that your book "<strong>${escapeHtml(title)}</strong>" has reached a new publishing milestone.</p>
+  
+  <div style="background:#f4f9f7;border:1px solid #c9e4dc;border-radius:10px;padding:16px;margin:20px 0">
+    <div style="display:flex;align-items:center;margin-bottom:8px">
+      <span style="background:#0f5d55;color:#ffffff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px">Completed Milestone</span>
+      <span style="font-weight:700;color:#0f5d55;margin-left:10px;font-size:15px">✓ ${escapeHtml(completedStageName)}</span>
+    </div>
+    <div style="font-size:13px;color:#4a453e;margin-top:10px;border-top:1px dashed #c9e4dc;padding-top:10px">
+      <strong>Next Active Stage:</strong> ${escapeHtml(nextStageName)}
+    </div>
+    ${stageNote ? `<div style="font-size:12px;color:#6b6559;margin-top:6px;font-style:italic">${escapeHtml(stageNote)}</div>` : ""}
+  </div>
+
+  <p>You can follow the real-time pipeline status and deliverables on your live author dashboard:</p>
+  <p style="margin:24px 0">
+    <a href="${escapeHtml(trackingUrl)}" style="display:inline-block;background:#0f5d55;color:#ffffff;padding:11px 22px;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
+      Track Book Progress →
+    </a>
+  </p>
+  <p style="font-size:12px;color:#8c867a;margin-top:28px;border-top:1px solid #f0eee9;padding-top:14px">
+    Kairali Books Publishing Division · Kozhikode, Kerala
+  </p>
+</div>`.trim();
+
+  return { subject, text, html };
+}
+
+/**
+ * Final Proof Sign-Off Email with PDF Attachment & 1-Click Approval Link.
+ */
+export function proofApprovalEmail(input: {
+  authorName: string;
+  title: string;
+  isbn?: string | null;
+  approvalUrl: string;
+  hasAttachment: boolean;
+  trackingUrl: string;
+}): { subject: string; text: string; html: string } {
+  const { authorName, title, isbn, approvalUrl, hasAttachment, trackingUrl } = input;
+  const subject = `Action Required: Final Proof Approval for "${title}" — Kairali Books`;
+
+  const text = [
+    `Dear ${authorName},`,
+    ``,
+    `Your book "${title}" has completed typesetting, editorial review, cover design, and ISBN registration${isbn ? ` (ISBN: ${isbn})` : ""}.`,
+    ``,
+    `It is now ready for your final proof inspection and digital sign-off before we queue it for the offset printing press run.`,
+    ``,
+    hasAttachment 
+      ? `We have attached the complete proofreading layout PDF directly to this email for your convenience.`
+      : `The proofreading layout PDF is available for inspection in your review portal.`,
+    ``,
+    `Please inspect the text, layout, and formatting. To approve the title for printing, click the secure link below:`,
+    approvalUrl,
+    ``,
+    `If revisions are needed, you can also submit your feedback comments directly on the approval page.`,
+    ``,
+    `Author Portal: ${trackingUrl}`,
+    ``,
+    `Warm regards,`,
+    `Editorial & Production Team`,
+    `Kairali Books`,
+  ].join("\n");
+
+  const html = `
+<div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1c1a17;max-width:560px;background:#ffffff;padding:26px;border:1px solid #e8e6e1;border-radius:12px">
+  <div style="border-bottom:2px solid #b3541e;padding-bottom:12px;margin-bottom:18px">
+    <span style="font-size:18px;font-weight:700;color:#0f5d55">Kairali Books</span>
+    <span style="font-size:14px;color:#6b6559;margin-left:8px">കൈരളി ബുക്സ് · Final Proofing</span>
+  </div>
+  
+  <p>Dear ${escapeHtml(authorName)},</p>
+  <p>We are delighted to share that the layout, cover artwork, and official ISBN registration${isbn ? ` (<strong>ISBN: ${escapeHtml(isbn)}</strong>)` : ""} for your book "<strong>${escapeHtml(title)}</strong>" are complete!</p>
+  
+  <div style="background:#fcf9f5;border:1px solid #f0e1d5;border-left:4px solid #b3541e;padding:16px;border-radius:0 10px 10px 0;margin:20px 0">
+    <h4 style="margin:0 0 6px 0;color:#b3541e;font-size:15px">Action Required: Author Final Sign-Off</h4>
+    <p style="margin:0;font-size:13px;color:#4a453e">
+      Before we schedule and send the title to the offset printing press, we require your final digital review and sign-off.
+    </p>
+    ${hasAttachment ? `
+    <p style="margin:10px 0 0 0;font-size:12px;color:#0f5d55;font-weight:600">
+      📎 The complete proofreading layout PDF is attached to this email for your offline review.
+    </p>` : ""}
+  </div>
+
+  <p>Please review the proofreading PDF. When you are satisfied with the text and layout, click the button below to approve:</p>
+
+  <div style="text-align:center;margin:28px 0">
+    <a href="${escapeHtml(approvalUrl)}" style="display:inline-block;background:#0f5d55;color:#ffffff;padding:13px 28px;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px;box-shadow:0 2px 4px rgba(15,93,85,0.2)">
+      ✓ Accept &amp; Approve Final Proof →
+    </a>
+    <div style="margin-top:10px;font-size:11px;color:#6b6559">
+      Clicking this link opens your secure approval page to confirm sign-off or request revisions.
+    </div>
+  </div>
+
+  <p style="font-size:12px;color:#8c867a;margin-top:32px;border-top:1px solid #f0eee9;padding-top:14px">
+    If you need any corrections, you can submit revision notes on the link above.<br>
+    Kairali Books Publishing Division · Kozhikode, Kerala
+  </p>
+</div>`.trim();
+
+  return { subject, text, html };
+}
+
+/**
+ * Triggered upon post-production completion & book launch.
+ */
+export function publicationCelebrationEmail(input: {
+  authorName: string;
+  title: string;
+  isbn?: string | null;
+  authorCopiesQty: number;
+  courierTracking?: string | null;
+  channels: string[];
+  trackingUrl: string;
+}): { subject: string; text: string; html: string } {
+  const { authorName, title, isbn, authorCopiesQty, courierTracking, channels, trackingUrl } = input;
+  const subject = `Congratulations! "${title}" is Published & Live — Kairali Books`;
+
+  const text = [
+    `Dear ${authorName},`,
+    ``,
+    `Heartiest congratulations! Your book "${title}"${isbn ? ` (ISBN: ${isbn})` : ""} has completed all post-production stages, quality inspection, and warehouse intake.`,
+    ``,
+    authorCopiesQty > 0 ? `Your ${authorCopiesQty} author complimentary copies have been allocated.${courierTracking ? ` Courier / Dispatch Details: ${courierTracking}` : ""}` : ``,
+    ``,
+    `Distribution Channels Activated: ${channels.join(", ")}`,
+    ``,
+    `You can view sales and royalty reports anytime on your author portal:`,
+    trackingUrl,
+    ``,
+    `We wish your book tremendous success and look forward to reaching readers together!`,
+    ``,
+    `Warmest congratulations,`,
+    `Kairali Books · കൈരളി ബുക്സ്`,
+  ].filter(Boolean).join("\n");
+
+  const html = `
+<div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1c1a17;max-width:560px;background:#ffffff;padding:26px;border:1px solid #e8e6e1;border-radius:12px">
+  <div style="border-bottom:2px solid #0f5d55;padding-bottom:12px;margin-bottom:18px">
+    <span style="font-size:20px;font-weight:700;color:#0f5d55">Kairali Books</span>
+    <span style="font-size:14px;color:#6b6559;margin-left:8px">കൈരളി ബുക്സ്</span>
+  </div>
+  
+  <p style="font-size:16px;font-weight:700;color:#0f5d55;margin-bottom:8px">🎉 Your Book is Officially Published!</p>
+  <p>Dear ${escapeHtml(authorName)},</p>
+  <p>We are absolutely delighted to celebrate the successful publication of your book "<strong>${escapeHtml(title)}</strong>"${isbn ? ` (ISBN: ${escapeHtml(isbn)})` : ""}.</p>
+  
+  <div style="background:#f4f9f7;border:1px solid #c9e4dc;padding:16px;border-radius:10px;margin:20px 0">
+    <h4 style="margin:0 0 10px 0;color:#0f5d55;font-size:14px">Post-Production &amp; Dispatch Summary</h4>
+    ${authorCopiesQty > 0 ? `
+      <div style="font-size:13px;color:#4a453e;margin-bottom:6px">
+        <strong>Author Copies:</strong> ${authorCopiesQty} copies segregated for delivery
+      </div>
+      ${courierTracking ? `
+      <div style="font-size:13px;color:#4a453e;margin-bottom:6px">
+        <strong>Courier Docket / Tracking:</strong> ${escapeHtml(courierTracking)}
+      </div>` : ""}
+    ` : ""}
+    <div style="font-size:13px;color:#4a453e;margin-top:8px">
+      <strong>Active Distribution Channels:</strong> ${escapeHtml(channels.join(" · "))}
+    </div>
+  </div>
+
+  <p>Your book is now live across our retail bookstores, distributor network, and online catalog. You can track ongoing inventory and sales on your author portal:</p>
+
+  <p style="margin:24px 0">
+    <a href="${escapeHtml(trackingUrl)}" style="display:inline-block;background:#0f5d55;color:#ffffff;padding:11px 24px;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
+      Access Author Portal →
+    </a>
+  </p>
+
+  <p>Thank you for trusting Kairali Books as your publishing home. We wish your work the very best!</p>
+  <p style="color:#6b6559;margin-top:20px">Kairali Books Editorial &amp; Distribution Team</p>
+</div>`.trim();
+
+  return { subject, text, html };
+}
+
 

@@ -9,6 +9,7 @@ import { parseContractNotes } from "@/lib/contracts";
 import ScheduleForm from "./schedule-form";
 import TaskAdvance from "./task-advance";
 import PrintReceiptForm from "./print-receipt-form";
+import PostProductionForm from "./post-production-form";
 import PostProductionDashboard from "./post-production-dashboard";
 import { ProofPreviewButtons } from "@/app/(app)/author/proof-preview-button";
 
@@ -22,7 +23,8 @@ const STATUS_LABELS: Record<string, string> = {
   cover_design: "Cover Design",
   isbn_registration: "ISBN Registration",
   final_proof: "Author Final Proof",
-  printing: "Printing Run",
+  printing: "Offset Printing Run",
+  post_production: "Post-Production Intake",
   completed: "Completed / Live",
   cancelled: "Cancelled",
 };
@@ -60,7 +62,7 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
   const publishingType = contractMeta.publishing_type ?? "kairali_funded";
   const contractFreeCopies = contractMeta.free_copies ?? 10;
 
-  const isManager = user.role === "owner" || user.role === "accounts";
+  const isManager = user.role === "owner" || user.role === "accounts" || user.role === "production";
 
   // Determine active stage assignees
   let activeAssigneesStr: string | null = null;
@@ -101,7 +103,8 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
     cover_design: "bg-accent/10 text-accent border-accent/20",
     isbn_registration: "bg-danger/10 text-danger border-danger/20",
     final_proof: "bg-warning/15 text-warning border-warning/30",
-    printing: "bg-success/10 text-success border-success/20",
+    printing: "bg-primary/10 text-primary border-primary/20",
+    post_production: "bg-primary/15 text-primary border-primary/30 font-bold",
     completed: "bg-success text-white border-success",
     cancelled: "bg-danger/10 text-danger border-danger/20",
   }[proj.status] ?? "bg-surface-muted text-foreground border-border";
@@ -165,17 +168,18 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
                   "isbn_registration",
                   "final_proof",
                   "printing",
+                  "post_production",
                   "completed",
                 ];
                 const currentStageIdx = PIPELINE_ORDER.indexOf(proj.status);
 
                 const trackerSteps = [
-                  { key: "dtp", label: "DTP / typesetting", completedAt: proj.dtp_completed_at, staff: resolveStaffNames(proj.dtp_assigned_to, proj.dtp_assignees) },
+                  { key: "dtp", label: "DTP / Typesetting", completedAt: proj.dtp_completed_at, staff: resolveStaffNames(proj.dtp_assigned_to, proj.dtp_assignees) },
                   { key: "editing", label: "Proofreading & Editing", completedAt: proj.editing_completed_at, staff: resolveStaffNames(proj.editing_assigned_to, proj.editing_assignees) },
                   { key: "cover_design", label: "Cover Design", completedAt: proj.cover_completed_at, staff: resolveStaffNames(proj.cover_assigned_to, proj.cover_assignees) },
                   {
                     key: "isbn_registration",
-                    label: "ISBN registration",
+                    label: "ISBN Registration",
                     completedAt: proj.isbn_completed_at,
                     staff: resolveStaffNames(proj.isbn_assigned_to, proj.isbn_assignees),
                     detail: proj.isbn_registered,
@@ -183,8 +187,9 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
                       ? `Request Sent: ${proj.isbn_requested_at.split(" ")[0]}${proj.isbn_request_ref ? ` (Ref: ${proj.isbn_request_ref})` : ""} · Awaiting Allocation`
                       : null,
                   },
-                  { key: "final_proof", label: "Final Proof approval", completedAt: proj.proof_approved_at, staff: resolveStaffNames(proj.proof_assigned_to, proj.proof_assignees) },
-                  { key: "printing", label: "Print run completion", completedAt: proj.print_completed_at, staff: null },
+                  { key: "final_proof", label: "Author Final Proof", completedAt: proj.proof_approved_at, staff: resolveStaffNames(proj.proof_assigned_to, proj.proof_assignees) },
+                  { key: "printing", label: "Offset Printing Run", completedAt: proj.print_completed_at, staff: null },
+                  { key: "post_production", label: "Post-Production Intake", completedAt: proj.post_production_completed_at, staff: null },
                 ];
 
                 return trackerSteps.map((step, idx) => {
@@ -294,6 +299,8 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
               isbnRequestedAt={proj.isbn_requested_at}
               isbnRequestRef={proj.isbn_request_ref}
               proofApprovedAt={proj.proof_approved_at}
+              proofEmailSentAt={proj.proof_email_sent_at}
+              hasLayout={Boolean(proj.final_layout_path)}
             />
           )}
 
@@ -318,8 +325,8 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
             <div className="rounded-xl border border-border bg-surface p-5">
               <h3 className="text-sm font-semibold mb-2">Final Copy Proofing</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                The manuscript and cover design files have been uploaded. The project is currently awaiting 
-                author review and digital sign-off from their tracking portal.
+                The manuscript layout PDF and cover design artwork have been generated. The project is currently awaiting 
+                author review and digital sign-off from their email or portal.
               </p>
               {proj.proof_feedback && (
                 <div className="bg-accent/5 border border-accent/20 rounded-lg p-4">
@@ -332,14 +339,25 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
             </div>
           )}
 
-          {/* Printing receipts completion panel */}
+          {/* Printing press run panel */}
           {proj.status === "printing" && (
             <PrintReceiptForm
+              projectId={proj.id}
+              publishingType={publishingType}
+              authorName={proj.titles.authors?.name || "Author"}
+              titleName={proj.titles.name}
+            />
+          )}
+
+          {/* Dedicated Post-Production intake panel */}
+          {proj.status === "post_production" && (
+            <PostProductionForm
               projectId={proj.id}
               publishingType={publishingType}
               contractFreeCopies={contractFreeCopies}
               authorName={proj.titles.authors?.name || "Author"}
               titleName={proj.titles.name}
+              orderedQty={proj.print_jobs?.qty ?? 1000}
             />
           )}
 
