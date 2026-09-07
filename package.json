@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "user:set": "tsx --env-file=.env scripts/set-user.mts",
+    "seed:malayalam": "tsx --env-file=.env scripts/seed-malayalam-pms.mts",
     "db:pull": "prisma db pull && prisma generate",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
