@@ -67,8 +67,8 @@ export default function ReviewForm({ submissionId }: { submissionId: string }) {
   const totalPackageWithGst = packageCostRupees + gstAmount;
 
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl border border-black/10 bg-surface p-6 dark:border-white/10">
-      <h2 className="mb-4 text-base font-bold text-foreground">Review & Publishing Decision</h2>
+    <form onSubmit={onSubmit} className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
+      <h2 className="mb-4 text-base font-bold text-foreground">Review &amp; Publishing Decision</h2>
       
       <div className="mb-6 grid grid-cols-3 gap-3">
         <button

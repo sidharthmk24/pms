@@ -19,6 +19,9 @@ export const GET = handler(async () => {
   await requireApiCapability("users.manage");
 
   const users = await prisma.users.findMany({
+    where: {
+      role: { not: "author" },
+    },
     select: {
       id: true,
       name: true,

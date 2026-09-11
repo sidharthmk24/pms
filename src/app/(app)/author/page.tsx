@@ -7,6 +7,7 @@ import { formatPaise } from "@/lib/money";
 import { parseContractNotes, type ContractMetadata } from "@/lib/contracts";
 import { ProofPreviewButtons } from "./proof-preview-button";
 import { AuthorProofAction } from "./author-proof-action";
+import { OrderTracker, type TrackerData } from "./order-tracker";
 
 export const metadata: Metadata = {
   title: "Author Portal · Kairali Books",
@@ -19,7 +20,7 @@ const STATUS_LABELS: Record<string, { label: string; class: string }> = {
   pending_review: { label: "Pending Review", class: "bg-primary/10 text-primary border-primary/20" },
   under_review: { label: "Under Review", class: "bg-warning/10 text-warning border-warning/20" },
   needs_revision: { label: "Needs Revision", class: "bg-accent/10 text-accent border-accent/20" },
-  accepted: { label: "Approved & Accepted", class: "bg-success/10 text-success border-success/20" },
+  accepted: { label: "Approved & Accepted", class: "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-2xs" },
   declined: { label: "Declined", class: "bg-muted text-muted-foreground border-border" },
   archived: { label: "Archived", class: "bg-muted text-muted-foreground border-border" },
   withdrawn: { label: "Withdrawn", class: "bg-muted text-muted-foreground border-border" },
@@ -131,6 +132,17 @@ export default async function AuthorDashboardPage({
 
   const authorDisplayName = author?.name || user.name || "Author";
 
+  let authorAvatar: string | null = null;
+  if (author?.notes) {
+    try {
+      const parsed = JSON.parse(author.notes);
+      if (parsed.avatar) authorAvatar = parsed.avatar;
+    } catch {
+      // plain text note
+    }
+  }
+  const initialLetter = authorDisplayName.charAt(0).toUpperCase();
+
   const inReviewCount = submissions.filter((s) => ["new", "pending_review", "under_review"].includes(s.status)).length;
   const approvedCount = submissions.filter((s) => s.status === "accepted").length;
   const inProductionCount = projects.filter((p) => p.status !== "published").length;
@@ -158,25 +170,36 @@ export default async function AuthorDashboardPage({
         </div>
       )}
 
-      {/* Welcome Banner */}
-      <header className="relative overflow-hidden rounded-[28px] border border-black/10 bg-surface p-6 shadow-sm backdrop-blur-xl dark:border-white/10 sm:p-8">
+      {/* Welcome Banner with Author Portrait */}
+      <header className="relative overflow-hidden rounded-[28px] border border-[#7e2562]/15 bg-white p-6 shadow-plum-sm sm:p-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Kairali Author Portal
-              </span>
-              <span className="text-xs font-medium text-muted-foreground">
-                {user.email}
-              </span>
+          <div className="flex items-center gap-4 sm:gap-5">
+            <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-[#7e2562]/20 bg-gradient-to-br from-[#7e2562] to-[#591443] flex items-center justify-center text-white shadow-plum-sm">
+              {authorAvatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={authorAvatar} alt={authorDisplayName} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-2xl sm:text-3xl font-extrabold">{initialLetter}</span>
+              )}
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl font-serif">
-              Welcome back, {authorDisplayName}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
-              Track the live editorial evaluation of your manuscripts, view executed publishing agreements, and monitor real-time production stages from DTP to printing.
-            </p>
+
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#faedf5] border border-[#7e2562]/20 px-3 py-0.5 text-xs font-bold text-[#7e2562]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Kairali Author Portal
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {user.email}
+                </span>
+              </div>
+              <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl font-serif">
+                Welcome, {authorDisplayName}
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
+                Track live editorial evaluation of your manuscripts with Amazon/Flipkart-style milestone tracking, view executed publishing agreements, and monitor real-time production stages.
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
@@ -451,87 +474,59 @@ export default async function AuthorDashboardPage({
         </div>
 
         {submissions.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">You have not submitted any manuscripts yet.</p>
-            <Link href="/author/submit" className="mt-2 inline-block font-bold text-primary hover:underline">
-              Submit your first manuscript &rarr;
+          <div className="py-14 text-center text-sm text-muted-foreground bg-[#faf6f9]/50 rounded-2xl border border-[#7e2562]/10 p-8">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7e2562]/10 text-[#7e2562] mb-3">
+              <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <p className="font-bold text-foreground text-base">No manuscripts submitted yet.</p>
+            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+              Once you submit a manuscript via the onboarding portal, it will be automatically linked and tracked in real time here.
+            </p>
+            <Link
+              href="/author/submit"
+              className="apple-button mt-4 inline-flex items-center gap-2 rounded-xl bg-[#7e2562] px-6 py-2.5 text-xs font-extrabold text-white shadow-plum-sm hover:bg-[#681b50] transition-all"
+            >
+              <span>Submit Your First Manuscript</span>
+              <span>&rarr;</span>
             </Link>
           </div>
         ) : (
-          <div className="mt-6 space-y-4">
+          <div className="mt-6 space-y-6">
             {submissions.map((sub) => {
-              const statusInfo = STATUS_LABELS[sub.status] || {
-                label: sub.status,
-                class: "bg-muted text-muted-foreground border-border",
+              const matchedContract = contracts.find(
+                (c) =>
+                  c.titles.name.toLowerCase() === sub.title.toLowerCase() ||
+                  (sub.title_ml && c.titles.name_ml?.toLowerCase() === sub.title_ml.toLowerCase())
+              );
+
+              const matchedProject = projects.find(
+                (p) =>
+                  p.titles.name.toLowerCase() === sub.title.toLowerCase() ||
+                  (sub.title_ml && p.titles.name_ml?.toLowerCase() === sub.title_ml.toLowerCase())
+              );
+
+              const trackerData: TrackerData = {
+                id: sub.id,
+                refNo: sub.ref_no,
+                title: sub.title,
+                titleMl: sub.title_ml,
+                genre: sub.genre,
+                language: sub.language,
+                submittedAt: sub.submitted_at,
+                statusCode: sub.status,
+                statusLabel: STATUS_LABELS[sub.status]?.label || sub.status,
+                reviewNotes: sub.review_notes,
+                contractId: matchedContract?.id,
+                contractSignedOn: matchedContract?.signed_on,
+                productionId: matchedProject?.id,
+                productionStatus: matchedProject?.status,
+                courierDocket: matchedProject?.author_dispatch_tracking,
+                authorCopiesQty: matchedProject?.author_copies_qty,
               };
 
-              return (
-                <div
-                  key={sub.id}
-                  className="rounded-2xl border border-black/10 bg-background/60 p-5 dark:border-white/10 dark:bg-surface-muted/40 transition-all hover:border-black/20 dark:hover:border-white/20"
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-primary">
-                          {sub.ref_no}
-                        </span>
-                        <span className="text-xs text-muted-foreground">·</span>
-                        <span className="text-xs text-muted-foreground">{sub.genre}</span>
-                        <span className="text-xs text-muted-foreground">·</span>
-                        <span className="text-xs text-muted-foreground">{sub.language}</span>
-                      </div>
-                      <h3 className="text-base font-extrabold text-foreground font-serif">
-                        {sub.title}
-                      </h3>
-                      {sub.title_ml && (
-                        <p className="text-xs text-muted-foreground font-serif">{sub.title_ml}</p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${statusInfo.class}`}
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                        {statusInfo.label}
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="mt-3 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {sub.synopsis}
-                  </p>
-
-                  {/* Editorial Feedback / Revision Note Alert */}
-                  {sub.review_notes && (
-                    <div className="mt-4 rounded-xl border border-accent/20 bg-accent/5 p-3.5 text-xs text-foreground">
-                      <div className="flex items-center gap-1.5 font-bold text-accent mb-1">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                        </svg>
-                        <span>Editorial Review Feedback</span>
-                      </div>
-                      <p className="text-muted-foreground leading-relaxed pl-5">
-                        {sub.review_notes}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="mt-4 flex flex-wrap items-center justify-between border-t border-black/[0.04] pt-3 text-[11px] text-muted-foreground dark:border-white/[0.04]">
-                    <span>Submitted: {formatIST(sub.submitted_at)}</span>
-                    {sub.status === "accepted" && (
-                      <Link
-                        href="#contracts"
-                        className="font-bold text-success hover:underline inline-flex items-center gap-1"
-                      >
-                        <span>View Publishing Agreement</span>
-                        <span>&rarr;</span>
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              );
+              return <OrderTracker key={sub.id} data={trackerData} />;
             })}
           </div>
         )}

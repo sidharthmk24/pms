@@ -29,7 +29,12 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
         setPending(false);
         return;
       }
-      const targetPath = body.user?.role === "author" ? "/author" : nextPath;
+      const targetPath =
+        nextPath && nextPath !== "/" && nextPath !== "/dashboard"
+          ? nextPath
+          : body.user?.role === "author"
+            ? "/author"
+            : nextPath;
       router.replace(targetPath);
       router.refresh();
     } catch {
@@ -53,7 +58,7 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
         >
           Email address
         </label>
-        <div className="apple-input-container relative flex items-center rounded-xl border border-black/10 bg-background/80 dark:border-white/10 dark:bg-surface-muted/60">
+        <div className="apple-input-container relative flex items-center rounded-sm border border-[#7e2562]/20 bg-white">
           <div className="pointer-events-none pl-3.5 text-muted-foreground" aria-hidden="true">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -84,7 +89,7 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
             Password
           </label>
         </div>
-        <div className="apple-input-container relative flex items-center rounded-xl border border-black/10 bg-background/80 dark:border-white/10 dark:bg-surface-muted/60">
+        <div className="apple-input-container relative flex items-center rounded-sm border border-[#7e2562]/20 bg-white">
           <div className="pointer-events-none pl-3.5 text-muted-foreground" aria-hidden="true">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -104,7 +109,7 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="apple-button mr-2 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
+            className="apple-button mr-2 flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:bg-[#7e2562]/10 hover:text-primary"
             aria-label={showPassword ? "Hide password" : "Show password"}
             tabIndex={-1}
           >
@@ -122,29 +127,29 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
         </div>
       </div>
 
-      {/* Error Message with Apple Alert Pill */}
+      {/* Error Message with Alert Pill */}
       {error && (
         <div
           role="alert"
-          className="flex items-center gap-2 rounded-xl bg-danger/10 px-3.5 py-2.5 text-[13px] font-medium text-danger border border-danger/20 animate-apple-in"
+          className="flex items-center gap-2 rounded-sm bg-rose-50 px-3.5 py-2.5 text-[13px] font-semibold text-rose-800 border border-rose-200 animate-apple-in"
         >
-          <svg className="h-4 w-4 shrink-0 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="h-4 w-4 shrink-0 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           <span>{error}</span>
         </div>
       )}
 
-      {/* Primary Apple-style Action Button */}
+      {/* Primary Action Button */}
       <button
         type="submit"
         disabled={pending}
-        className="apple-button relative mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+        className="apple-button relative mt-2 flex w-full items-center justify-center gap-2 rounded-sm bg-primary px-4 py-3 text-sm font-bold text-white shadow-plum-md hover:bg-primary-hover hover:shadow-plum-lg disabled:cursor-not-allowed disabled:opacity-50"
       >
         {pending ? (
           <>
             <svg
-              className="h-4 w-4 animate-spin text-current"
+              className="h-4 w-4 animate-spin text-white"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -156,7 +161,7 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
             <span>Signing in…</span>
           </>
         ) : (
-          <span>Sign In</span>
+          <span>Sign In to PMS</span>
         )}
       </button>
     </form>

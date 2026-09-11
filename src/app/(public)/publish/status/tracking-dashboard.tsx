@@ -70,6 +70,7 @@ export default function TrackingDashboard({
 }) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
+  const [brief, setBrief] = useState("");
   const [comment, setComment] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,14 +79,14 @@ export default function TrackingDashboard({
   const [previewType, setPreviewType] = useState<"layout" | "cover">("layout");
 
   const statusClass = {
-    new: "bg-foreground text-background",
-    pending_review: "bg-black/[0.08] text-foreground dark:bg-white/[0.1]",
-    under_review: "bg-warning/15 text-warning border border-warning/30",
-    needs_revision: "bg-accent/15 text-accent border border-accent/30",
-    accepted: "bg-success/15 text-success border border-success/30",
-    declined: "bg-danger/15 text-danger border border-danger/30",
-    archived: "bg-muted-foreground/15 text-muted-foreground",
-    withdrawn: "bg-muted-foreground/15 text-muted-foreground",
+    new: "bg-[#7e2562] text-white shadow-plum-sm",
+    pending_review: "bg-[#7e2562]/10 text-[#7e2562] border border-[#7e2562]/20 font-bold",
+    under_review: "bg-amber-50 text-amber-800 border border-amber-200 font-bold",
+    needs_revision: "bg-amber-100 text-amber-900 border border-amber-300 font-bold",
+    accepted: "bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold",
+    declined: "bg-rose-50 text-rose-800 border border-rose-200 font-bold",
+    archived: "bg-gray-100 text-gray-600",
+    withdrawn: "bg-gray-100 text-gray-600",
   }[submission.status] ?? "bg-surface-muted text-foreground";
 
   async function onUpload(e: React.FormEvent) {
@@ -99,6 +100,7 @@ export default function TrackingDashboard({
     const formData = new FormData();
     formData.append("action", "upload_revision");
     formData.append("manuscript", file);
+    formData.append("brief", brief.trim());
 
     try {
       const res = await fetch(`/api/public/submissions/${submission.id}/status`, {
@@ -109,8 +111,9 @@ export default function TrackingDashboard({
       if (!res.ok || !body.ok) {
         setError(body?.error ?? "Failed to upload revision");
       } else {
-        setSuccess("Revised manuscript uploaded successfully!");
+        setSuccess("Revised manuscript and brief uploaded successfully!");
         setFile(null);
+        setBrief("");
         router.refresh();
       }
     } catch {
@@ -183,10 +186,10 @@ export default function TrackingDashboard({
   return (
     <div className="space-y-6">
       {/* Header card */}
-      <div className="rounded-[28px] border border-black/[0.08] bg-surface/90 p-7 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80 sm:p-8">
+      <div className="rounded-3xl border border-[#7e2562]/15 bg-white p-7 shadow-plum-sm sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <span className="numeric text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <span className="numeric text-xs font-bold uppercase tracking-wider text-primary">
               Tracking Ref: {submission.ref_no}
             </span>
             <h2 className="mt-1 text-2xl font-bold text-foreground sm:text-3xl">{submission.title}</h2>
@@ -202,10 +205,10 @@ export default function TrackingDashboard({
 
       {/* Main portal messages based on status */}
       {(submission.status === "new" || submission.status === "pending_review") && (
-        <div className="rounded-[28px] border border-black/[0.08] bg-surface/90 p-7 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80 sm:p-8">
+        <div className="rounded-3xl border border-[#7e2562]/15 bg-white p-7 shadow-plum-sm sm:p-8">
           <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/[0.05] dark:bg-white/[0.08]">
-              <svg className="h-5 w-5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7e2562]/10 text-[#7e2562]">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -220,9 +223,9 @@ export default function TrackingDashboard({
       )}
 
       {submission.status === "under_review" && (
-        <div className="rounded-[28px] border border-black/[0.08] bg-surface/90 p-7 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80 sm:p-8">
+        <div className="rounded-3xl border border-[#7e2562]/15 bg-white p-7 shadow-plum-sm sm:p-8">
           <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning/10 text-warning">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 border border-amber-200">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -261,26 +264,45 @@ export default function TrackingDashboard({
 
           {/* Upload Form */}
           <div className="rounded-xl border border-border bg-surface p-6">
-            <h3 className="text-sm font-semibold mb-3">Upload Revised Manuscript</h3>
+            <h3 className="text-sm font-semibold mb-3">Upload Revised Manuscript &amp; Brief</h3>
             <form onSubmit={onUpload} className="space-y-4">
-              <div className="rounded-lg border border-dashed border-border bg-background p-6 text-center">
+              <div className="group relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#7e2562]/30 bg-background p-6 text-center hover:border-[#7e2562]/60 cursor-pointer">
                 <input
                   id="revised-manuscript"
                   type="file"
                   accept=".pdf,.doc,.docx,.odt"
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  className="hidden"
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0 z-10"
                 />
-                <label htmlFor="revised-manuscript" className="cursor-pointer block">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mx-auto h-8 w-8 text-muted-foreground mb-2">
+                <div className="pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mx-auto h-8 w-8 text-[#7e2562] mb-2 group-hover:scale-110 transition-transform">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
                   </svg>
-                  <span className="text-sm font-medium text-primary">Click to select revised manuscript</span>
+                  <span className="text-sm font-bold text-[#7e2562]">Click or drag &amp; drop to select revised manuscript</span>
                   <span className="block text-xs text-muted-foreground mt-1">PDF, DOC, DOCX or ODT up to 25 MB</span>
-                </label>
+                </div>
                 {file && (
-                  <p className="text-xs font-semibold text-success mt-3">Selected file: {file.name}</p>
+                  <p className="text-xs font-bold text-emerald-700 mt-3 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                    ✓ Selected: {file.name} ({Math.round((file.size / 1024 / 1024) * 100) / 100} MB)
+                  </p>
                 )}
+              </div>
+
+              <div>
+                <label htmlFor="revision-brief" className="block text-xs font-bold text-foreground mb-1.5">
+                  Author&apos;s Brief &amp; Revision Notes <span className="text-muted-foreground font-normal">(Optional)</span>
+                </label>
+                <textarea
+                  id="revision-brief"
+                  rows={3}
+                  value={brief}
+                  onChange={(e) => setBrief(e.target.value)}
+                  placeholder="Briefly describe the revisions you made in response to the editor's comments..."
+                  className="w-full rounded-xl border border-border bg-background p-3 text-xs leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:border-[#7e2562] focus:outline-none focus:ring-2 focus:ring-[#7e2562]/20"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  This optional note will be sent to the assigned editor along with your revised file.
+                </p>
               </div>
 
               {error && <p className="text-xs font-semibold text-danger">{error}</p>}
@@ -289,9 +311,9 @@ export default function TrackingDashboard({
               <button
                 type="submit"
                 disabled={pending || !file}
-                className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover disabled:opacity-60"
+                className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover disabled:opacity-60 cursor-pointer"
               >
-                {pending ? "Uploading..." : "Submit Revision"}
+                {pending ? "Uploading..." : "Submit Revised Manuscript & Brief"}
               </button>
             </form>
           </div>

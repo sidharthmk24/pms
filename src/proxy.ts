@@ -6,7 +6,7 @@ const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "kairali_session";
  * Routes served to the public, signed in or not — the "Publish With Us" flow
  * (Flow 7). Everything else in the app is staff-only.
  */
-const PUBLIC_PREFIXES = ["/publish"];
+const PUBLIC_PREFIXES = ["/publish", "/author/register", "/author/setup"];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));

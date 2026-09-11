@@ -32,7 +32,7 @@ export default async function ContractPrintPage({
   const meta = parseContractNotes(contract.term_notes);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-serif p-8 sm:p-12 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-white text-gray-900    p-8 sm:p-12 max-w-4xl mx-auto">
       <PrintTrigger />
 
       {/* Official Letterhead */}

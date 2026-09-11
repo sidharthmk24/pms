@@ -97,17 +97,30 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
   const printCost = proj.print_jobs?.cost_paise ?? 0;
 
   const statusClass = {
-    under_contract: "bg-surface-muted text-muted-foreground border-border",
-    dtp: "bg-primary/10 text-primary border-primary/20",
-    editing: "bg-warning/10 text-warning border-warning/20",
-    cover_design: "bg-accent/10 text-accent border-accent/20",
-    isbn_registration: "bg-danger/10 text-danger border-danger/20",
-    final_proof: "bg-warning/15 text-warning border-warning/30",
-    printing: "bg-primary/10 text-primary border-primary/20",
-    post_production: "bg-primary/15 text-primary border-primary/30 font-bold",
-    completed: "bg-success text-white border-success",
-    cancelled: "bg-danger/10 text-danger border-danger/20",
-  }[proj.status] ?? "bg-surface-muted text-foreground border-border";
+    under_contract: "bg-slate-100 text-slate-700 border-slate-300 font-bold",
+    dtp: "bg-sky-50 text-sky-800 border-sky-300 font-bold",
+    editing: "bg-amber-50 text-amber-800 border-amber-300 font-bold",
+    cover_design: "bg-indigo-50 text-indigo-800 border-indigo-300 font-bold",
+    isbn_registration: "bg-blue-50 text-blue-800 border-blue-300 font-bold",
+    final_proof: "bg-orange-50 text-orange-800 border-orange-300 font-bold",
+    printing: "bg-[#faedf5] text-[#7e2562] border-[#7e2562]/35 font-bold",
+    post_production: "bg-teal-50 text-teal-800 border-teal-300 font-bold",
+    completed: "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-2xs",
+    cancelled: "bg-rose-50 text-rose-800 border-rose-300 font-bold",
+  }[proj.status] ?? "bg-slate-100 text-slate-700 border-slate-300";
+
+  const statusDot = {
+    under_contract: "bg-slate-500",
+    dtp: "bg-sky-600",
+    editing: "bg-amber-600",
+    cover_design: "bg-indigo-600",
+    isbn_registration: "bg-blue-600",
+    final_proof: "bg-orange-600",
+    printing: "bg-[#7e2562]",
+    post_production: "bg-teal-600",
+    completed: "bg-emerald-600",
+    cancelled: "bg-rose-600",
+  }[proj.status] ?? "bg-slate-500";
 
   // Fetch staff names for stages display
   const staffMap = new Map(activeUsers.map((u) => [u.id, u.name]));
@@ -122,29 +135,36 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <nav className="mb-6 text-sm">
-        <Link href="/production" className="text-muted-foreground hover:text-foreground">
-          ← Back to production projects
+    <div className="mx-auto max-w-6xl animate-apple-in space-y-6">
+      {/* Top Left Back Navigation */}
+      <div className="flex items-center justify-between">
+        <Link
+          href="/production"
+          className="apple-button inline-flex items-center gap-2 rounded-xl border border-[#7e2562]/20 bg-white px-3.5 py-2 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/35 transition-all group"
+        >
+          <svg className="h-4 w-4 text-[#7e2562] transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span>Back to Production</span>
         </Link>
-      </nav>
+      </div>
 
-      <header className="mb-8 flex flex-wrap items-start justify-between gap-4 border-b border-border pb-6">
+      {/* Header with Navigation and Status */}
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end border-b border-[#7e2562]/10 pb-6">
         <div>
-          <span className="numeric text-xs font-semibold text-muted-foreground">
-            Production ID: {proj.id.slice(0, 8)}
-          </span>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{proj.titles.name}</h1>
+       
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            {proj.titles.name}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Author: <strong>{proj.titles.authors?.name ?? "Unknown Author"}</strong> · ISBN: {proj.titles.isbn || "Pending Registration"}
           </p>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <span className={`rounded-md border px-2.5 py-1 text-xs font-semibold ${statusClass}`}>
+
+        <div className="flex items-center gap-3">
+          <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs ${statusClass}`}>
+            <span className={`h-2 w-2 rounded-full ${statusDot}`} />
             {STATUS_LABELS[proj.status] ?? proj.status}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            Project initialized {formatIST(proj.created_at)}
           </span>
         </div>
       </header>
@@ -154,7 +174,7 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
         {/* Left column: Overview details (Sticky while right column scrolls) */}
         <section className="space-y-6 md:col-span-1 md:sticky md:top-20 md:self-start md:max-h-[calc(100vh-6rem)] md:overflow-y-auto pr-1">
           {/* Task Progress list */}
-          <div className="rounded-xl border border-border bg-surface p-5">
+          <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
             <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
               Pipeline Status Tracker
             </h2>
@@ -306,7 +326,7 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
 
           {/* Uploaded Deliverables Preview */}
           {(proj.final_layout_path || proj.final_cover_path) && (
-            <div className="rounded-xl border border-border bg-surface p-5 space-y-2">
+            <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Uploaded Production Deliverables</h3>
               <p className="text-xs text-muted-foreground">
                 Inspect uploaded typeset layout drafts and cover artwork in the in-browser viewer.
@@ -322,15 +342,15 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
 
           {/* Author Proof review loops detail */}
           {proj.status === "final_proof" && (
-            <div className="rounded-xl border border-border bg-surface p-5">
+            <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
               <h3 className="text-sm font-semibold mb-2">Final Copy Proofing</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 The manuscript layout PDF and cover design artwork have been generated. The project is currently awaiting 
                 author review and digital sign-off from their email or portal.
               </p>
               {proj.proof_feedback && (
-                <div className="bg-accent/5 border border-accent/20 rounded-lg p-4">
-                  <h4 className="text-xs font-semibold text-accent mb-1">Author Revision Feedback Comments</h4>
+                <div className="bg-[#faedf5]/40 border border-[#7e2562]/20 rounded-2xl p-4">
+                  <h4 className="text-xs font-bold text-[#7e2562] mb-1">Author Revision Feedback Comments</h4>
                   <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
                     {proj.proof_feedback}
                   </p>

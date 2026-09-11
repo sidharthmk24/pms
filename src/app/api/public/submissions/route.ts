@@ -4,6 +4,7 @@ import { audit } from "@/lib/audit";
 import { queueEmail, submissionReceivedEmail } from "@/lib/mail";
 import { getResponseWeeks, submissionsOpen } from "@/lib/settings";
 import { discardManuscript, storeManuscript, UploadError } from "@/lib/storage";
+import { getSessionUser } from "@/lib/session";
 import {
   allowSubmission,
   createSubmission,
@@ -11,10 +12,16 @@ import {
   type ManuscriptMeta,
 } from "@/lib/submissions";
 
-/** Public endpoint — deliberately unauthenticated. See src/proxy.ts allowlist. */
+/** Manuscript submission endpoint — requires authenticated author. */
 export const POST = handler(async (req: Request) => {
   if (!(await submissionsOpen())) {
     return fail(503, "Submissions are closed at the moment. Please check back soon.");
+  }
+
+  // Author MUST be signed in to submit
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) {
+    return fail(401, "You must be signed in with an author account to submit a manuscript. Please log in or create an account.");
   }
 
   const ip =
@@ -36,9 +43,9 @@ export const POST = handler(async (req: Request) => {
   }
 
   const fields = SubmissionSchema.parse({
-    author_name: form.get("author_name") ?? "",
+    author_name: (form.get("author_name") as string)?.trim() || sessionUser.name,
     author_name_ml: form.get("author_name_ml") ?? "",
-    email: form.get("email") ?? "",
+    email: sessionUser.email.toLowerCase().trim(),
     phone: form.get("phone") ?? "",
     place: form.get("place") ?? "",
     title: form.get("title") ?? "",

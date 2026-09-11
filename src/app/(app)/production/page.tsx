@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { formatIST } from "@/lib/time";
+import { formatIST, formatTimeIST } from "@/lib/time";
+import ProductionFilterBar from "./production-filter-bar";
 
 export const metadata: Metadata = { title: "Production Pipeline · Kairali PMS" };
 export const dynamic = "force-dynamic";
@@ -21,23 +22,44 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_BADGE_STYLES: Record<string, string> = {
-  under_contract: "bg-black/[0.04] text-muted-foreground dark:bg-white/[0.06]",
-  dtp: "bg-foreground text-background",
-  editing: "bg-warning/10 text-warning border border-warning/20",
-  cover_design: "bg-black/[0.06] text-foreground border border-black/10 dark:bg-white/[0.08]",
-  isbn_registration: "bg-danger/10 text-danger border border-danger/20",
-  final_proof: "bg-warning/15 text-warning border border-warning/30",
-  printing: "bg-foreground/[0.08] text-foreground border border-foreground/20 font-semibold",
-  post_production: "bg-primary/15 text-primary border border-primary/30 font-bold",
-  completed: "bg-foreground text-background font-semibold",
-  cancelled: "bg-danger/10 text-danger border border-danger/20",
+  under_contract: "bg-slate-100 text-slate-700 border border-slate-300 font-bold",
+  dtp: "bg-sky-50 text-sky-800 border border-sky-300 font-bold",
+  editing: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
+  cover_design: "bg-indigo-50 text-indigo-800 border border-indigo-300 font-bold",
+  isbn_registration: "bg-blue-50 text-blue-800 border border-blue-300 font-bold",
+  final_proof: "bg-orange-50 text-orange-800 border border-orange-300 font-bold",
+  printing: "bg-[#faedf5] text-[#7e2562] border border-[#7e2562]/35 font-bold",
+  post_production: "bg-teal-50 text-teal-800 border border-teal-300 font-bold",
+  completed: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold shadow-2xs",
+  cancelled: "bg-rose-50 text-rose-800 border border-rose-300 font-bold",
 };
 
-export default async function ProductionListPage() {
+const STATUS_DOT_STYLES: Record<string, string> = {
+  under_contract: "bg-slate-500",
+  dtp: "bg-sky-600",
+  editing: "bg-amber-600",
+  cover_design: "bg-indigo-600",
+  isbn_registration: "bg-blue-600",
+  final_proof: "bg-orange-600",
+  printing: "bg-[#7e2562]",
+  post_production: "bg-teal-600",
+  completed: "bg-emerald-600",
+  cancelled: "bg-rose-600",
+};
+
+export default async function ProductionListPage({
+  searchParams,
+}: PageProps<"/production">) {
   const user = await requireCapability("production_pipeline.read");
   const isManager = user.role === "owner" || user.role === "accounts" || user.role === "production";
 
-  const whereClause = isManager
+  const { status, category, sort } = await searchParams;
+
+  const filterStatus = typeof status === "string" ? status : undefined;
+  const filterCategory = typeof category === "string" ? category : undefined;
+  const filterSort = typeof sort === "string" ? sort : "updated_desc";
+
+  const baseWhere = isManager
     ? {}
     : {
         OR: [
@@ -49,34 +71,67 @@ export default async function ProductionListPage() {
         ],
       };
 
-  const projects = await prisma.production_projects.findMany({
-    where: whereClause,
-    orderBy: { updated_at: "desc" },
-    include: {
-      titles: {
-        select: {
-          name: true,
-          category: true,
-          language: true,
-          authors: { select: { name: true } },
+  const whereClause: any = {
+    ...baseWhere,
+    ...(filterStatus ? { status: filterStatus } : {}),
+    ...(filterCategory ? { titles: { category: filterCategory } } : {}),
+  };
+
+  let orderBy: any = { updated_at: "desc" };
+  if (filterSort === "updated_asc") {
+    orderBy = { updated_at: "asc" };
+  } else if (filterSort === "created_desc") {
+    orderBy = { created_at: "desc" };
+  } else if (filterSort === "created_asc") {
+    orderBy = { created_at: "asc" };
+  } else if (filterSort === "title_asc") {
+    orderBy = { titles: { name: "asc" } };
+  } else if (filterSort === "title_desc") {
+    orderBy = { titles: { name: "desc" } };
+  } else if (filterSort === "author_asc") {
+    orderBy = { titles: { authors: { name: "asc" } } };
+  } else if (filterSort === "author_desc") {
+    orderBy = { titles: { authors: { name: "desc" } } };
+  } else if (filterSort === "status_asc") {
+    orderBy = { status: "asc" };
+  }
+
+  const [projects, categoriesRaw] = await Promise.all([
+    prisma.production_projects.findMany({
+      where: whereClause,
+      orderBy,
+      include: {
+        titles: {
+          select: {
+            name: true,
+            category: true,
+            language: true,
+            authors: { select: { name: true } },
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.titles.findMany({
+      where: { production_projects: { isNot: null } },
+      select: { category: true },
+      distinct: ["category"],
+    }),
+  ]);
+
+  const categories = categoriesRaw
+    .map((c) => c.category)
+    .filter((c): c is string => Boolean(c && c.trim()))
+    .sort();
 
   return (
     <div className="mx-auto max-w-6xl animate-apple-in space-y-6">
       {/* Header */}
       <header className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-black/10 bg-black/[0.04] px-3.5 py-1 text-xs font-semibold text-muted-foreground dark:border-white/10 dark:bg-white/[0.06]">
-            <span className="h-2 w-2 rounded-full bg-foreground/80" />
-            <span>Workflow & Pipeline</span>
-          </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Production Pipeline
+            Production Flow
           </h1>
-          <p className="mt-1.5 text-base font-medium text-muted-foreground">
+          <p className="mt-1.5 text-base  text-muted-foreground">
             {isManager
               ? "Track publishing schedules, assignments, and print runs"
               : "Review and complete your active production milestones"}
@@ -84,18 +139,27 @@ export default async function ProductionListPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="rounded-full border border-black/10 bg-surface px-4 py-1.5 text-xs font-bold text-muted-foreground shadow-xs dark:border-white/15 dark:bg-surface-muted/60">
+          <span className="rounded-full border border-[#7e2562]/20 bg-white px-4 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs">
             {projects.length} Active Projects
           </span>
         </div>
       </header>
 
+      {/* Filter Toolbar */}
+      <ProductionFilterBar
+        statusLabels={STATUS_LABELS}
+        categories={categories}
+        currentStatus={filterStatus}
+        currentCategory={filterCategory}
+        currentSort={filterSort}
+      />
+
       {/* Projects Table Card */}
-      <section className="overflow-hidden rounded-[24px] border border-black/[0.08] bg-surface/90 shadow-[0_2px_8px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
+      <section className="relative z-10 overflow-hidden rounded-3xl border border-[#7e2562]/15 bg-white shadow-plum-sm">
         {projects.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-black/[0.04] dark:bg-white/[0.06]">
-              <svg className="h-7 w-7 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7e2562]/8 text-[#7e2562]">
+              <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
@@ -106,16 +170,16 @@ export default async function ProductionListPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-base">
               <thead>
-                <tr className="border-b border-black/[0.08] bg-black/[0.02] text-left text-xs font-bold uppercase tracking-wider text-muted-foreground dark:border-white/[0.1] dark:bg-white/[0.03]">
-                  <th className="px-6 py-4">Book Title</th>
-                  <th className="px-6 py-4">Author</th>
-                  <th className="px-6 py-4">Active Stage</th>
-                  <th className="px-6 py-4">Deadline</th>
-                  <th className="px-6 py-4 text-right">Last Updated</th>
-                  <th className="px-6 py-4 text-right">Action</th>
+                <tr className="border-b border-[#7e2562]/10 bg-[#faf6f9]/60 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-6 py-4 whitespace-nowrap">Book Title</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Author</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Active Stage</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Deadline</th>
+                  <th className="px-6 py-4 text-right whitespace-nowrap">Last Updated</th>
+                  <th className="px-6 py-4 text-right whitespace-nowrap">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/[0.05] dark:divide-white/[0.06]">
+              <tbody className="divide-y divide-[#7e2562]/8">
                 {projects.map((proj) => {
                   let activeDeadline: string | null = null;
                   if (proj.status === "dtp") activeDeadline = proj.dtp_deadline;
@@ -127,12 +191,14 @@ export default async function ProductionListPage() {
                   const isOverdue = activeDeadline && new Date(activeDeadline) < new Date();
                   const statusClass =
                     STATUS_BADGE_STYLES[proj.status] ??
-                    "bg-black/[0.05] text-foreground dark:bg-white/[0.08]";
+                    "bg-slate-100 text-slate-700 border border-slate-300 font-bold";
+                  const dotClass =
+                    STATUS_DOT_STYLES[proj.status] ?? "bg-slate-500";
 
                   return (
                     <tr
                       key={proj.id}
-                      className="transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
+                      className="transition-colors hover:bg-[#faf6f9]/50"
                     >
                       <td className="px-6 py-4.5">
                         <span className="block font-bold text-foreground">{proj.titles.name}</span>
@@ -143,12 +209,13 @@ export default async function ProductionListPage() {
                       <td className="px-6 py-4.5 font-semibold text-foreground">
                         {proj.titles.authors?.name ?? "Unknown Author"}
                       </td>
-                      <td className="px-6 py-4.5">
-                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${statusClass}`}>
+                      <td className="px-6 py-4.5 whitespace-nowrap">
+                        <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap ${statusClass}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
                           {STATUS_LABELS[proj.status] ?? proj.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4.5 text-sm font-semibold">
+                      <td className="px-6 py-4.5 text-sm font-semibold whitespace-nowrap">
                         {activeDeadline ? (
                           <span
                             className={
@@ -168,16 +235,21 @@ export default async function ProductionListPage() {
                           <span className="text-muted-foreground/70">No deadline</span>
                         )}
                       </td>
-                      <td className="numeric px-6 py-4.5 text-right text-sm font-medium text-muted-foreground">
-                        {formatIST(proj.updated_at)}
+                      <td className="numeric px-6 py-4.5 text-right text-sm whitespace-nowrap">
+                        <span className="block font-semibold text-foreground">
+                          {formatIST(proj.updated_at, false)}
+                        </span>
+                        <span className="block text-xs font-medium text-muted-foreground">
+                          {formatTimeIST(proj.updated_at)}
+                        </span>
                       </td>
-                      <td className="px-6 py-4.5 text-right">
+                      <td className="px-6 py-4.5 text-right whitespace-nowrap">
                         <Link
                           href={`/production/${proj.id}`}
-                          className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-black/15 bg-surface px-4 py-2 text-xs font-bold text-foreground shadow-xs hover:bg-black/5 hover:border-black/30 dark:border-white/15 dark:bg-surface-muted/60 dark:hover:bg-white/10"
+                          className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/25 bg-white px-3.5 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#7e2562] hover:text-white hover:border-[#7e2562] hover:shadow-plum-sm transition-all group"
                         >
                           <span>{isManager ? "Manage" : "Update Tasks"}</span>
-                          <svg className="h-3.5 w-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <svg className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                           </svg>
                         </Link>

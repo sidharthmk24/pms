@@ -10,6 +10,9 @@ export default async function TeamManagementPage() {
   const user = await requireCapability("users.manage");
 
   const users = await prisma.users.findMany({
+    where: {
+      role: { not: "author" },
+    },
     select: {
       id: true,
       name: true,

@@ -20,7 +20,7 @@ export default async function AuthorSubmitPage() {
   });
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 pb-12">
+    <div className="mx-auto max-w-4xl space-y-6 pb-12">
       {/* Top Breadcrumb / Back Link */}
       <div>
         <Link

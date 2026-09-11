@@ -18,10 +18,11 @@ export const AUTHOR_NAV: NavItem[] = [
 
 export const NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", capability: null, ready: true },
+  { label: "Activity Logs", href: "/activity", capability: null, ready: true },
   { label: "Submissions", href: "/submissions", capability: "submissions.read", ready: true },
   { label: "Production", href: "/production", capability: "production_pipeline.read", ready: true },
   { label: "Published Books", href: "/titles", capability: "titles.read", ready: true },
-  { label: "Authors", href: "/authors", capability: "authors.read", ready: false },
+  { label: "Authors", href: "/authors", capability: "authors.read", ready: true },
   { label: "Contracts", href: "/contracts", capability: "contracts.read", ready: true },
   { label: "Sales", href: "/sales", capability: "sales.read", ready: false },
   { label: "Dealers", href: "/dealers", capability: "dealers.read", ready: false },

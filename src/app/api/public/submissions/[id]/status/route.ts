@@ -37,6 +37,8 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       return fail(400, "Please attach a valid revised manuscript file");
     }
 
+    const brief = (form.get("brief") as string)?.trim() || "";
+
     // Write new file to disk
     let stored;
     try {
@@ -47,6 +49,10 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     }
 
     const oldPath = sub.manuscript_path;
+    const now = stamp();
+    const updatedNotes = brief
+      ? `[Author Revision Brief - ${now}]:\n${brief}\n\n[Previous Editor Feedback]:\n${sub.review_notes || "None"}`
+      : sub.review_notes;
 
     try {
       // Update database
@@ -54,11 +60,12 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         where: { id },
         data: {
           status: "under_review",
+          review_notes: updatedNotes,
           manuscript_path: stored.relativePath,
           manuscript_filename: stored.filename,
           manuscript_size: stored.size,
           manuscript_mime: stored.mime,
-          updated_at: stamp(),
+          updated_at: now,
         },
       });
 
@@ -78,7 +85,9 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         to: sub.users.email,
         toName: sub.users.name,
         subject: `Revised manuscript uploaded — ${sub.ref_no}`,
-        text: `Dear ${sub.users.name},\n\nThe author of "${sub.title}" (${sub.ref_no}) has uploaded a revised manuscript for your review.\n\nPlease log into the PMS dashboard to review the changes.`,
+        text: `Dear ${sub.users.name},\n\nThe author of "${sub.title}" (${sub.ref_no}) has uploaded a revised manuscript for your review.\n\n${
+          brief ? `Author's Revision Brief:\n"${brief}"\n\n` : ""
+        }Please log into the PMS dashboard to review the changes.`,
       });
     }
 
@@ -87,7 +96,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       action: "author_upload_revision",
       entity: "submission",
       entityId: id,
-      detail: { ref_no: sub.ref_no, title: sub.title },
+      detail: { ref_no: sub.ref_no, title: sub.title, brief: brief ? brief.slice(0, 200) : undefined },
     });
 
     return ok({ success: true });

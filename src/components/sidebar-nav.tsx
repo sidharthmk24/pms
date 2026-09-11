@@ -14,6 +14,12 @@ function getNavIcon(href: string): ReactNode {
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
         </svg>
       );
+    case "/activity":
+      return (
+        <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
     case "/publish/submit":
     case "/author/submit":
       return (
@@ -125,21 +131,21 @@ export default function SidebarNav({ items }: { items: NavItem[] }) {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`apple-button group flex items-center justify-between rounded-xl px-3.5 py-2.5 text-[15px] font-medium transition-colors duration-150 ${
+            className={`apple-button group flex items-center justify-between rounded-xl px-3.5 py-2.5 text-[15px] font-medium transition-all duration-150 ${
               active
-                ? "bg-foreground text-background shadow-[0_2px_8px_rgba(0,0,0,0.12)] font-semibold dark:bg-foreground dark:text-background"
-                : "text-foreground/85 hover:bg-black/[0.04] hover:text-foreground dark:text-muted-foreground dark:hover:bg-white/[0.06] dark:hover:text-foreground"
+                ? "bg-primary text-white shadow-plum-sm font-semibold"
+                : "text-foreground/80 hover:bg-[#7e2562]/8 hover:text-primary"
             }`}
           >
             <span className="flex items-center gap-3">
-              <span className={active ? "opacity-100" : "opacity-70 group-hover:opacity-100 transition-opacity"}>
+              <span className={active ? "opacity-100 text-white" : "opacity-70 group-hover:opacity-100 group-hover:text-primary transition-all"}>
                 {icon}
               </span>
               <span>{item.label}</span>
             </span>
-            {/* {active && (
-              <span className="h-2 w-2 rounded-full bg-background opacity-90" />
-            )} */}
+            {active && (
+              <span className="h-1.5 w-1.5 rounded-full bg-white opacity-80" />
+            )}
           </Link>
         );
       })}

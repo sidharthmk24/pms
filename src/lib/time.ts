@@ -38,3 +38,15 @@ export function formatIST(s: string | null | undefined, withTime = true): string
     ...(withTime ? { timeStyle: "short" as const } : {}),
   }).format(d);
 }
+
+/** Render only the time part of a stored stamp in Asia/Kolkata. */
+export function formatTimeIST(s: string | null | undefined): string {
+  if (!s) return "";
+  const d = s.length <= 10 ? new Date(`${s}T00:00:00Z`) : parseStamp(s);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    timeStyle: "short",
+  }).format(d);
+}
+

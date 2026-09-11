@@ -47,7 +47,7 @@ export default async function StatusTrackingPage({ searchParams }: PageProps<"/p
       <nav className="mb-6">
         <Link
           href="/publish"
-          className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-surface px-3.5 py-1.5 text-xs font-bold text-muted-foreground shadow-xs hover:bg-black/5 hover:text-foreground dark:border-white/10 dark:bg-surface-muted/60 dark:hover:bg-white/10"
+          className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/20 bg-white px-3.5 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5]"
         >
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -58,26 +58,26 @@ export default async function StatusTrackingPage({ searchParams }: PageProps<"/p
 
       {/* Header */}
       <header className="mb-8">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-black/[0.04] px-3.5 py-1 text-xs font-bold text-muted-foreground dark:border-white/10 dark:bg-white/[0.06]">
-          <span className="h-2 w-2 rounded-full bg-foreground/80" />
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#7e2562]/20 bg-[#faedf5] px-3.5 py-1 text-xs font-bold text-[#7e2562]">
+          <span className="h-2 w-2 rounded-full bg-[#7e2562]" />
           <span>Author Tracking Portal</span>
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
           Track Your Manuscript
         </h1>
-        <p className="mt-2 text-base text-muted-foreground">
-          Check live review progress, editorial feedback, revision requests, or digitally sign your publishing contract.
+        <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">
+          Check live review progress, editorial feedback, revision requests, or digitally execute your publishing contract.
         </p>
       </header>
 
       {submission ? (
         <TrackingDashboard submission={submission} contract={contract} production={production} />
       ) : (
-        <section className="rounded-[28px] border border-black/[0.08] bg-surface/90 p-7 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80 sm:p-9">
+        <section className="rounded-3xl border border-[#7e2562]/15 bg-white p-7 shadow-plum-sm sm:p-9">
           <form method="GET" action="/publish/status" className="space-y-6">
             <div>
               <label htmlFor="ref" className="mb-2 block text-sm font-bold text-foreground">
-                Reference Number <span className="text-danger">*</span>
+                Reference Tracking Number <span className="text-rose-600 font-bold">*</span>
               </label>
               <input
                 id="ref"
@@ -86,16 +86,16 @@ export default async function StatusTrackingPage({ searchParams }: PageProps<"/p
                 required
                 placeholder="e.g. SUB-2026-0004"
                 defaultValue={refNo ?? ""}
-                className="w-full rounded-xl border border-black/15 bg-background/90 px-4 py-3.5 text-base font-semibold text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-foreground dark:border-white/15 dark:bg-surface-muted/80"
+                className="w-full rounded-xl border border-[#7e2562]/20 bg-white px-4 py-3.5 text-base font-semibold text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15"
               />
-              <p className="mt-1.5 text-xs font-medium text-muted-foreground">
-                Found in your confirmation email or submission receipt screen
+              <p className="mt-2 text-xs font-medium text-muted-foreground">
+                Delivered in your confirmation email upon submission
               </p>
             </div>
 
             <div>
               <label htmlFor="email" className="mb-2 block text-sm font-bold text-foreground">
-                Author Email Address <span className="text-danger">*</span>
+                Author Email Address <span className="text-rose-600 font-bold">*</span>
               </label>
               <input
                 id="email"
@@ -104,22 +104,22 @@ export default async function StatusTrackingPage({ searchParams }: PageProps<"/p
                 required
                 placeholder="you@example.com"
                 defaultValue={authorEmail ?? ""}
-                className="w-full rounded-xl border border-black/15 bg-background/90 px-4 py-3.5 text-base font-semibold text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-foreground dark:border-white/15 dark:bg-surface-muted/80"
+                className="w-full rounded-xl border border-[#7e2562]/20 bg-white px-4 py-3.5 text-base font-semibold text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15"
               />
-              <p className="mt-1.5 text-xs font-medium text-muted-foreground">
-                The email address you submitted with the manuscript
+              <p className="mt-2 text-xs font-medium text-muted-foreground">
+                The email address registered when submitting your manuscript
               </p>
             </div>
 
             {errorMsg && (
-              <div role="alert" className="rounded-2xl border border-danger/20 bg-danger/10 p-4 text-sm font-bold text-danger">
+              <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-800">
                 {errorMsg}
               </div>
             )}
 
             <button
               type="submit"
-              className="apple-button inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-primary-foreground shadow-md hover:bg-primary-hover"
+              className="apple-button inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-primary py-4 text-base font-bold text-white shadow-plum-md hover:bg-primary-hover hover:shadow-plum-lg"
             >
               <span>Check Manuscript Status</span>
               <svg className="h-5 w-5 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

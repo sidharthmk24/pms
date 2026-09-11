@@ -64,6 +64,44 @@ export type TitleItem = {
 type SortField = "name" | "author" | "mrp" | "stock" | "isbn" | "created_at";
 type SortOrder = "asc" | "desc";
 
+function BookCoverThumbnail({
+  title,
+  projectId,
+  hasCover,
+}: {
+  title: string;
+  projectId?: string | null;
+  hasCover?: boolean;
+}) {
+  const [imageError, setImageError] = useState(false);
+  const coverUrl =
+    projectId && hasCover && !imageError
+      ? `/api/public/production/${projectId}/download?type=cover&mode=inline`
+      : null;
+
+  if (coverUrl) {
+    return (
+      <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded-md border border-black/10 bg-[#faf6f9] shadow-2xs group-hover:scale-105 transition-transform">
+        <img
+          src={coverUrl}
+          alt={title}
+          onError={() => setImageError(true)}
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-12 w-9 shrink-0 items-center justify-center rounded-md border border-[#7e2562]/20 bg-gradient-to-br from-[#7e2562]/10 to-[#7e2562]/5 shadow-2xs group-hover:scale-105 transition-transform text-[#7e2562]">
+      <svg className="h-4.5 w-4.5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    </div>
+  );
+}
+
 export function TitlesClient({
   initialTitles,
   categories,
@@ -146,9 +184,9 @@ export function TitlesClient({
         if (sortField === "name") {
           cmp = a.name.localeCompare(b.name);
         } else if (sortField === "author") {
-          const authorA = a.authors?.name || "";
-          const authorB = b.authors?.name || "";
-          cmp = authorA.localeCompare(authorB);
+          const aAuthor = a.authors?.name || "";
+          const bAuthor = b.authors?.name || "";
+          cmp = aAuthor.localeCompare(bAuthor);
         } else if (sortField === "mrp") {
           cmp = a.mrp_paise - b.mrp_paise;
         } else if (sortField === "stock") {
@@ -164,9 +202,17 @@ export function TitlesClient({
   }, [initialTitles, search, selectedCategory, stockFilter, sortField, sortOrder]);
 
   // Overall catalog metrics
-  const totalStock = useMemo(() => initialTitles.reduce((acc, t) => acc + (t.stock || 0), 0), [initialTitles]);
-  const totalValuation = useMemo(() => initialTitles.reduce((acc, t) => acc + (t.stock * t.mrp_paise || 0), 0), [initialTitles]);
-  const lowStockCount = useMemo(() => initialTitles.filter((t) => t.stock > 0 && t.stock <= t.reorder_level).length, [initialTitles]);
+  const totalStock = useMemo(() => {
+    return initialTitles.reduce((acc, t) => acc + (t.stock > 0 ? t.stock : 0), 0);
+  }, [initialTitles]);
+
+  const totalValuation = useMemo(() => {
+    return initialTitles.reduce((acc, t) => acc + (t.stock > 0 ? t.stock * t.mrp_paise : 0), 0);
+  }, [initialTitles]);
+
+  const lowStockCount = useMemo(() => {
+    return initialTitles.filter((t) => t.stock > 0 && t.stock <= t.reorder_level).length;
+  }, [initialTitles]);
 
   const categoryOptions: DropdownOption[] = useMemo(() => [
     { value: "all", label: `All Genres (${categories.length})` },
@@ -178,10 +224,10 @@ export function TitlesClient({
 
   const stockOptions: DropdownOption[] = useMemo(() => [
     { value: "all", label: "All Inventory Status" },
-    { value: "in_stock", label: "🟢 In Stock (> 0)" },
-    { value: "low_stock", label: "🟡 Low Stock (≤ reorder)" },
-    { value: "out_of_stock", label: "🔴 Out of Stock (0)" },
-    { value: "out_of_print", label: "⚪ Out of Print" },
+    { value: "in_stock", label: "In Stock (> 0)" },
+    { value: "low_stock", label: "Low Stock (≤ reorder)" },
+    { value: "out_of_stock", label: "Out of Stock (0)" },
+    { value: "out_of_print", label: "Out of Print" },
   ], []);
 
   return (
@@ -191,7 +237,11 @@ export function TitlesClient({
         <div className="rounded-2xl border border-black/[0.08] bg-surface p-4 shadow-xs dark:border-white/[0.08]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Catalog Titles</span>
-            <span className="rounded-lg bg-primary/10 p-2 text-primary">📚</span>
+            <span className="rounded-xl bg-primary/10 p-2.5 text-primary">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </span>
           </div>
           <p className="mt-2 text-2xl font-black tracking-tight text-foreground">{initialTitles.length}</p>
           <span className="text-[11px] text-muted-foreground">Published &amp; registered books</span>
@@ -200,7 +250,11 @@ export function TitlesClient({
         <div className="rounded-2xl border border-black/[0.08] bg-surface p-4 shadow-xs dark:border-white/[0.08]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Warehouse Stock</span>
-            <span className="rounded-lg bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-400">📦</span>
+            <span className="rounded-xl bg-emerald-500/10 p-2.5 text-emerald-600 dark:text-emerald-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </span>
           </div>
           <p className="mt-2 text-2xl font-black tracking-tight text-foreground">{totalStock.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">copies</span></p>
           <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">Available inventory</span>
@@ -209,7 +263,11 @@ export function TitlesClient({
         <div className="rounded-2xl border border-black/[0.08] bg-surface p-4 shadow-xs dark:border-white/[0.08]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Inventory Valuation</span>
-            <span className="rounded-lg bg-blue-500/10 p-2 text-blue-600 dark:text-blue-400">💰</span>
+            <span className="rounded-xl bg-blue-500/10 p-2.5 text-blue-600 dark:text-blue-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
           </div>
           <p className="mt-2 text-2xl font-black tracking-tight text-foreground">{formatPaise(totalValuation)}</p>
           <span className="text-[11px] text-muted-foreground">Total retail MRP value</span>
@@ -218,7 +276,11 @@ export function TitlesClient({
         <div className="rounded-2xl border border-black/[0.08] bg-surface p-4 shadow-xs dark:border-white/[0.08]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Low Stock Alerts</span>
-            <span className="rounded-lg bg-amber-500/10 p-2 text-amber-600 dark:text-amber-400">⚠️</span>
+            <span className="rounded-xl bg-amber-500/10 p-2.5 text-amber-600 dark:text-amber-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </span>
           </div>
           <p className="mt-2 text-2xl font-black tracking-tight text-foreground">{lowStockCount}</p>
           <span className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">Titles below reorder limit</span>
@@ -300,14 +362,14 @@ export function TitlesClient({
       </div>
 
       {/* Main Titles Table */}
-      <div className="rounded-2xl border border-black/[0.08] bg-surface shadow-xs dark:border-white/[0.08] overflow-hidden">
+      <div className="relative z-10 rounded-3xl border border-[#7e2562]/15 bg-white shadow-plum-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-black/[0.08] bg-black/[0.02] text-muted-foreground font-semibold dark:border-white/[0.08] dark:bg-white/[0.02]">
+              <tr className="border-b border-[#7e2562]/10 bg-[#faf6f9]/60 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 <th
                   onClick={() => toggleSort("name")}
-                  className="py-3.5 px-4 cursor-pointer hover:text-foreground transition select-none"
+                  className="py-3.5 px-4 cursor-pointer hover:text-foreground transition select-none whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1.5">
                     <span>Book Title</span>
@@ -318,7 +380,7 @@ export function TitlesClient({
                 </th>
                 <th
                   onClick={() => toggleSort("author")}
-                  className="py-3.5 px-4 cursor-pointer hover:text-foreground transition select-none"
+                  className="py-3.5 px-4 cursor-pointer hover:text-foreground transition select-none whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1.5">
                     <span>Author</span>
@@ -329,7 +391,7 @@ export function TitlesClient({
                 </th>
                 <th
                   onClick={() => toggleSort("isbn")}
-                  className="py-3.5 px-4 cursor-pointer hover:text-foreground transition select-none"
+                  className="py-3.5 px-4 cursor-pointer hover:text-foreground transition select-none whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1.5">
                     <span>ISBN</span>
@@ -338,10 +400,10 @@ export function TitlesClient({
                     )}
                   </div>
                 </th>
-                <th className="py-3.5 px-4">Genre / Edition</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Genre / Edition</th>
                 <th
                   onClick={() => toggleSort("mrp")}
-                  className="py-3.5 px-4 text-right cursor-pointer hover:text-foreground transition select-none"
+                  className="py-3.5 px-4 text-right cursor-pointer hover:text-foreground transition select-none whitespace-nowrap"
                 >
                   <div className="flex items-center justify-end gap-1.5">
                     <span>MRP</span>
@@ -352,7 +414,7 @@ export function TitlesClient({
                 </th>
                 <th
                   onClick={() => toggleSort("stock")}
-                  className="py-3.5 px-4 text-center cursor-pointer hover:text-foreground transition select-none"
+                  className="py-3.5 px-4 text-center cursor-pointer hover:text-foreground transition select-none whitespace-nowrap"
                 >
                   <div className="flex items-center justify-center gap-1.5">
                     <span>Warehouse Stock</span>
@@ -361,7 +423,7 @@ export function TitlesClient({
                     )}
                   </div>
                 </th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+                <th className="py-3.5 px-4 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-black/[0.06] dark:divide-white/[0.06]">
@@ -374,22 +436,20 @@ export function TitlesClient({
                 </tr>
               ) : (
                 filteredTitles.map((title) => {
-                  const isLow = title.stock > 0 && title.stock <= title.reorder_level;
-                  const isOut = title.stock === 0 && title.status !== "out_of_print";
-                  const isOutOfPrint = title.status === "out_of_print";
-
                   return (
                     <tr
                       key={title.id}
                       onClick={() => setSelectedBook(title)}
                       className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition cursor-pointer group"
                     >
-                      {/* Title & Language */}
+                      {/* Title & Cover Image */}
                       <td className="py-3 px-4">
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-10 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 border border-primary/20 text-xs font-bold text-primary shadow-2xs group-hover:scale-105 transition-transform">
-                            📖
-                          </div>
+                        <div className="flex items-center gap-3">
+                          <BookCoverThumbnail
+                            title={title.name}
+                            projectId={title.production_projects?.id}
+                            hasCover={Boolean(title.production_projects?.final_cover_path)}
+                          />
                           <div className="min-w-0">
                             <span className="font-bold text-foreground block truncate max-w-xs sm:max-w-sm group-hover:text-primary transition-colors">
                               {title.name}
@@ -426,12 +486,18 @@ export function TitlesClient({
                             type="button"
                             onClick={(e) => copyToClipboard(title.isbn!, e)}
                             title="Click to copy ISBN"
-                            className="inline-flex items-center gap-1 rounded-md bg-black/5 dark:bg-white/5 px-2 py-0.5 font-bold hover:bg-primary/15 hover:text-primary transition cursor-pointer"
+                            className="inline-flex items-center gap-1.5 rounded-md bg-black/5 dark:bg-white/5 px-2 py-1 font-bold hover:bg-primary/15 hover:text-primary transition cursor-pointer"
                           >
                             <span>{title.isbn}</span>
-                            <span className="text-[9px] opacity-60">
-                              {copiedIsbn === title.isbn ? "✓" : "📋"}
-                            </span>
+                            {copiedIsbn === title.isbn ? (
+                              <svg className="h-3 w-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <svg className="h-3 w-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            )}
                           </button>
                         ) : (
                           <span className="text-muted-foreground italic">Pending</span>
@@ -457,32 +523,17 @@ export function TitlesClient({
                         )}
                       </td>
 
-                      {/* Stock & Status Pill */}
+                      {/* Warehouse Stock */}
                       <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="font-extrabold text-foreground">
-                            {title.stock.toLocaleString()}
-                          </span>
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${
-                              isOutOfPrint
-                                ? "bg-neutral-500/10 text-neutral-500 border-neutral-500/20"
-                                : isOut
-                                ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
-                                : isLow
-                                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                            }`}
-                          >
-                            {isOutOfPrint
-                              ? "Out of Print"
-                              : isOut
-                              ? "Out of Stock"
-                              : isLow
-                              ? `Low (${title.stock})`
-                              : "In Stock"}
-                          </span>
-                        </div>
+                        <span
+                          className={`numeric text-sm font-black ${
+                            title.stock <= 0
+                              ? "text-rose-600 dark:text-rose-400 font-extrabold"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {title.stock.toLocaleString()}
+                        </span>
                       </td>
 
                       {/* Action buttons */}
@@ -501,7 +552,7 @@ export function TitlesClient({
                                 });
                               }}
                               title="Preview typeset layout and cover"
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-surface hover:bg-surface-muted transition cursor-pointer text-muted-foreground hover:text-foreground"
+                              className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-xl border border-[#7e2562]/20 bg-white text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition cursor-pointer"
                             >
                               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -514,18 +565,18 @@ export function TitlesClient({
                           {title.production_projects?.id ? (
                             <Link
                               href={`/production/${title.production_projects.id}`}
-                              className="inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary hover:bg-primary/20 transition shadow-2xs"
+                              className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/25 bg-white px-3 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#7e2562] hover:text-white hover:border-[#7e2562] hover:shadow-plum-sm transition-all group"
                             >
                               <span>Pipeline</span>
-                              <span>&rarr;</span>
+                              <span className="group-hover:translate-x-0.5 transition-transform">&rarr;</span>
                             </Link>
                           ) : (
                             <button
                               type="button"
                               onClick={() => setSelectedBook(title)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface px-2.5 py-1 text-[11px] font-semibold hover:bg-surface-muted transition cursor-pointer"
+                              className="apple-button inline-flex items-center gap-1 rounded-xl border border-black/15 bg-white px-3 py-1.5 text-xs font-bold text-foreground shadow-2xs hover:bg-black/5 hover:border-black/30 transition cursor-pointer"
                             >
-                              Details
+                              <span>Details</span>
                             </button>
                           )}
                         </div>

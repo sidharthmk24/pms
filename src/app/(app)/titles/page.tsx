@@ -122,10 +122,10 @@ export default async function TitlesPage() {
       {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground font-serif">
+          <h1 className="text-3xl font-black tracking-tight text-foreground ">
             Published Books &amp; Titles Catalog
           </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-base text-muted-foreground mt-0.5">
             Comprehensive catalog of printed books, allocated ISBN records, warehouse stock balances, and commercial specifications.
           </p>
         </div>

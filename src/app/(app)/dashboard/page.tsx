@@ -74,31 +74,31 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       {/* Hero Welcome Header */}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-black/10 bg-black/[0.04] px-3.5 py-1 text-xs font-semibold text-muted-foreground dark:border-white/10 dark:bg-white/[0.06]">
-            <span className="h-2 w-2 rounded-full bg-foreground/80" />
-            <span>Overview for {currentMonthName}</span>
-          </div>
+          {/* <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#7e2562]/20 bg-[#faedf5] px-3.5 py-1 text-xs font-bold text-[#7e2562]">
+            <span className="h-2 w-2 rounded-full bg-[#7e2562]" /> */}
+            {/* <span>Overview for {currentMonthName}</span> */}
+          {/* </div> */}
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Good day, {user.name.split(" ")[0]}
           </h1>
           <p className="mt-1 text-base font-medium text-muted-foreground">
-            Publisher telemetry & inventory management
+            Publisher telemetry &amp; inventory management
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <Link
             href="/submissions"
-            className="apple-button inline-flex items-center gap-2 rounded-xl border border-black/15 bg-surface px-4 py-2.5 text-xs font-bold text-foreground shadow-xs hover:bg-black/5 dark:border-white/15 dark:bg-surface-muted/60 dark:hover:bg-white/10"
+            className="apple-button inline-flex items-center gap-2 rounded-xl border border-[#7e2562]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5]"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="h-4 w-4 text-[#7e2562]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <span>Submissions</span>
           </Link>
           <Link
             href="/production"
-            className="apple-button inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-xs hover:bg-primary-hover"
+            className="apple-button inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-plum-sm hover:bg-primary-hover"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -114,6 +114,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           label="Net sales"
           value={formatPaiseShort(netSales)}
           hint={`${monthSales._count} invoice(s)${returns > 0 ? ` · ${formatPaiseShort(returns)} returned` : ""}`}
+          tone="primary"
           icon={
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -145,6 +146,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           label="Print jobs open"
           value={String(pendingJobs)}
           hint="Pending or printing"
+          tone="primary"
           icon={
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -156,11 +158,11 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       {/* Main Content Grid: Reorder Soon + Recent Activity */}
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Reorder Table Card */}
-        <div className="flex flex-col justify-between rounded-[24px] border border-black/[0.08] bg-surface/90 p-6 shadow-[0_2px_8px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80 lg:col-span-2">
+        <div className="flex flex-col justify-between rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm lg:col-span-2">
           <div>
             <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-black/[0.04] text-foreground dark:bg-white/[0.06]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#7e2562]/8 text-[#7e2562]">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
@@ -170,7 +172,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
                   <p className="text-xs font-medium text-muted-foreground">Titles at or below safety stock threshold</p>
                 </div>
               </div>
-              <span className="rounded-full bg-black/[0.05] px-3 py-1 text-xs font-bold text-muted-foreground dark:bg-white/[0.08]">
+              <span className="rounded-full bg-[#7e2562]/8 px-3 py-1 text-xs font-bold text-[#7e2562]">
                 {lowStock.length} items
               </span>
             </div>
@@ -228,29 +230,38 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
         </div>
 
         {/* Recent Activity Timeline */}
-        <div className="flex flex-col justify-between rounded-[24px] border border-black/[0.08] bg-surface/90 p-6 shadow-[0_2px_8px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
+        <div className="flex flex-col justify-between rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
           <div>
             <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-black/[0.04] text-foreground dark:bg-white/[0.06]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#7e2562]/8 text-[#7e2562]">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
                   <h2 className="text-base font-bold tracking-tight text-foreground">Recent Activity</h2>
-                  <p className="text-xs font-medium text-muted-foreground">Audit telemetry & system log</p>
+                  {/* <p className="text-xs font-medium text-muted-foreground">Audit telemetry &amp; system log</p> */}
                 </div>
               </div>
+              <Link
+                href="/activity"
+                className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/20 bg-[#faedf5]/80 px-3 py-1.5 text-xs font-bold text-[#7e2562] transition-colors hover:bg-[#faedf5]"
+              >
+                <span>View all</span>
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
 
             {recent.length === 0 ? (
               <p className="py-10 text-center text-sm text-muted-foreground">No events recorded yet.</p>
             ) : (
-              <div className="relative space-y-4 before:absolute before:bottom-2 before:left-[13px] before:top-2 before:w-[1px] before:bg-black/[0.08] dark:before:bg-white/[0.1]">
+              <div className="space-y-4">
                 {recent.map((row) => (
                   <div key={row.id} className="relative flex items-start gap-3 pl-1">
-                    <span className="relative z-10 mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-foreground ring-4 ring-surface" />
+                    <span className="relative z-10 mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-[#7e2562] ring-4 ring-[#faedf5]" />
                     <div className="min-w-0 flex-1 text-sm">
                       <p className="font-bold text-foreground truncate">
                         {row.users?.name ?? "System"}{" "}
@@ -271,16 +282,16 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       </section>
 
       {/* Catalogue Insights Footer Bar */}
-      <footer className="flex flex-col items-center justify-between gap-3 rounded-2xl border border-black/[0.08] bg-surface/80 px-6 py-4 text-sm text-muted-foreground backdrop-blur-md dark:border-white/[0.1] dark:bg-surface-muted/50 sm:flex-row">
+      <footer className="flex flex-col items-center justify-between gap-3 rounded-2xl border border-[#7e2562]/15 bg-[#faf6f9] px-6 py-4 text-sm text-muted-foreground sm:flex-row">
         <div className="flex items-center gap-2.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-foreground/70" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#7e2562]" />
           <span>
             Catalogue: <strong className="font-bold text-foreground">{activeTitles}</strong> active titles across{" "}
             <strong className="font-bold text-foreground">{authorCount}</strong> author(s)
           </span>
         </div>
         <div>
-          Inventory valuation: <strong className="numeric font-bold text-foreground">{formatPaise(inventoryValue)}</strong>
+          Inventory valuation: <strong className="numeric font-bold text-[#7e2562]">{formatPaise(inventoryValue)}</strong>
         </div>
       </footer>
     </div>

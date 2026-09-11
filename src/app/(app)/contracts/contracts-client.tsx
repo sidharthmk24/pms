@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { useEffect } from "react";
 import { SmoothDropdown } from "@/components/dropdown";
 import { formatPaise } from "@/lib/money";
 import {
@@ -62,6 +61,7 @@ export default function ContractsClient({
   const [mounted, setMounted] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("recent");
   const [viewingContract, setViewingContract] = useState<EnrichedContract | null>(null);
   const [signingContract, setSigningContract] = useState<EnrichedContract | null>(null);
   const [publisherSignature, setPublisherSignature] = useState("Radhika Menon");
@@ -72,21 +72,53 @@ export default function ContractsClient({
     setMounted(true);
   }, []);
 
-  const enrichedContracts = contracts.map((c) => {
-    const meta = parseContractNotes(c.term_notes);
-    const status = getContractStatus(c);
-    return { ...c, meta, status };
-  });
+  const enrichedContracts = useMemo(() => {
+    return contracts.map((c) => {
+      const meta = parseContractNotes(c.term_notes);
+      const status = getContractStatus(c);
+      return { ...c, meta, status };
+    });
+  }, [contracts]);
 
-  const filtered = enrichedContracts.filter((c) => {
-    const matchesSearch =
-      c.titles.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.authors.name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.meta.contract_ref && c.meta.contract_ref.toLowerCase().includes(search.toLowerCase()));
+  const filtered = useMemo(() => {
+    return enrichedContracts
+      .filter((c) => {
+        const matchesSearch =
+          c.titles.name.toLowerCase().includes(search.toLowerCase()) ||
+          c.authors.name.toLowerCase().includes(search.toLowerCase()) ||
+          (c.meta.contract_ref && c.meta.contract_ref.toLowerCase().includes(search.toLowerCase()));
 
-    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+        const matchesStatus = statusFilter === "all" || c.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        if (sortBy === "recent") {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        if (sortBy === "oldest") {
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        }
+        if (sortBy === "title_asc") {
+          return a.titles.name.localeCompare(b.titles.name);
+        }
+        if (sortBy === "title_desc") {
+          return b.titles.name.localeCompare(a.titles.name);
+        }
+        if (sortBy === "author_asc") {
+          return a.authors.name.localeCompare(b.authors.name);
+        }
+        if (sortBy === "author_desc") {
+          return b.authors.name.localeCompare(a.authors.name);
+        }
+        if (sortBy === "royalty_desc") {
+          return b.royalty_pct - a.royalty_pct;
+        }
+        if (sortBy === "advance_desc") {
+          return b.advance_paise - a.advance_paise;
+        }
+        return 0;
+      });
+  }, [enrichedContracts, search, statusFilter, sortBy]);
 
   const totalCount = contracts.length;
   const signedCount = enrichedContracts.filter((c) => c.status === "signed").length;
@@ -134,21 +166,21 @@ export default function ContractsClient({
     <div className="space-y-6">
       {/* Metric Cards */}
       <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
-        <div className="rounded-2xl border border-black/10 bg-surface p-4.5 dark:border-white/10">
+        <div className="rounded-2xl border border-[#7e2562]/15 bg-white p-4.5 shadow-2xs">
           <span className="text-xs font-bold text-muted-foreground">Total Contracts</span>
           <p className="mt-1 text-2xl font-black text-foreground">{totalCount}</p>
         </div>
-        <div className="rounded-2xl border border-black/10 bg-surface p-4.5 dark:border-white/10">
-          <span className="text-xs font-bold text-success">Fully Dual-Signed</span>
-          <p className="mt-1 text-2xl font-black text-foreground">{signedCount}</p>
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4.5 shadow-2xs">
+          <span className="text-xs font-bold text-emerald-800">Fully Dual-Signed</span>
+          <p className="mt-1 text-2xl font-black text-emerald-900">{signedCount}</p>
         </div>
-        <div className="rounded-2xl border border-black/10 bg-surface p-4.5 dark:border-white/10">
-          <span className="text-xs font-bold text-warning">Awaiting Author Sign</span>
-          <p className="mt-1 text-2xl font-black text-foreground">{pendingAuthorCount}</p>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4.5 shadow-2xs">
+          <span className="text-xs font-bold text-amber-800">Awaiting Author Sign</span>
+          <p className="mt-1 text-2xl font-black text-amber-900">{pendingAuthorCount}</p>
         </div>
-        <div className="rounded-2xl border border-black/10 bg-surface p-4.5 dark:border-white/10">
-          <span className="text-xs font-bold text-muted-foreground">Awaiting Publisher</span>
-          <p className="mt-1 text-2xl font-black text-foreground">{pendingPublisherCount}</p>
+        <div className="rounded-2xl border border-[#7e2562]/20 bg-[#faedf5]/60 p-4.5 shadow-2xs">
+          <span className="text-xs font-bold text-[#7e2562]">Awaiting Publisher</span>
+          <p className="mt-1 text-2xl font-black text-[#7e2562]">{pendingPublisherCount}</p>
         </div>
       </div>
 
@@ -164,38 +196,58 @@ export default function ContractsClient({
           />
         </div>
 
-        <div className="flex items-center gap-2 min-w-[170px]">
-          <SmoothDropdown
-            size="sm"
-            value={statusFilter}
-            onChange={(val) => setStatusFilter(val as any)}
-            ariaLabel="Filter by status"
-            align="right"
-            options={[
-              { value: "all", label: "All Statuses" },
-              { value: "signed", label: "Fully Signed" },
-              { value: "awaiting_author", label: "Awaiting Author" },
-              { value: "awaiting_publisher", label: "Awaiting Publisher" },
-            ]}
-          />
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="w-44">
+            <SmoothDropdown
+              size="sm"
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val as any)}
+              ariaLabel="Filter by status"
+              options={[
+                { value: "all", label: "All Statuses" },
+                { value: "signed", label: "Fully Signed" },
+                { value: "awaiting_author", label: "Awaiting Author" },
+                { value: "awaiting_publisher", label: "Awaiting Publisher" },
+              ]}
+            />
+          </div>
+
+          <div className="w-48">
+            <SmoothDropdown
+              size="sm"
+              value={sortBy}
+              onChange={(val) => setSortBy(val)}
+              ariaLabel="Sort contracts"
+              options={[
+                { value: "recent", label: "Newest Created" },
+                { value: "oldest", label: "Oldest Created" },
+                { value: "title_asc", label: "Title (A → Z)" },
+                { value: "title_desc", label: "Title (Z → A)" },
+                { value: "author_asc", label: "Author (A → Z)" },
+                { value: "author_desc", label: "Author (Z → A)" },
+                { value: "royalty_desc", label: "Royalty (High → Low)" },
+                { value: "advance_desc", label: "Advance (High → Low)" },
+              ]}
+            />
+          </div>
         </div>
       </div>
 
       {/* Contracts Table */}
-      <section className="relative z-10 overflow-hidden rounded-3xl border border-black/10 bg-surface dark:border-white/10">
+      <section className="relative z-10 overflow-hidden rounded-3xl border border-[#7e2562]/15 bg-white shadow-plum-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-black/[0.06] bg-black/[0.02] text-xs font-bold uppercase tracking-wider text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.02]">
+            <thead className="border-b border-[#7e2562]/10 bg-[#faf6f9]/60 text-xs font-bold uppercase tracking-wider text-muted-foreground">
               <tr>
-                <th className="px-6 py-4">Contract / Title</th>
-                <th className="px-6 py-4">Author</th>
-                <th className="px-6 py-4">Track & Terms</th>
-                <th className="px-6 py-4">Advance (₹)</th>
-                <th className="px-6 py-4">Signing Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-4 whitespace-nowrap">Contract / Title</th>
+                <th className="px-6 py-4 whitespace-nowrap">Author</th>
+                <th className="px-6 py-4 whitespace-nowrap">Track & Terms</th>
+                <th className="px-6 py-4 whitespace-nowrap">Advance (₹)</th>
+                <th className="px-6 py-4 whitespace-nowrap">Signing Status</th>
+                <th className="px-6 py-4 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.06]">
+            <tbody className="divide-y divide-[#7e2562]/8">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-sm text-muted-foreground">
@@ -209,7 +261,7 @@ export default function ContractsClient({
                   const isAwaitingPublisher = c.status === "awaiting_publisher";
 
                   return (
-                    <tr key={c.id} className="transition-colors hover:bg-black/[0.015] dark:hover:bg-white/[0.02]">
+                    <tr key={c.id} className="transition-colors hover:bg-[#faf6f9]/50">
                       {/* Contract Ref & Title */}
                       <td className="px-6 py-4">
                         <div>
@@ -249,19 +301,20 @@ export default function ContractsClient({
                       {/* Signing Status */}
                       <td className="px-6 py-4">
                         {isSigned && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-300 shadow-2xs">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
                             Dual-Signed
                           </span>
                         )}
                         {isAwaitingAuthor && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-xs font-bold text-warning">
-                            <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-600" />
                             Awaiting Author
                           </span>
                         )}
                         {isAwaitingPublisher && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/10 px-2.5 py-1 text-xs font-bold text-foreground dark:bg-white/10">
-                            <span className="h-1.5 w-1.5 rounded-full bg-foreground" />
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#faedf5] px-3 py-1 text-xs font-bold text-[#7e2562] border border-[#7e2562]/25">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#7e2562]" />
                             Awaiting Publisher
                           </span>
                         )}
@@ -272,7 +325,7 @@ export default function ContractsClient({
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => setViewingContract(c)}
-                            className="apple-button rounded-xl border border-black/10 bg-surface px-3 py-1.5 text-xs font-bold text-foreground hover:bg-black/5 dark:border-white/15 dark:bg-surface-muted/60"
+                            className="apple-button inline-flex items-center gap-1 rounded-xl border border-[#7e2562]/25 bg-white px-3 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition-all cursor-pointer"
                           >
                             View Agreement
                           </button>
@@ -283,22 +336,28 @@ export default function ContractsClient({
                                 setSigningContract(c);
                                 setPublisherSignature(currentUserName);
                               }}
-                              className="apple-button rounded-xl bg-foreground px-3 py-1.5 text-xs font-bold text-background shadow-xs hover:opacity-90"
+                              className="apple-button inline-flex items-center gap-1.5 rounded-xl bg-[#7e2562] px-3.5 py-1.5 text-xs font-bold text-white shadow-plum-sm hover:bg-[#681b50] active:scale-[0.98] transition-all cursor-pointer"
                             >
-                              Publisher Sign
+                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                              <span>Publisher Sign</span>
                             </button>
                           )}
 
                           <button
                             onClick={() => copyAuthorLink(c.id)}
                             title="Copy secure author signing link"
-                            className={`apple-button rounded-xl border px-3 py-1.5 text-xs font-bold transition-all ${
+                            className={`apple-button inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                               copiedId === c.id
-                                ? "border-success bg-success text-white"
-                                : "border-black/10 bg-surface text-foreground hover:bg-black/5 dark:border-white/15"
+                                ? "border-emerald-600 bg-emerald-600 text-white shadow-2xs"
+                                : "border-black/15 bg-white text-muted-foreground hover:text-foreground hover:bg-black/5 hover:border-black/25 shadow-2xs"
                             }`}
                           >
-                            {copiedId === c.id ? "Link Copied!" : "Author Link"}
+                            <svg className="h-3.5 w-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            <span>{copiedId === c.id ? "Copied!" : "Author Link"}</span>
                           </button>
                         </div>
                       </td>
@@ -335,7 +394,7 @@ export default function ContractsClient({
             </div>
 
             {/* Agreement Content (Printable Legal Document) */}
-            <div className="printable-contract flex-1 overflow-y-auto p-8 space-y-6 text-sm text-foreground/90 leading-relaxed font-serif">
+            <div className="printable-contract flex-1 overflow-y-auto p-8 space-y-6 text-sm text-foreground/90 leading-relaxed ">
               {/* Document Letterhead */}
               <div className="text-center pb-5 border-b border-black/15 dark:border-white/15">
                 <span className="text-[11px] font-mono font-bold text-muted-foreground uppercase tracking-widest block mb-1">

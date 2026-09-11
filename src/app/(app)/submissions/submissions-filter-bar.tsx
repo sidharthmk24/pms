@@ -14,18 +14,20 @@ export default function SubmissionsFilterBar({
   editors,
   currentStatus,
   currentEditor,
+  currentSort = "submitted_desc",
 }: {
   statusLabels: Record<string, string>;
   editors: Editor[];
   currentStatus?: string;
   currentEditor?: string;
+  currentSort?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  function onFilterChange(key: "status" | "editor", value: string) {
+  function onFilterChange(key: "status" | "editor" | "sort", value: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) {
+    if (value && !(key === "sort" && value === "submitted_desc")) {
       params.set(key, value);
     } else {
       params.delete(key);
@@ -34,10 +36,25 @@ export default function SubmissionsFilterBar({
     router.push(query ? `/submissions?${query}` : "/submissions");
   }
 
-  const hasFilter = Boolean(currentStatus || currentEditor);
+  const hasFilter = Boolean(
+    currentStatus ||
+    currentEditor ||
+    (currentSort && currentSort !== "submitted_desc")
+  );
+
+  const sortOptions = [
+    { value: "submitted_desc", label: "Newest Submitted" },
+    { value: "submitted_asc", label: "Oldest Submitted" },
+    { value: "title_asc", label: "Title (A → Z)" },
+    { value: "title_desc", label: "Title (Z → A)" },
+    { value: "author_asc", label: "Author (A → Z)" },
+    { value: "author_desc", label: "Author (Z → A)" },
+    { value: "ref_desc", label: "Ref # (Newest)" },
+    { value: "ref_asc", label: "Ref # (Oldest)" },
+  ];
 
   return (
-    <section className="relative z-20 rounded-[22px] border border-black/[0.08] bg-surface/90 p-4.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
+    <section className="relative z-20 rounded-xl border border-[#7e2562]/15 bg-white p-3.5 sm:p-4 shadow-plum-sm">
       <div className="flex flex-wrap items-center gap-3.5">
         {/* Status Filter */}
         <div className="w-52">
@@ -74,6 +91,19 @@ export default function SubmissionsFilterBar({
                 label: u.name,
               })),
             ]}
+          />
+        </div>
+
+        {/* Sort By Dropdown */}
+        <div className="w-52">
+          <SmoothDropdown
+            id="sort-filter"
+            name="sort"
+            value={currentSort || "submitted_desc"}
+            onChange={(val) => onFilterChange("sort", val)}
+            ariaLabel="Sort submissions"
+            placeholder="Sort by"
+            options={sortOptions}
           />
         </div>
 

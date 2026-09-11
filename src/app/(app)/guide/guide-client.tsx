@@ -30,7 +30,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "roles-overview",
     sectionId: "overview",
-    sectionTitle: "1. System Overview & Roles",
+    sectionTitle: " System Overview & Roles",
     badge: "Core",
     title: "System Roles & Operational Capabilities",
     keywords: ["roles", "owner", "editor", "production", "author", "store", "accounts", "permissions", "access"],
@@ -45,7 +45,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "submissions-flow",
     sectionId: "submissions",
-    sectionTitle: "2. Submissions & Editorial Review",
+    sectionTitle: "Submissions & Editorial Review",
     badge: "Editorial",
     title: "Manuscript Intake & Public Submission Portal",
     keywords: ["submissions", "publish", "intake", "author", "manuscript", "tracking", "upload", "synopsis"],
@@ -61,7 +61,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "editorial-decisions",
     sectionId: "submissions",
-    sectionTitle: "2. Submissions & Editorial Review",
+    sectionTitle: "Submissions & Editorial Review",
     badge: "Editorial",
     title: "Editorial Review & Decision Making",
     keywords: ["review", "decision", "accept", "revision", "reject", "decline", "editor notes", "feedback"],
@@ -77,7 +77,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "kairali-books-publishing",
     sectionId: "contracts",
-    sectionTitle: "3. Commercial Terms & Contracts",
+    sectionTitle: "Commercial Terms & Contracts",
     badge: "Legal",
     title: "Kairali Books Publishing Track",
     keywords: ["kairali books", "publishing", "royalty", "advance", "mrp", "net", "free copies", "discount", "commercial"],
@@ -94,7 +94,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "self-publishing",
     sectionId: "contracts",
-    sectionTitle: "3. Commercial Terms & Contracts",
+    sectionTitle: " Commercial Terms & Contracts",
     badge: "Legal",
     title: "Author-Assisted Publishing Track",
     keywords: ["self publishing", "author assisted", "gst", "package fee", "tax", "18% gst", "print run"],
@@ -110,7 +110,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "digital-signing",
     sectionId: "signing",
-    sectionTitle: "4. Digital Dual-Signing Workflow",
+    sectionTitle: "Digital Dual-Signing Workflow",
     badge: "Security",
     title: "Digital Dual-Signing & Legal Execution",
     keywords: ["signing", "dual signing", "signature", "pan", "tds", "bank", "it act", "pdf", "contract"],
@@ -126,7 +126,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "author-portal-workflow",
     sectionId: "author",
-    sectionTitle: "5. Author Portal & Account Setup",
+    sectionTitle: "Author Portal & Account Setup",
     badge: "Author",
     title: "Author Portal & Post-Signing Account Activation",
     keywords: ["author portal", "author dashboard", "setup", "password", "production tracker", "manuscripts", "stepper"],
@@ -143,7 +143,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "dtp-production-pipeline",
     sectionId: "production",
-    sectionTitle: "6. DTP & Production Pipeline",
+    sectionTitle: "DTP & Production Pipeline",
     badge: "Press",
     title: "Production Pipeline & Milestone Tracking",
     keywords: ["production", "dtp", "typesetting", "cover", "proof", "isbn", "print job", "press", "warehouse"],
@@ -162,7 +162,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "flow-8b-post-production",
     sectionId: "production",
-    sectionTitle: "6. DTP & Production Pipeline",
+    sectionTitle: "DTP & Production Pipeline",
     badge: "Fulfillment",
     title: "Flow 8b: Post-Production Intake & BMS Handover",
     keywords: ["flow 8b", "post-production", "qc", "author copies", "warehouse", "stock in", "bms", "handover", "channels"],
@@ -180,7 +180,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "team-staff-management",
     sectionId: "team",
-    sectionTitle: "7. Team & Staff Management",
+    sectionTitle: "Team & Staff Management",
     badge: "Admin",
     title: "Staff Accounts, Passwords & Access Control",
     keywords: ["team", "staff", "admin", "users", "bcrypt", "deactivate", "password", "security"],
@@ -218,14 +218,14 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
   const [search, setSearch] = useState("");
 
   const sections: { id: SectionKey; title: string; badge: string }[] = [
-    { id: "overview", title: "1. System Overview & Roles", badge: "Core" },
-    { id: "submissions", title: "2. Submissions & Editorial Review", badge: "Editorial" },
-    { id: "contracts", title: "3. Commercial Terms & Contracts", badge: "Legal" },
-    { id: "signing", title: "4. Digital Dual-Signing Workflow", badge: "Security" },
-    { id: "author", title: "5. Author Portal & Activation", badge: "Author" },
-    { id: "production", title: "6. DTP & Production Pipeline", badge: "Press" },
-    { id: "team", title: "7. Team & Staff Management", badge: "Admin" },
-    { id: "accounts", title: "8. Test Accounts & Quick Links", badge: "Reference" },
+    { id: "overview", title: "System Overview & Roles", badge: "Core" },
+    { id: "submissions", title: "Submissions & Editorial Review", badge: "Editorial" },
+    { id: "contracts", title: "Commercial Terms & Contracts", badge: "Legal" },
+    { id: "signing", title: "Digital Dual-Signing Workflow", badge: "Security" },
+    { id: "author", title: "Author Portal & Activation", badge: "Author" },
+    { id: "production", title: "DTP & Production Pipeline", badge: "Press" },
+    { id: "team", title: "Team & Staff Management", badge: "Admin" },
+    { id: "accounts", title: "Test Accounts & Quick Links", badge: "Reference" },
   ];
 
   // Filtered topics when searching
@@ -253,7 +253,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
             <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Documentation &amp; Manual
             </span>
-            <h1 className="mt-1 text-3xl font-black tracking-tight text-foreground font-serif">
+            <h1 className="mt-1 text-3xl  tracking-tight text-foreground ">
               Kairali PMS User Guide
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -263,15 +263,21 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
           <div className="flex items-center gap-3">
             <button
               onClick={() => window.print()}
-              className="apple-button rounded-xl border border-black/10 bg-surface px-4 py-2.5 text-xs font-bold text-foreground shadow-xs hover:bg-black/5 dark:border-white/15"
+              className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/35 transition-all cursor-pointer"
             >
-              Print / Save PDF Guide
+              <svg className="h-3.5 w-3.5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              <span>Print / Save PDF</span>
             </button>
             <Link
               href={currentUserRole === "author" ? "/author" : "/dashboard"}
-              className="apple-button rounded-xl bg-foreground px-4 py-2.5 text-xs font-bold text-background shadow-xs hover:opacity-90"
+              className="apple-button inline-flex items-center gap-1.5 rounded-xl bg-[#7e2562] px-4 py-2.5 text-xs font-bold text-white shadow-plum-sm hover:bg-[#681d50] hover:shadow-plum transition-all cursor-pointer group"
             >
-              Back to Dashboard →
+              <span>Back to Dashboard</span>
+              <svg className="h-3.5 w-3.5 opacity-80 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
             </Link>
           </div>
         </div>
@@ -414,7 +420,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
           {activeTab === "overview" && (
             <div className="space-y-6">
               <div className="rounded-3xl border border-black/10 bg-surface p-8 space-y-6 dark:border-white/10">
-                <h2 className="text-xl font-black text-foreground">1. System Roles &amp; Capabilities</h2>
+                <h2 className="text-xl font-black text-foreground"> System Roles &amp; Capabilities</h2>
                 <p className="text-sm text-foreground/80 leading-relaxed">
                   Kairali PMS is streamlined around active publishing roles to ensure smooth operational handoffs:
                 </p>
@@ -469,7 +475,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
             <div className="space-y-6">
               <div className="rounded-3xl border border-black/10 bg-surface p-8 space-y-6 dark:border-white/10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-black text-foreground">2. Submissions &amp; Editorial Review</h2>
+                  <h2 className="text-xl font-black text-foreground"> Submissions &amp; Editorial Review</h2>
                   <Link
                     href="/submissions"
                     className="text-xs font-bold text-foreground underline hover:opacity-80"
@@ -511,7 +517,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
             <div className="space-y-6">
               <div className="rounded-3xl border border-black/10 bg-surface p-8 space-y-6 dark:border-white/10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-black text-foreground">3. Commercial Terms &amp; Legal Structure</h2>
+                  <h2 className="text-xl font-black text-foreground">Commercial Terms &amp; Legal Structure</h2>
                   <Link
                     href="/contracts"
                     className="text-xs font-bold text-foreground underline hover:opacity-80"
@@ -554,7 +560,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
           {activeTab === "signing" && (
             <div className="space-y-6">
               <div className="rounded-3xl border border-black/10 bg-surface p-8 space-y-6 dark:border-white/10">
-                <h2 className="text-xl font-black text-foreground">4. Digital Dual-Signing Workflow</h2>
+                <h2 className="text-xl font-black text-foreground">Digital Dual-Signing Workflow</h2>
                 <p className="text-sm text-foreground/80 leading-relaxed">
                   Agreements are digitally executed without paper, generating legally binding audit trails under the Indian IT Act:
                 </p>
@@ -605,7 +611,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
             <div className="space-y-6">
               <div className="rounded-3xl border border-black/10 bg-surface p-8 space-y-6 dark:border-white/10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-black text-foreground">5. Author Portal &amp; Account Setup</h2>
+                  <h2 className="text-xl font-black text-foreground">Author Portal &amp; Account Setup</h2>
                   <Link
                     href="/author"
                     className="text-xs font-bold text-foreground underline hover:opacity-80"
@@ -642,7 +648,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
             <div className="space-y-6">
               <div className="rounded-3xl border border-black/10 bg-surface p-8 space-y-6 dark:border-white/10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-black text-foreground">6. Production &amp; DTP Pipeline</h2>
+                  <h2 className="text-xl font-black text-foreground">Production &amp; DTP Pipeline</h2>
                   <Link
                     href="/production"
                     className="text-xs font-bold text-foreground underline hover:opacity-80"
@@ -690,7 +696,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
             <div className="space-y-6">
               <div className="rounded-3xl border border-black/10 bg-surface p-8 space-y-6 dark:border-white/10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-black text-foreground">7. Team &amp; Staff Management</h2>
+                  <h2 className="text-xl font-black text-foreground">Team &amp; Staff Management</h2>
                   {currentUserRole === "owner" && (
                     <Link
                       href="/team"
@@ -718,7 +724,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
           {activeTab === "accounts" && (
             <div className="space-y-6">
               <div className="rounded-3xl border border-black/10 bg-surface p-8 space-y-6 dark:border-white/10">
-                <h2 className="text-xl font-black text-foreground">8. Live Cloud Test Accounts</h2>
+                <h2 className="text-xl font-black text-foreground">Live Cloud Test Accounts</h2>
                 <p className="text-sm text-foreground/80 leading-relaxed">
                   Use these credentials to sign in and test different staff roles on the live Neon cloud database:
                 </p>

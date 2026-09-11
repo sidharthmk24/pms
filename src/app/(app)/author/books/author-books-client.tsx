@@ -161,7 +161,11 @@ export function AuthorBooksClient({
         <div className="rounded-2xl border border-black/[0.08] bg-surface p-4 shadow-xs dark:border-white/[0.08]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">My Published Titles</span>
-            <span className="rounded-lg bg-primary/10 p-2 text-primary">📖</span>
+            <span className="rounded-xl bg-primary/10 p-2.5 text-primary">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </span>
           </div>
           <p className="mt-2 text-2xl font-black tracking-tight text-foreground">{initialBooks.length}</p>
           <span className="text-[11px] text-muted-foreground">In official publication</span>
@@ -170,7 +174,11 @@ export function AuthorBooksClient({
         <div className="rounded-2xl border border-black/[0.08] bg-surface p-4 shadow-xs dark:border-white/[0.08]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Copies In Circulation</span>
-            <span className="rounded-lg bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-400">📦</span>
+            <span className="rounded-xl bg-emerald-500/10 p-2.5 text-emerald-600 dark:text-emerald-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </span>
           </div>
           <p className="mt-2 text-2xl font-black tracking-tight text-foreground">{totalCopiesPrinted.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">copies</span></p>
           <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">Printed press run inventory</span>
@@ -179,7 +187,11 @@ export function AuthorBooksClient({
         <div className="rounded-2xl border border-black/[0.08] bg-surface p-4 shadow-xs dark:border-white/[0.08]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Author Complimentary Copies</span>
-            <span className="rounded-lg bg-blue-500/10 p-2 text-blue-600 dark:text-blue-400">🚚</span>
+            <span className="rounded-xl bg-blue-500/10 p-2.5 text-blue-600 dark:text-blue-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
+              </svg>
+            </span>
           </div>
           <p className="mt-2 text-2xl font-black tracking-tight text-foreground">{totalAuthorCopies.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">copies</span></p>
           <span className="text-[11px] text-muted-foreground">Dispatched to your address</span>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import LoginForm from "./login-form";
 
 export const metadata: Metadata = { title: "Sign in · Kairali Books" };
@@ -9,16 +10,17 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const nextPath = typeof next === "string" && next.startsWith("/") ? next : "/dashboard";
 
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-4 py-12 selection:bg-foreground selection:text-background">
-      {/* Apple-style subtle ambient background glow */}
+    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-4 py-12 selection:bg-primary selection:text-white bg-background">
+      {/* Brand plum ambient glow */}
       <div 
         aria-hidden="true" 
         className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden"
       >
-        <div className="h-[480px] w-[640px] -translate-y-12 rounded-full bg-foreground/[0.025] blur-[100px] dark:bg-foreground/[0.035]" />
+        <div className="h-[520px] w-[680px] -translate-y-12 rounded-full bg-[#7e2562]/[0.07] blur-[100px]" />
+        <div className="h-[300px] w-[400px] translate-y-24 rounded-full bg-[#9b3179]/[0.04] blur-[80px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-[390px] animate-apple-in">
+      <div className="relative z-10 w-full max-w-[400px] animate-apple-in">
         {/* Brand Header */}
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-3 transition-transform duration-300 hover:scale-[1.02]">
@@ -28,29 +30,29 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
               width={220}
               height={55}
               priority
-              className="h-10 w-auto object-contain dark:invert"
+              className="h-10 w-auto object-contain"
             />
           </div>
-          <p className="text-[13px] font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-2 rounded-sm bg-[#7e2562]/8 px-3.5 py-1 text-xs font-bold text-[#7e2562]">
             Publisher Management System
-          </p>
+          </span>
         </div>
 
-        {/* Apple Glass Container */}
-        <div className="rounded-[24px] border border-black/[0.08] bg-surface/90 p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04),0_1px_3px_rgb(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.12] dark:bg-surface/85 dark:shadow-[0_20px_50px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.06)] sm:p-8">
+        {/* Login Container */}
+        <div className="rounded-sm border border-[#7e2562]/15 bg-white p-7 shadow-plum-md sm:p-8">
           <LoginForm nextPath={nextPath} />
         </div>
 
         {/* Footer Support Prompt */}
         <div className="mt-7 text-center">
           <p className="text-[13px] text-muted-foreground">
-            Trouble signing in?{" "}
-            <a
-              href="mailto:admin@kairalibooks.in"
-              className="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors hover:text-foreground/80 hover:decoration-foreground"
+            Author without access?{" "}
+            <Link
+              href="/publish"
+              className="font-bold text-[#7e2562] hover:underline"
             >
-              Contact support
-            </a>
+              Author Portal
+            </Link>
           </p>
         </div>
       </div>

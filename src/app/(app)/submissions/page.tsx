@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { formatIST } from "@/lib/time";
+import { formatIST, formatTimeIST } from "@/lib/time";
 import { can } from "@/lib/roles";
 import SubmissionsFilterBar from "./submissions-filter-bar";
 import ReassignSelect from "./reassign-select";
@@ -12,7 +12,6 @@ export const dynamic = "force-dynamic";
 
 const STATUS_LABELS: Record<string, string> = {
   new: "Pending Review",
-  pending_review: "Pending Review",
   under_review: "Under Review",
   needs_revision: "Needs Revision",
   accepted: "Accepted",
@@ -22,14 +21,14 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_BADGE_STYLES: Record<string, string> = {
-  new: "bg-warning/10 text-warning border border-warning/20",
-  pending_review: "bg-warning/10 text-warning border border-warning/20",
-  under_review: "bg-warning/10 text-warning border border-warning/20",
-  needs_revision: "bg-black/[0.06] text-foreground border border-black/10 dark:bg-white/[0.08] dark:text-foreground",
-  accepted: "bg-foreground/[0.08] text-foreground border border-foreground/20 font-semibold",
-  declined: "bg-danger/10 text-danger border border-danger/20",
-  archived: "bg-black/[0.04] text-muted-foreground dark:bg-white/[0.05]",
-  withdrawn: "bg-black/[0.04] text-muted-foreground dark:bg-white/[0.05]",
+  new: "bg-[#7e2562]/10 text-[#7e2562] border border-[#7e2562]/25 font-bold",
+  pending_review: "bg-[#7e2562]/10 text-[#7e2562] border border-[#7e2562]/25 font-bold",
+  under_review: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
+  needs_revision: "bg-orange-50 text-orange-800 border border-orange-300 font-bold",
+  accepted: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold shadow-2xs",
+  declined: "bg-rose-50 text-rose-800 border border-rose-300 font-bold",
+  archived: "bg-gray-100 text-gray-700 border border-gray-200 font-semibold",
+  withdrawn: "bg-gray-100 text-gray-700 border border-gray-200 font-semibold",
 };
 
 const GENRE_LABELS: Record<string, string> = {
@@ -50,18 +49,40 @@ export default async function SubmissionsListPage({ searchParams }: PageProps<"/
   const user = await requireCapability("submissions.read");
   const isManager = can(user.role, "submissions.manage");
 
-  const { status, editor } = await searchParams;
+  const { status, editor, sort } = await searchParams;
 
   const filterStatus = typeof status === "string" ? status : undefined;
   const filterEditor = typeof editor === "string" ? editor : undefined;
+  const filterSort = typeof sort === "string" ? sort : "submitted_desc";
+
+  let orderBy: Record<string, "asc" | "desc"> = { submitted_at: "desc" };
+  if (filterSort === "submitted_asc") {
+    orderBy = { submitted_at: "asc" };
+  } else if (filterSort === "title_asc") {
+    orderBy = { title: "asc" };
+  } else if (filterSort === "title_desc") {
+    orderBy = { title: "desc" };
+  } else if (filterSort === "author_asc") {
+    orderBy = { author_name: "asc" };
+  } else if (filterSort === "author_desc") {
+    orderBy = { author_name: "desc" };
+  } else if (filterSort === "ref_desc") {
+    orderBy = { ref_no: "desc" };
+  } else if (filterSort === "ref_asc") {
+    orderBy = { ref_no: "asc" };
+  }
 
   const [submissions, editors] = await Promise.all([
     prisma.submissions.findMany({
       where: {
-        ...(filterStatus ? { status: filterStatus } : {}),
+        ...(filterStatus
+          ? filterStatus === "new" || filterStatus === "pending_review"
+            ? { status: { in: ["new", "pending_review"] } }
+            : { status: filterStatus }
+          : {}),
         ...(filterEditor ? { reviewed_by: filterEditor } : {}),
       },
-      orderBy: { submitted_at: "desc" },
+      orderBy,
       include: {
         users: { select: { name: true, role: true } },
       },
@@ -78,20 +99,17 @@ export default async function SubmissionsListPage({ searchParams }: PageProps<"/
       {/* Header */}
       <header className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-black/10 bg-black/[0.04] px-3.5 py-1 text-xs font-semibold text-muted-foreground dark:border-white/10 dark:bg-white/[0.06]">
-            <span className="h-2 w-2 rounded-full bg-foreground/80" />
-            <span>Submissions Management</span>
-          </div>
+        
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Manuscript Submissions
           </h1>
-          <p className="mt-1.5 text-base font-medium text-muted-foreground">
+          <p className="mt-1.5 text-base  text-muted-foreground">
             Review and evaluate submitted book manuscripts
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="rounded-full border border-black/10 bg-surface px-4 py-1.5 text-xs font-bold text-muted-foreground shadow-xs dark:border-white/15 dark:bg-surface-muted/60">
+          <span className="rounded-full border border-[#7e2562]/20 bg-white px-4 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs">
             {submissions.length} Total Submissions
           </span>
         </div>
@@ -103,14 +121,15 @@ export default async function SubmissionsListPage({ searchParams }: PageProps<"/
         editors={editors}
         currentStatus={filterStatus}
         currentEditor={filterEditor}
+        currentSort={filterSort}
       />
 
       {/* Submissions Table Card */}
-      <section className="relative z-10 overflow-hidden rounded-[24px] border border-black/[0.08] bg-surface/90 shadow-[0_2px_8px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
+      <section className="relative z-10 overflow-hidden rounded-3xl border border-[#7e2562]/15 bg-white shadow-plum-sm">
         {submissions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-black/[0.04] dark:bg-white/[0.06]">
-              <svg className="h-7 w-7 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7e2562]/8 text-[#7e2562]">
+              <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
@@ -121,29 +140,29 @@ export default async function SubmissionsListPage({ searchParams }: PageProps<"/
           <div className="overflow-x-auto">
             <table className="w-full text-base">
               <thead>
-                <tr className="border-b border-black/[0.08] bg-black/[0.02] text-left text-xs font-bold uppercase tracking-wider text-muted-foreground dark:border-white/[0.1] dark:bg-white/[0.03]">
-                  <th className="px-6 py-4">Ref # / Title</th>
-                  <th className="px-6 py-4">Author</th>
-                  <th className="px-6 py-4">Genre / Lang</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Assigned Editor</th>
-                  <th className="px-6 py-4 text-right">Submitted</th>
-                  <th className="px-6 py-4 text-right">Action</th>
+                <tr className="border-b border-[#7e2562]/10 bg-[#faf6f9]/60 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-6 py-4 whitespace-nowrap">Ref # / Title</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Author</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Genre / Lang</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Status</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Assigned Editor</th>
+                  <th className="px-6 py-4 text-right whitespace-nowrap">Submitted</th>
+                  <th className="px-6 py-4 text-right whitespace-nowrap">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/[0.05] dark:divide-white/[0.06]">
+              <tbody className="divide-y divide-[#7e2562]/8">
                 {submissions.map((sub) => {
                   const statusClass =
                     STATUS_BADGE_STYLES[sub.status] ??
-                    "bg-black/[0.05] text-foreground dark:bg-white/[0.08]";
+                    "bg-[#7e2562]/8 text-[#7e2562]";
 
                   return (
                     <tr
                       key={sub.id}
-                      className="transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
+                      className="transition-colors hover:bg-[#faf6f9]/50"
                     >
                       <td className="px-6 py-4.5">
-                        <span className="numeric block text-xs font-bold text-muted-foreground">
+                        <span className="numeric block text-xs font-bold text-primary">
                           {sub.ref_no}
                         </span>
                         <span className="block text-base font-bold text-foreground">{sub.title}</span>
@@ -155,12 +174,13 @@ export default async function SubmissionsListPage({ searchParams }: PageProps<"/
                         </span>
                         <span className="block text-xs text-muted-foreground">{sub.language}</span>
                       </td>
-                      <td className="px-6 py-4.5">
-                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${statusClass}`}>
+                      <td className="px-6 py-4.5 whitespace-nowrap">
+                        <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap ${statusClass}`}>
+                          {sub.status === "accepted" && <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />}
                           {STATUS_LABELS[sub.status] ?? sub.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4.5">
+                      <td className="px-6 py-4.5 whitespace-nowrap">
                         {isManager ? (
                           <ReassignSelect
                             submissionId={sub.id}
@@ -174,16 +194,21 @@ export default async function SubmissionsListPage({ searchParams }: PageProps<"/
                           </span>
                         )}
                       </td>
-                      <td className="numeric px-6 py-4.5 text-right text-sm font-medium text-muted-foreground">
-                        {formatIST(sub.submitted_at)}
+                      <td className="numeric px-6 py-4.5 text-right text-sm whitespace-nowrap">
+                        <span className="block font-semibold text-foreground">
+                          {formatIST(sub.submitted_at, false)}
+                        </span>
+                        <span className="block text-xs font-medium text-muted-foreground">
+                          {formatTimeIST(sub.submitted_at)}
+                        </span>
                       </td>
-                      <td className="px-6 py-4.5 text-right">
+                      <td className="px-6 py-4.5 text-right whitespace-nowrap">
                         <Link
                           href={`/submissions/${sub.id}`}
-                          className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-black/15 bg-surface px-4 py-2 text-xs font-bold text-foreground shadow-xs hover:bg-black/5 hover:border-black/30 dark:border-white/15 dark:bg-surface-muted/60 dark:hover:bg-white/10"
+                          className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/25 bg-white px-3.5 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#7e2562] hover:text-white hover:border-[#7e2562] hover:shadow-plum-sm transition-all group"
                         >
                           <span>Review</span>
-                          <svg className="h-3.5 w-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <svg className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                           </svg>
                         </Link>
