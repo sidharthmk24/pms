@@ -251,69 +251,38 @@ export function acceptEmail(input: {
   title: string;
   contractUrl?: string;
   trackingUrl?: string;
-  isExistingAuthor?: boolean;
 }): { subject: string; text: string; html: string } {
-  const { authorName, refNo, title, trackingUrl, isExistingAuthor } = input;
+  const { authorName, refNo, title, trackingUrl } = input;
   const primarySigningUrl = input.contractUrl || trackingUrl || "#";
 
-  if (isExistingAuthor) {
-    const subject = `Manuscript Approved & in Production — ${refNo}`;
-    const text = [
-      `Dear ${authorName},`,
-      ``,
-      `We are pleased to inform you that your new manuscript "${title}" (Reference: ${refNo}) has been approved and accepted by Kairali Books!`,
-      ``,
-      `As an existing contracted author, your work has been seamlessly added under your publishing portfolio and moved directly into our Production & DTP Pipeline.`,
-      ``,
-      `You can monitor typesetting, cover design, and printing updates anytime on your Author Dashboard.`,
-      ``,
-      `Congratulations once again!`,
-      ``,
-      `Sincerely,`,
-      `Kairali Books`,
-    ].join("\n");
-
-    const html = `
-<div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1c1a17;max-width:520px">
-  <p>Dear ${escapeHtml(authorName)},</p>
-  <p>We are pleased to inform you that your new manuscript "<strong>${escapeHtml(title)}</strong>" (Reference: ${escapeHtml(refNo)}) has been approved and accepted by Kairali Books!</p>
-  <p>As an existing author with an active agreement, your work has been seamlessly enrolled into our <strong>Production &amp; DTP Pipeline</strong>.</p>
-  <p>Our team has commenced typesetting and layout design. You can track real-time milestones on your Author Dashboard.</p>
-  <p>Congratulations once again!</p>
-  <p style="color:#6b6559;margin-top:24px">Sincerely,<br><strong>Kairali Books Editorial Team</strong></p>
-</div>`.trim();
-
-    return { subject, text, html };
-  }
-
-  const subject = `Congratulations! Your manuscript has been accepted — ${refNo}`;
+  const subject = `Congratulations! Your manuscript has been accepted — ${refNo} (${title})`;
   const text = [
     `Dear ${authorName},`,
     ``,
     `We are thrilled to inform you that your manuscript "${title}" (Reference: ${refNo}) has been accepted for publication by Kairali Books!`,
     ``,
-    `We have generated your contract and publishing terms. Please review the terms and digitally sign your publishing agreement:`,
+    `We have generated your dedicated publishing agreement and contract terms. Please review the terms and digitally sign your publishing agreement:`,
     primarySigningUrl,
     ...(trackingUrl ? [``, `You can also track your manuscript status anytime at:`, trackingUrl] : []),
     ``,
-    `Once signed, your manuscript will transition to our production pipeline. We are excited to partner with you to bring your book to readers.`,
+    `Once signed, your manuscript will transition into our production pipeline. We are excited to partner with you to bring your book to readers.`,
     ``,
     `Congratulations once again!`,
     ``,
     `Sincerely,`,
-    `Kairali Books`,
+    `Kairali Books Editorial Team`,
   ].join("\n");
 
   const html = `
 <div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1c1a17;max-width:520px">
   <p>Dear ${escapeHtml(authorName)},</p>
   <p>We are thrilled to inform you that your manuscript "<strong>${escapeHtml(title)}</strong>" (Reference: ${escapeHtml(refNo)}) has been accepted for publication by Kairali Books!</p>
-  <p>We have generated your contract and publishing terms. Please review the terms and digitally sign your publishing agreement:</p>
-  <p><a href="${escapeHtml(primarySigningUrl)}" style="display:inline-block;background:#0f5d55;color:#ffffff;padding:10px 18px;text-decoration:none;border-radius:6px;font-weight:500">Review &amp; Sign Contract</a></p>
-  ${trackingUrl ? `<p style="font-size:13px;color:#6b6559">You can also track your submission anytime on the <a href="${escapeHtml(trackingUrl)}" style="color:#0f5d55">Author Tracking Portal</a>.</p>` : ""}
-  <p>Once signed, your manuscript will transition to our production pipeline. We are excited to partner with you to bring your book to readers.</p>
+  <p>We have generated your dedicated publishing agreement and royalty schedule. Please review the terms and digitally sign the agreement for this book:</p>
+  <p><a href="${escapeHtml(primarySigningUrl)}" style="display:inline-block;background:#7e2562;color:#ffffff;padding:11px 22px;text-decoration:none;border-radius:8px;font-weight:700">Review &amp; Sign Agreement</a></p>
+  ${trackingUrl ? `<p style="font-size:13px;color:#6b6559">You can also track your submission progress anytime on the <a href="${escapeHtml(trackingUrl)}" style="color:#7e2562;font-weight:600">Author Tracking Portal</a>.</p>` : ""}
+  <p>Once digitally signed, your book will officially move into our production and typesetting pipeline.</p>
   <p>Congratulations once again!</p>
-  <p style="color:#6b6559">Sincerely,<br>Kairali Books</p>
+  <p style="color:#6b6559;margin-top:24px">Sincerely,<br><strong>Kairali Books Editorial Team</strong></p>
 </div>`.trim();
 
   return { subject, text, html };
@@ -534,6 +503,105 @@ export function publicationCelebrationEmail(input: {
 </div>`.trim();
 
   return { subject, text, html };
+}
+
+/**
+ * Renders and sends password reset emails with a secure, 1-hour valid creation link.
+ */
+export function renderPasswordResetEmail({
+  recipientName,
+  resetUrl,
+}: {
+  recipientName?: string | null;
+  resetUrl: string;
+}): { subject: string; text: string; html: string } {
+  const name = recipientName?.trim() || "User";
+  const subject = `Reset Your Kairali Books Account Password`;
+
+  const text = [
+    `Hello ${name},`,
+    ``,
+    `We received a request to reset the password for your Kairali Books account.`,
+    ``,
+    `Create your new password using this link:`,
+    resetUrl,
+    ``,
+    `Note: This link is valid for 1 hour and will automatically expire once used.`,
+    ``,
+    `If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.`,
+    ``,
+    `Warm regards,`,
+    `Kairali Books · കൈരളി ബുക്സ്`,
+  ].join("\n");
+
+  const html = `
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.6;color:#1c1a17;max-width:540px;background:#ffffff;padding:32px 28px;border:1px solid #7e256220;border-radius:16px;margin:0 auto;box-shadow:0 4px 20px rgba(126,37,98,0.06)">
+  <div style="border-bottom:2px solid #7e2562;padding-bottom:14px;margin-bottom:20px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:22px;font-weight:800;color:#7e2562;letter-spacing:-0.5px">Kairali Books</span>
+    <span style="font-size:13px;font-weight:600;color:#7e256280;margin-left:8px">കൈരളി ബുക്സ്</span>
+  </div>
+
+  <h2 style="font-size:18px;font-weight:800;color:#1c1a17;margin:0 0 12px 0">Password Reset Request</h2>
+
+  <p style="font-size:14px;color:#4a453e;margin:0 0 16px 0">Dear ${escapeHtml(name)},</p>
+
+  <p style="font-size:14px;color:#4a453e;margin:0 0 20px 0">
+    We received a request to reset the password for your account on the <strong>Kairali Books Publisher Management System</strong>.
+  </p>
+
+  <div style="text-align:center;margin:32px 0">
+    <!--[if mso]>
+    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${escapeHtml(resetUrl)}" style="height:48px;v-text-anchor:middle;width:240px;" arcsize="20%" stroke="f" fillcolor="#7e2562">
+      <w:anchorlock/>
+      <center style="color:#ffffff;font-family:sans-serif;font-size:14px;font-weight:bold;">Create New Password →</center>
+    </v:roundrect>
+    <![endif]-->
+    <!--[if !mso]><!-->
+    <a href="${escapeHtml(resetUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#7e2562;color:#ffffff !important;padding:14px 34px;text-decoration:none !important;border-radius:10px;font-weight:700;font-size:14px;box-shadow:0 4px 12px rgba(126,37,98,0.25);letter-spacing:0.2px">
+      Create New Password &rarr;
+    </a>
+    <!--<![endif]-->
+  </div>
+
+  <div style="background:#faedf5;border:1px solid #7e256225;padding:14px 16px;border-radius:10px;margin:24px 0">
+    <p style="font-size:12px;color:#7e2562;margin:0;font-weight:600">
+      ⏱️ This link is valid for <strong>1 hour</strong> and will automatically expire once used.
+    </p>
+  </div>
+
+  <hr style="border:none;border-top:1px solid #e7e5e4;margin:24px 0" />
+
+  <p style="font-size:12px;color:#a8a29e;margin:0">
+    If you did not request this password reset, you can safely disregard this email. Your account remains secure.
+  </p>
+
+  <p style="font-size:12px;color:#78716c;margin-top:16px;font-weight:600">
+    Kairali Books Security &amp; Publishing Systems
+  </p>
+</div>`.trim();
+
+  return { subject, text, html };
+}
+
+export async function sendPasswordResetEmail({
+  to,
+  name,
+  resetUrl,
+}: {
+  to: string;
+  name?: string | null;
+  resetUrl: string;
+}): Promise<void> {
+  const { subject, text, html } = renderPasswordResetEmail({ recipientName: name, resetUrl });
+  await queueEmail({
+    to,
+    toName: name,
+    subject,
+    text,
+    html,
+    template: "password_reset",
+    refType: "user_password_reset",
+  });
 }
 
 

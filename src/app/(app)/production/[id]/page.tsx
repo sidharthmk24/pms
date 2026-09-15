@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { formatIST } from "@/lib/time";
 import { formatPaise } from "@/lib/money";
 import { parseContractNotes } from "@/lib/contracts";
+import { hasRole } from "@/lib/roles";
 import ScheduleForm from "./schedule-form";
 import TaskAdvance from "./task-advance";
 import PrintReceiptForm from "./print-receipt-form";
@@ -31,6 +32,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default async function ProductionDetailPage({ params }: PageProps<"/production/[id]">) {
   const user = await requireCapability("production_pipeline.read");
+  const isOwner = hasRole(user.role, "owner");
   const { id } = await params;
 
   const proj = await prisma.production_projects.findUnique({
@@ -47,12 +49,37 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
 
   if (!proj) notFound();
 
+  // Enforce that non-owner team members can only view projects assigned to them
+  const allProjectAssignees = [
+    proj.dtp_assigned_to,
+    proj.dtp_assignees,
+    proj.editing_assigned_to,
+    proj.editing_assignees,
+    proj.cover_assigned_to,
+    proj.cover_assignees,
+    proj.isbn_assigned_to,
+    proj.isbn_assignees,
+    proj.proof_assigned_to,
+    proj.proof_assignees,
+  ].filter(Boolean).join(",");
+
+  const isAssignedToProject =
+    allProjectAssignees.includes(user.id) ||
+    allProjectAssignees.includes(user.name);
+
+  if (!isOwner && !isAssignedToProject) {
+    notFound();
+  }
+
   const [contract, activeUsers] = await Promise.all([
     prisma.contracts.findFirst({
       where: { title_id: proj.title_id },
     }),
     prisma.users.findMany({
-      where: { active: true },
+      where: {
+        active: true,
+        role: { not: "author" },
+      },
       select: { id: true, name: true, role: true },
       orderBy: { name: "asc" },
     }),
@@ -61,8 +88,6 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
   const contractMeta = parseContractNotes(contract?.term_notes);
   const publishingType = contractMeta.publishing_type ?? "kairali_funded";
   const contractFreeCopies = contractMeta.free_copies ?? 10;
-
-  const isManager = user.role === "owner" || user.role === "accounts" || user.role === "production";
 
   // Determine active stage assignees
   let activeAssigneesStr: string | null = null;
@@ -88,8 +113,8 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
     ? activeAssigneesStr.split(",").map((s) => s.trim()).filter(Boolean)
     : activeAssigneeId ? [activeAssigneeId] : [];
 
-  const isAssignee = activeAssigneeList.includes(user.id);
-  const canAdvance = isAssignee || user.role === "owner" || user.role === "production" || user.role === "editor";
+  const isAssignee = activeAssigneeList.includes(user.id) || activeAssigneeList.includes(user.name);
+  const canAdvance = isAssignee || isOwner;
 
   // Financial estimations (for managers)
   const mrp = proj.titles.mrp_paise;
@@ -174,105 +199,255 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
         {/* Left column: Overview details (Sticky while right column scrolls) */}
         <section className="space-y-6 md:col-span-1 md:sticky md:top-20 md:self-start md:max-h-[calc(100vh-6rem)] md:overflow-y-auto pr-1">
           {/* Task Progress list */}
-          <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
-              Pipeline Status Tracker
-            </h2>
-            <div className="space-y-4">
-              {(() => {
-                const PIPELINE_ORDER = [
-                  "under_contract",
-                  "dtp",
-                  "editing",
-                  "cover_design",
-                  "isbn_registration",
-                  "final_proof",
-                  "printing",
-                  "post_production",
-                  "completed",
-                ];
-                const currentStageIdx = PIPELINE_ORDER.indexOf(proj.status);
+          <div className="rounded-3xl border border-[#7e2562]/15 bg-white p-6 shadow-plum-sm dark:bg-surface dark:border-white/10">
+            {(() => {
+              const PIPELINE_ORDER = [
+                "under_contract",
+                "dtp",
+                "editing",
+                "cover_design",
+                "isbn_registration",
+                "final_proof",
+                "printing",
+                "post_production",
+                "completed",
+              ];
+              const currentStageIdx = PIPELINE_ORDER.indexOf(proj.status);
 
-                const trackerSteps = [
-                  { key: "dtp", label: "DTP / Typesetting", completedAt: proj.dtp_completed_at, staff: resolveStaffNames(proj.dtp_assigned_to, proj.dtp_assignees) },
-                  { key: "editing", label: "Proofreading & Editing", completedAt: proj.editing_completed_at, staff: resolveStaffNames(proj.editing_assigned_to, proj.editing_assignees) },
-                  { key: "cover_design", label: "Cover Design", completedAt: proj.cover_completed_at, staff: resolveStaffNames(proj.cover_assigned_to, proj.cover_assignees) },
-                  {
-                    key: "isbn_registration",
-                    label: "ISBN Registration",
-                    completedAt: proj.isbn_completed_at,
-                    staff: resolveStaffNames(proj.isbn_assigned_to, proj.isbn_assignees),
-                    detail: proj.isbn_registered,
-                    substep: !proj.isbn_completed_at && proj.isbn_requested_at
-                      ? `Request Sent: ${proj.isbn_requested_at.split(" ")[0]}${proj.isbn_request_ref ? ` (Ref: ${proj.isbn_request_ref})` : ""} · Awaiting Allocation`
-                      : null,
-                  },
-                  { key: "final_proof", label: "Author Final Proof", completedAt: proj.proof_approved_at, staff: resolveStaffNames(proj.proof_assigned_to, proj.proof_assignees) },
-                  { key: "printing", label: "Offset Printing Run", completedAt: proj.print_completed_at, staff: null },
-                  { key: "post_production", label: "Post-Production Intake", completedAt: proj.post_production_completed_at, staff: null },
-                ];
+              const trackerSteps = [
+                {
+                  key: "dtp",
+                  label: "DTP / Typesetting",
+                  completedAt: proj.dtp_completed_at,
+                  deadline: proj.dtp_deadline,
+                  staff: resolveStaffNames(proj.dtp_assigned_to, proj.dtp_assignees),
+                },
+                {
+                  key: "editing",
+                  label: "Proofreading & Editing",
+                  completedAt: proj.editing_completed_at,
+                  deadline: proj.editing_deadline,
+                  staff: resolveStaffNames(proj.editing_assigned_to, proj.editing_assignees),
+                },
+                {
+                  key: "cover_design",
+                  label: "Cover Design",
+                  completedAt: proj.cover_completed_at,
+                  deadline: proj.cover_deadline,
+                  staff: resolveStaffNames(proj.cover_assigned_to, proj.cover_assignees),
+                },
+                {
+                  key: "isbn_registration",
+                  label: "ISBN Registration",
+                  completedAt: proj.isbn_completed_at,
+                  deadline: proj.isbn_deadline,
+                  staff: resolveStaffNames(proj.isbn_assigned_to, proj.isbn_assignees),
+                  detail: proj.isbn_registered,
+                  substep: !proj.isbn_completed_at && proj.isbn_requested_at
+                    ? `Application filed: ${proj.isbn_requested_at.split(" ")[0]}${proj.isbn_request_ref ? ` (Ref: ${proj.isbn_request_ref})` : ""}`
+                    : null,
+                },
+                {
+                  key: "final_proof",
+                  label: "Author Final Proof",
+                  completedAt: proj.proof_approved_at,
+                  deadline: proj.proof_deadline,
+                  staff: resolveStaffNames(proj.proof_assigned_to, proj.proof_assignees),
+                },
+                {
+                  key: "printing",
+                  label: "Offset Printing Run",
+                  completedAt: proj.print_completed_at,
+                  deadline: null,
+                  staff: null,
+                },
+                {
+                  key: "post_production",
+                  label: "Post-Production Intake",
+                  completedAt: proj.post_production_completed_at,
+                  deadline: null,
+                  staff: null,
+                },
+              ];
 
-                return trackerSteps.map((step, idx) => {
-                  const stepIdx = PIPELINE_ORDER.indexOf(step.key);
-                  const isCompleted = stepIdx < currentStageIdx;
-                  const isCurrent = step.key === proj.status;
+              const completedCount = trackerSteps.filter(
+                (s) => PIPELINE_ORDER.indexOf(s.key) < currentStageIdx
+              ).length;
+              const progressPct = Math.min(100, Math.round((completedCount / trackerSteps.length) * 100));
 
-                  return (
-                    <div key={idx} className="flex gap-3 text-sm">
-                      <div className="flex flex-col items-center">
-                        <span
-                          className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
-                            isCompleted
-                              ? "bg-success text-white shadow-xs"
-                              : isCurrent
-                              ? "bg-warning text-white ring-4 ring-warning/20 shadow-xs animate-pulse font-extrabold"
-                              : "bg-surface-muted text-muted-foreground border border-border"
+              function getStageActiveDescription(stageKey: string): string {
+                switch (stageKey) {
+                  case "dtp":
+                    return "Typesetting manuscript into print-ready interior layout";
+                  case "editing":
+                    return "Proofreading galley pages and checking typography";
+                  case "cover_design":
+                    return "Designing front, spine, and back cover artwork";
+                  case "isbn_registration":
+                    return proj?.isbn_requested_at
+                      ? "Application filed — awaiting official ISBN allocation"
+                      : "Preparing and filing official ISBN application";
+                  case "final_proof":
+                    if (proj?.proof_feedback) {
+                      return "Author requested revisions — updating proof files";
+                    }
+                    if (proj?.proof_email_sent_at) {
+                      return "Proof sent to author — awaiting final sign-off";
+                    }
+                    return "Preparing galley proof copy for author inspection";
+                  case "printing":
+                    return "Printing run in progress at the press (Offset / Digital)";
+                  case "post_production":
+                    return "Quality check, stock receipt & author copies dispatch";
+                  default:
+                    return "Currently in progress";
+                }
+              }
+
+              return (
+                <div className="space-y-4">
+                  {/* Header & Progress Indicator */}
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Pipeline Status
+                      </h2>
+                      <span className="rounded-full bg-[#faedf5] px-2.5 py-0.5 text-[10px] font-bold text-[#7e2562] dark:bg-[#7e2562]/20 dark:text-pink-300">
+                        {completedCount} of {trackerSteps.length} Steps · {progressPct}%
+                      </span>
+                    </div>
+                    {/* Mini Progress Bar */}
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#7e2562] to-emerald-500 transition-all duration-500"
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Steps Timeline */}
+                  <div className="space-y-2.5 pt-1">
+                    {trackerSteps.map((step, idx) => {
+                      const stepIdx = PIPELINE_ORDER.indexOf(step.key);
+                      const isCompleted = stepIdx < currentStageIdx;
+                      const isCurrent = step.key === proj.status;
+
+                      return (
+                        <div
+                          key={idx}
+                          className={`relative rounded-2xl transition-all ${
+                            isCurrent
+                              ? "border border-[#7e2562]/25 bg-gradient-to-br from-[#faedf5]/60 to-[#faedf5]/20 p-3.5 shadow-xs dark:from-[#7e2562]/15 dark:to-transparent dark:border-pink-500/30"
+                              : "p-2 hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
                           }`}
                         >
-                          {isCompleted ? "✓" : idx + 1}
-                        </span>
-                        {idx < trackerSteps.length - 1 && <div className="w-[1px] bg-border h-8 mt-1" />}
-                      </div>
-                      <div>
-                        <span className={`block font-medium ${isCurrent ? "text-warning font-bold" : "text-foreground"}`}>
-                          {step.label}
-                        </span>
-                        {step.staff && (
-                          <span className="block text-[10px] text-muted-foreground">
-                            Staff: {step.staff}
-                          </span>
-                        )}
-                        {step.detail && isCompleted && (
-                          <span className="block text-[10px] text-success font-semibold">
-                            ISBN: {step.detail}
-                          </span>
-                        )}
-                        {step.substep && isCurrent && (
-                          <span className="block text-[10px] text-warning font-semibold">
-                            🔵 {step.substep}
-                          </span>
-                        )}
-                        {isCompleted ? (
-                          <span className="block text-[10px] text-success">
-                            Completed: {step.completedAt ? formatIST(step.completedAt, false) : "Done"}
-                          </span>
-                        ) : isCurrent ? (
-                          <span className="block text-[10px] text-warning font-semibold">
-                            {proj.proof_feedback ? "🟠 Under Rework / Revision" : "🔵 Current Active Stage"}
-                          </span>
-                        ) : (
-                          <span className="block text-[10px] text-muted-foreground">Pending</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
-            </div>
+                          <div className="flex items-start gap-3">
+                            {/* Step Status Badge */}
+                            <div className="mt-0.5 flex shrink-0 items-center justify-center">
+                              {isCompleted ? (
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xs font-bold text-xs">
+                                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </span>
+                              ) : isCurrent ? (
+                                <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-[#7e2562] text-white font-extrabold text-xs shadow-xs ring-4 ring-[#7e2562]/15 dark:ring-pink-500/20">
+                                  {idx + 1}
+                                </span>
+                              ) : (
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full border border-black/12 bg-black/[0.02] text-xs font-bold text-muted-foreground dark:border-white/15 dark:bg-white/[0.04]">
+                                  {idx + 1}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Step Content */}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <span
+                                  className={`text-xs font-bold ${
+                                    isCurrent
+                                      ? "text-[#7e2562] dark:text-pink-300 text-sm"
+                                      : isCompleted
+                                      ? "text-foreground font-semibold"
+                                      : "text-muted-foreground"
+                                  }`}
+                                >
+                                  {step.label}
+                                </span>
+
+                                {isCompleted && step.completedAt && (
+                                  <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                                    {formatIST(step.completedAt, false).split(" ")[0]}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Staff & Details */}
+                              {step.staff && (
+                                <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                                  <svg className="h-3 w-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                  <span className="truncate">{step.staff}</span>
+                                </div>
+                              )}
+
+                              {step.detail && isCompleted && (
+                                <span className="mt-0.5 inline-block text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                                  ISBN: {step.detail}
+                                </span>
+                              )}
+
+                              {/* Active Step Live Blinking Status Box */}
+                              {isCurrent && (
+                                <div className="mt-2 space-y-1.5">
+                                  {proj.proof_feedback && step.key === "final_proof" ? (
+                                    <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+                                      <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                                      </span>
+                                      <span className="leading-tight">Author Revision Requested — Updating Layout</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-2 rounded-xl border border-[#7e2562]/20 bg-white/80 px-2.5 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs dark:bg-surface/90 dark:text-pink-300 dark:border-pink-500/30">
+                                      <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7e2562] opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#7e2562]"></span>
+                                      </span>
+                                      <span className="leading-tight">{getStageActiveDescription(step.key)}</span>
+                                    </div>
+                                  )}
+
+                                  {step.substep && (
+                                    <div className="flex items-center gap-1.5 text-[10px] font-medium text-amber-700 dark:text-amber-300 pl-1">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                      <span>{step.substep}</span>
+                                    </div>
+                                  )}
+
+                                  {step.deadline && (
+                                    <div className="flex items-center gap-1 text-[10px] font-semibold text-muted-foreground pl-1">
+                                      <span>Target:</span>
+                                      <span className="text-foreground">{step.deadline}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
-          {/* Financial Tracking (Only Managers/Accounts) */}
-          {isManager && (
+          {/* Financial Tracking (Only Owner) */}
+          {isOwner && (
             <div className="rounded-xl border border-border bg-surface p-5">
               <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
                 Cost & Royalty Tracking
@@ -392,8 +567,8 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
             />
           )}
 
-          {/* Schedule Configuration Form (Managers) */}
-          {isManager && proj.status !== "completed" && proj.status !== "cancelled" && (
+          {/* Schedule Configuration Form (Owner / Admin) */}
+          {isOwner && proj.status !== "completed" && proj.status !== "cancelled" && (
             <ScheduleForm project={proj} users={activeUsers} />
           )}
         </section>

@@ -3,6 +3,7 @@ import { fail, handler, ok } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { queueEmail } from "@/lib/mail";
 import { storeManuscript, discardManuscript, resolveManuscript, UploadError } from "@/lib/storage";
+import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { stamp, dateOnly } from "@/lib/time";
 
@@ -42,7 +43,8 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     // Write new file to disk
     let stored;
     try {
-      stored = await storeManuscript(file);
+      const sessionUser = await getSessionUser();
+      stored = await storeManuscript(file, sessionUser?.id || null);
     } catch (err) {
       if (err instanceof UploadError) return fail(422, err.message);
       throw err;
@@ -165,7 +167,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
 
     if (json.action === "proof_decision") {
       const { decision, comment } = json;
-      if (decision !== "approve" && decision !== "reject") {
+      if (decision !== "approve" && decision !== "reject" && decision !== "rework") {
         return fail(400, "Invalid proof decision");
       }
 
@@ -185,7 +187,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
 
       const now = stamp();
 
-      if (decision === "reject") {
+      if (decision === "reject" || decision === "rework") {
         if (!comment?.trim()) {
           return fail(422, "Please leave revision feedback comments");
         }

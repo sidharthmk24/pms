@@ -223,6 +223,13 @@ export function SmoothDropdown({
     lg: "h-4.5 w-4.5",
   }[size];
 
+  const isSelected =
+    selectedValue !== undefined &&
+    selectedValue !== null &&
+    String(selectedValue) !== "" &&
+    String(selectedValue) !== "all" &&
+    String(selectedValue) !== "ALL";
+
   return (
     <div
       ref={containerRef}
@@ -255,7 +262,11 @@ export function SmoothDropdown({
             disabled
               ? "opacity-50 cursor-not-allowed border-black/10 bg-black/[0.02] text-muted-foreground dark:border-white/10 dark:bg-white/[0.02]"
               : isOpen
-              ? "border-foreground bg-surface shadow-xs text-foreground ring-2 ring-foreground/10 dark:border-foreground dark:ring-foreground/20"
+              ? isSelected
+                ? "border-[#7e2562] ring-2 ring-[#7e2562]/30 shadow-plum-sm bg-[#faedf5]/60 text-black dark:text-white"
+                : "border-foreground bg-surface shadow-xs text-foreground ring-2 ring-foreground/10 dark:border-foreground dark:ring-foreground/20"
+              : isSelected
+              ? "border-[#7e2562] ring-2 ring-[#7e2562]/30 shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
               : "border-black/12 bg-surface hover:border-black/25 text-foreground hover:bg-black/[0.01] dark:border-white/15 dark:bg-surface-muted/60 dark:hover:border-white/30 dark:hover:bg-white/[0.02]"
           }
           ${buttonClassName}`}
@@ -266,8 +277,10 @@ export function SmoothDropdown({
           )}
           <span
             className={`truncate ${
-              !selectedOption || selectedOption.value === ""
+              !selectedOption || selectedOption.value === "" || selectedOption.value === "all" || selectedOption.value === "ALL"
                 ? "text-muted-foreground/70 font-normal"
+                : isSelected
+                ? "font-bold text-black dark:text-white"
                 : "font-semibold text-foreground"
             }`}
           >
@@ -276,7 +289,9 @@ export function SmoothDropdown({
         </div>
 
         <svg
-          className={`shrink-0 text-muted-foreground transition-transform duration-200 ease-out ${arrowSizes} ${
+          className={`shrink-0 transition-transform duration-200 ease-out ${arrowSizes} ${
+            isSelected ? "text-[#7e2562]" : "text-muted-foreground"
+          } ${
             isOpen ? "rotate-180 text-foreground" : "group-hover:text-foreground"
           }`}
           fill="none"

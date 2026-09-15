@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getSessionUser } from "@/lib/session";
 import SigningClient from "./signing-client";
 
 export const metadata: Metadata = {
@@ -48,5 +49,19 @@ export default async function AuthorContractPage({
     notFound();
   }
 
-  return <SigningClient contract={contract} />;
+  const sessionUser = await getSessionUser();
+  const authorEmail = contract.authors.email?.toLowerCase();
+  const userEmail = sessionUser?.email?.toLowerCase();
+  const isMatchingAuthor = Boolean(authorEmail && userEmail && authorEmail === userEmail);
+  const isStaff = Boolean(sessionUser && ["owner", "admin", "publisher", "editor"].includes(sessionUser.role));
+  const isVerified = isMatchingAuthor || isStaff;
+
+  return (
+    <SigningClient
+      contract={contract}
+      isVerified={isVerified}
+      authorEmail={contract.authors.email}
+    />
+  );
 }
+

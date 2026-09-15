@@ -18,7 +18,7 @@ export const AUTHOR_NAV: NavItem[] = [
 
 export const NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", capability: null, ready: true },
-  { label: "Activity Logs", href: "/activity", capability: null, ready: true },
+  { label: "Activity Logs", href: "/activity", capability: "users.manage", ready: true },
   { label: "Submissions", href: "/submissions", capability: "submissions.read", ready: true },
   { label: "Production", href: "/production", capability: "production_pipeline.read", ready: true },
   { label: "Published Books", href: "/titles", capability: "titles.read", ready: true },
@@ -35,7 +35,7 @@ export const NAV: NavItem[] = [
   { label: "Settings", href: "/settings", capability: "settings.manage", ready: false },
 ];
 
-export function navFor(role: Role): NavItem[] {
+export function navFor(role: string): NavItem[] {
   if (role === "author") {
     return AUTHOR_NAV;
   }

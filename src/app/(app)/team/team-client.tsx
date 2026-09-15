@@ -3,7 +3,14 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import type { Role } from "@/lib/roles";
+import {
+  STAFF_ROLE_DEFINITIONS,
+  parseUserRoles,
+  hasRole,
+  type StaffRole,
+  type Role,
+  ROLE_LABEL,
+} from "@/lib/roles";
 
 type TeamUser = {
   id: string;
@@ -17,60 +24,41 @@ type TeamUser = {
   };
 };
 
-type StaffRole = Exclude<Role, "author">;
-
-const STAFF_ROLES: { val: StaffRole; label: string; desc: string }[] = [
-  { val: "editor", label: "Editor", desc: "Reviews manuscripts, decides acceptance, and manages editorial revisions." },
-  { val: "production", label: "Production", desc: "Handles DTP typesetting, cover design, ISBN registration, and print runs." },
-  { val: "accounts", label: "Accounts", desc: "Manages financial ledgers, dealer transactions, and author royalty settlements." },
-  { val: "store", label: "Store", desc: "Oversees warehouse stock movement, distribution, and inventory levels." },
-  { val: "owner", label: "Owner", desc: "Full administrative publisher access across all system modules." },
-];
-
-function getRoleBadge(role: string) {
-  switch (role) {
-    case "owner":
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/25 bg-purple-500/10 px-2.5 py-1 text-xs font-bold text-purple-700 dark:border-purple-400/25 dark:bg-purple-500/20 dark:text-purple-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-          Owner
-        </span>
-      );
-    case "editor":
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/25 bg-blue-500/10 px-2.5 py-1 text-xs font-bold text-blue-700 dark:border-blue-400/25 dark:bg-blue-500/20 dark:text-blue-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-          Editor
-        </span>
-      );
-    case "production":
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-700 dark:border-amber-400/25 dark:bg-amber-500/20 dark:text-amber-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-          Production
-        </span>
-      );
-    case "accounts":
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:border-emerald-400/25 dark:bg-emerald-500/20 dark:text-emerald-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Accounts
-        </span>
-      );
-    case "store":
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-2.5 py-1 text-xs font-bold text-cyan-700 dark:border-cyan-400/25 dark:bg-cyan-500/20 dark:text-cyan-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
-          Store
-        </span>
-      );
-    default:
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-black/5 px-2.5 py-1 text-xs font-bold text-muted-foreground dark:border-white/10 dark:bg-white/5">
-          {role}
-        </span>
-      );
+function renderRoleBadges(roleStr: string) {
+  const roles = parseUserRoles(roleStr);
+  if (roles.length === 0) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-black/5 px-2.5 py-1 text-xs font-bold text-muted-foreground dark:border-white/10 dark:bg-white/5">
+        No Role
+      </span>
+    );
   }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {roles.map((r) => {
+        const def = STAFF_ROLE_DEFINITIONS.find((d) => d.val === r);
+        if (!def) {
+          return (
+            <span
+              key={r}
+              className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-black/5 px-2 py-0.5 text-xs font-semibold text-muted-foreground"
+            >
+              {r}
+            </span>
+          );
+        }
+        return (
+          <span
+            key={r}
+            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold ${def.badgeClass}`}
+          >
+            {def.label}
+          </span>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function TeamClient({
@@ -89,12 +77,12 @@ export default function TeamClient({
 
   // Search and Role filter states
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRole, setSelectedRole] = useState<string>("all");
+  const [selectedFilterRole, setSelectedFilterRole] = useState<string>("all");
 
   // Form states
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<StaffRole>("production");
+  const [selectedRoles, setSelectedRoles] = useState<StaffRole[]>(["editor"]);
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
@@ -102,8 +90,23 @@ export default function TeamClient({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  function toggleRole(roleVal: StaffRole) {
+    if (selectedRoles.includes(roleVal)) {
+      if (selectedRoles.length > 1) {
+        setSelectedRoles(selectedRoles.filter((r) => r !== roleVal));
+      }
+    } else {
+      setSelectedRoles([...selectedRoles, roleVal]);
+    }
+  }
+
   async function handleCreateUser(e: React.FormEvent) {
     e.preventDefault();
+    if (selectedRoles.length === 0) {
+      setError("Please select at least one role for this team member.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -112,18 +115,23 @@ export default function TeamClient({
       const res = await fetch("/api/team", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, role, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          roles: selectedRoles,
+          password,
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
         setError(data.error ?? "Failed to create user");
       } else {
-        setSuccess(`User ${name} created successfully!`);
+        setSuccess(`User ${name} created successfully with ${selectedRoles.length} role(s)!`);
         setIsAddOpen(false);
         setName("");
         setEmail("");
         setPassword("");
-        setRole("production");
+        setSelectedRoles(["editor"]);
         router.refresh();
       }
     } catch {
@@ -137,6 +145,11 @@ export default function TeamClient({
     e.preventDefault();
     if (!editingUser) return;
 
+    if (selectedRoles.length === 0) {
+      setError("Please select at least one role for this team member.");
+      return;
+    }
+
     if (newPassword && newPassword.length < 8) {
       setError("Password must be at least 8 characters");
       return;
@@ -147,7 +160,10 @@ export default function TeamClient({
     setSuccess(null);
 
     try {
-      const payload: Record<string, any> = { name, role };
+      const payload: Record<string, unknown> = {
+        name,
+        roles: selectedRoles,
+      };
       if (newPassword) {
         payload.newPassword = newPassword;
       }
@@ -205,13 +221,26 @@ export default function TeamClient({
     }
   }
 
+  const filterTabs = [
+    { key: "all", label: "All Staff" },
+    { key: "owner", label: "Owner" },
+    { key: "editor", label: "Editor" },
+    { key: "designer", label: "Cover Designer" },
+    { key: "dtp", label: "DTP / Typesetter" },
+    { key: "proofreader", label: "Proofreader" },
+    { key: "isbn", label: "ISBN Specialist" },
+    { key: "production", label: "Production" },
+    { key: "accounts", label: "Accounts" },
+    { key: "store", label: "Store" },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Top Banner Notifications */}
       {success && (
         <div className="flex items-center justify-between rounded-2xl border border-success/30 bg-success/10 p-4 text-sm font-bold text-success">
           <span>{success}</span>
-          <button onClick={() => setSuccess(null)} className="text-xs opacity-75 hover:opacity-100">
+          <button onClick={() => setSuccess(null)} className="text-xs opacity-75 hover:opacity-100 cursor-pointer">
             ✕
           </button>
         </div>
@@ -220,7 +249,7 @@ export default function TeamClient({
       {error && (
         <div className="flex items-center justify-between rounded-2xl border border-danger/30 bg-danger/10 p-4 text-sm font-bold text-danger">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-xs opacity-75 hover:opacity-100">
+          <button onClick={() => setError(null)} className="text-xs opacity-75 hover:opacity-100 cursor-pointer">
             ✕
           </button>
         </div>
@@ -231,7 +260,7 @@ export default function TeamClient({
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Team & Roles</h1>
           <p className="mt-1 text-base text-muted-foreground">
-            Manage publisher staff accounts, access permissions, and editorial workload assignments.
+            Manage publisher staff, assign multiple specialized roles (Editor, Designer, DTP, Proofreader, ISBN, Production), and control permissions.
           </p>
         </div>
 
@@ -239,12 +268,12 @@ export default function TeamClient({
           onClick={() => {
             setName("");
             setEmail("");
-            setRole("editor");
+            setSelectedRoles(["editor"]);
             setPassword("");
             setError(null);
             setIsAddOpen(true);
           }}
-          className="apple-button inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground shadow-md hover:bg-primary-hover"
+          className="apple-button inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground shadow-md hover:bg-primary-hover cursor-pointer"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -254,7 +283,7 @@ export default function TeamClient({
       </div>
 
       {/* Search and Role Filter Bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative flex-1 max-w-sm">
           <input
             type="text"
@@ -275,7 +304,7 @@ export default function TeamClient({
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
             >
               ✕
             </button>
@@ -283,27 +312,23 @@ export default function TeamClient({
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {[
-            { key: "all", label: "All Staff" },
-            { key: "owner", label: "Owner" },
-            { key: "editor", label: "Editor" },
-            { key: "production", label: "Production" },
-            { key: "accounts", label: "Accounts" },
-            { key: "store", label: "Store" },
-          ].map((item) => {
-            const count = item.key === "all" ? users.length : users.filter((u) => u.role === item.key).length;
+          {filterTabs.map((item) => {
+            const count =
+              item.key === "all"
+                ? users.length
+                : users.filter((u) => hasRole(u.role, item.key as Role)).length;
             return (
               <button
                 key={item.key}
-                onClick={() => setSelectedRole(item.key)}
-                className={`apple-button rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                  selectedRole === item.key
+                onClick={() => setSelectedFilterRole(item.key)}
+                className={`apple-button rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  selectedFilterRole === item.key
                     ? "bg-foreground text-background shadow-xs font-extrabold"
                     : "border border-black/8 bg-surface text-muted-foreground hover:bg-black/5 hover:text-foreground dark:border-white/10 dark:bg-surface-muted/50"
                 }`}
               >
                 {item.label}
-                <span className={`ml-1.5 text-[10px] ${selectedRole === item.key ? "opacity-80" : "opacity-60"}`}>
+                <span className={`ml-1.5 text-[10px] ${selectedFilterRole === item.key ? "opacity-80" : "opacity-60"}`}>
                   ({count})
                 </span>
               </button>
@@ -313,15 +338,15 @@ export default function TeamClient({
       </div>
 
       {/* Team Members Bento Table */}
-      <section className="overflow-hidden rounded-sm border border-black/[0.08] bg-surface/90 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
+      <section className="overflow-hidden rounded-2xl border border-black/[0.08] bg-surface/90 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-black/[0.06] bg-black/[0.02] text-xs font-bold uppercase tracking-wider text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.02]">
               <tr>
                 <th className="px-6 py-4.5 whitespace-nowrap">Member</th>
-                <th className="px-6 py-4.5 whitespace-nowrap">Role</th>
+                <th className="px-6 py-4.5 whitespace-nowrap">Assigned Roles</th>
                 <th className="px-6 py-4.5 whitespace-nowrap">Email</th>
-                <th className="px-6 py-4.5 whitespace-nowrap">Submissions Workload</th>
+                <th className="px-6 py-4.5 whitespace-nowrap">Submissions</th>
                 <th className="px-6 py-4.5 whitespace-nowrap">Status</th>
                 <th className="px-6 py-4.5 text-right whitespace-nowrap">Actions</th>
               </tr>
@@ -332,7 +357,8 @@ export default function TeamClient({
                   const matchesSearch =
                     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     user.email.toLowerCase().includes(searchQuery.toLowerCase());
-                  const matchesRole = selectedRole === "all" || user.role === selectedRole;
+                  const matchesRole =
+                    selectedFilterRole === "all" || hasRole(user.role, selectedFilterRole as Role);
                   return matchesSearch && matchesRole;
                 });
 
@@ -380,9 +406,9 @@ export default function TeamClient({
                         </div>
                       </td>
 
-                      {/* Role Badge */}
-                      <td className="px-6 py-4.5 whitespace-nowrap">
-                        {getRoleBadge(user.role)}
+                      {/* Role Badges */}
+                      <td className="px-6 py-4.5 max-w-xs">
+                        {renderRoleBadges(user.role)}
                       </td>
 
                       {/* Email */}
@@ -418,7 +444,10 @@ export default function TeamClient({
                           <button
                             onClick={() => {
                               setName(user.name);
-                              setRole((STAFF_ROLES.some((r) => r.val === user.role) ? user.role : "editor") as StaffRole);
+                              const roles = parseUserRoles(user.role).filter(
+                                (r): r is StaffRole => r !== "author"
+                              );
+                              setSelectedRoles(roles.length > 0 ? roles : ["editor"]);
                               setNewPassword("");
                               setError(null);
                               setEditingUser(user);
@@ -456,25 +485,25 @@ export default function TeamClient({
 
       {/* MODAL 1: Add Team Member */}
       {isAddOpen && mounted && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/15 dark:bg-black/40">
-          <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-black/10 bg-surface dark:border-white/15">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-xs">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-black/10 bg-surface dark:border-white/15 shadow-2xl max-h-[90vh] flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-black/[0.06] px-6 py-4 dark:border-white/[0.08]">
               <div>
                 <h3 className="text-lg font-bold tracking-tight text-foreground">Add Team Member</h3>
-                <p className="text-xs text-muted-foreground">Create account credentials and permissions.</p>
+                <p className="text-xs text-muted-foreground">Create account credentials and assign multiple specialized roles.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-muted-foreground transition-colors hover:bg-black/10 hover:text-foreground dark:bg-white/10 dark:hover:bg-white/20"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-muted-foreground transition-colors hover:bg-black/10 hover:text-foreground dark:bg-white/10 dark:hover:bg-white/20 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleCreateUser} className="p-6 space-y-4">
+            <form onSubmit={handleCreateUser} className="p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-foreground/80">
                   Full Name
@@ -496,7 +525,7 @@ export default function TeamClient({
                 <input
                   type="email"
                   required
-                  placeholder="editor@kairalibooks.in"
+                  placeholder="staff@kairalibooks.in"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-xl border border-black/12 bg-black/[0.02] px-3.5 py-2.5 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-foreground/40 focus:bg-surface focus:ring-2 focus:ring-foreground/5 dark:border-white/15 dark:bg-white/[0.03] dark:focus:bg-surface"
@@ -504,28 +533,52 @@ export default function TeamClient({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-foreground/80">
-                  Role & Permissions
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 rounded-2xl border border-black/10 bg-black/[0.03] p-1.5 dark:border-white/10 dark:bg-white/[0.03]">
-                  {STAFF_ROLES.map((r) => (
-                    <button
-                      key={r.val}
-                      type="button"
-                      onClick={() => setRole(r.val)}
-                      className={`apple-button py-2 px-2.5 text-xs font-bold rounded-xl transition-all text-center ${
-                        role === r.val
-                          ? "bg-surface text-foreground shadow-xs font-extrabold ring-1 ring-black/10 dark:ring-white/15"
-                          : "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
-                      }`}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="text-xs font-semibold text-foreground/80">
+                    Assigned Functional Roles <span className="text-primary font-bold">(Select 1 or more)</span>
+                  </label>
+                  <span className="text-[11px] font-medium text-muted-foreground">
+                    {selectedRoles.length} selected
+                  </span>
                 </div>
-                <p className="mt-2 text-[11px] text-muted-foreground bg-black/[0.02] dark:bg-white/[0.02] p-2.5 rounded-xl border border-black/5 dark:border-white/5">
-                  {STAFF_ROLES.find((r) => r.val === role)?.desc}
-                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                  {STAFF_ROLE_DEFINITIONS.map((r) => {
+                    const isSelected = selectedRoles.includes(r.val);
+                    return (
+                      <button
+                        key={r.val}
+                        type="button"
+                        onClick={() => toggleRole(r.val)}
+                        className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? "border-primary bg-primary/5 text-foreground shadow-xs ring-1 ring-primary/20"
+                            : "border-black/8 bg-surface text-muted-foreground hover:bg-black/5 hover:text-foreground dark:border-white/10 dark:bg-surface-muted/30"
+                        }`}
+                      >
+                        <div
+                          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
+                            isSelected
+                              ? "border-primary bg-primary text-white"
+                              : "border-black/20 bg-white dark:border-white/20 dark:bg-surface"
+                          }`}
+                        >
+                          {isSelected && (
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-xs font-bold text-foreground block">{r.label}</span>
+                          <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight mt-0.5">
+                            {r.desc}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div>
@@ -554,14 +607,14 @@ export default function TeamClient({
                 <button
                   type="button"
                   onClick={() => setIsAddOpen(false)}
-                  className="apple-button flex-1 rounded-xl border border-black/12 bg-black/[0.02] py-2.5 text-xs font-bold text-foreground hover:bg-black/[0.05] dark:border-white/15 dark:bg-white/[0.04] dark:hover:bg-white/[0.08]"
+                  className="apple-button flex-1 rounded-xl border border-black/12 bg-black/[0.02] py-2.5 text-xs font-bold text-foreground hover:bg-black/[0.05] dark:border-white/15 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="apple-button flex-1 rounded-xl bg-foreground py-2.5 text-xs font-bold text-background shadow-xs hover:opacity-90 disabled:opacity-50"
+                  className="apple-button flex-1 rounded-xl bg-foreground py-2.5 text-xs font-bold text-background shadow-xs hover:opacity-90 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? "Creating..." : "Create Member"}
                 </button>
@@ -572,27 +625,27 @@ export default function TeamClient({
         document.body
       )}
 
-      {/* MODAL 2: Edit User Role, Name & Password */}
+      {/* MODAL 2: Edit User Multi-Roles, Name & Password */}
       {editingUser && mounted && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/15 dark:bg-black/40">
-          <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-black/10 bg-surface dark:border-white/15 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-xs">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-black/10 bg-surface dark:border-white/15 shadow-2xl max-h-[90vh] flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-black/[0.06] px-6 py-4 dark:border-white/[0.08]">
               <div>
-                <h3 className="text-lg font-bold tracking-tight text-foreground">Edit Member Details</h3>
-                <p className="text-xs text-muted-foreground">Update profile, role permissions, and password.</p>
+                <h3 className="text-lg font-bold tracking-tight text-foreground">Edit Member Details & Roles</h3>
+                <p className="text-xs text-muted-foreground">Assign or adjust specialized functional roles and permissions.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingUser(null)}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-muted-foreground transition-colors hover:bg-black/10 hover:text-foreground dark:bg-white/10 dark:hover:bg-white/20"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-muted-foreground transition-colors hover:bg-black/10 hover:text-foreground dark:bg-white/10 dark:hover:bg-white/20 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleUpdateUser} className="p-6 space-y-4">
+            <form onSubmit={handleUpdateUser} className="p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-foreground/80">
                   Full Name
@@ -619,28 +672,52 @@ export default function TeamClient({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-foreground/80">
-                  Role & Permissions
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 rounded-2xl border border-black/10 bg-black/[0.03] p-1.5 dark:border-white/10 dark:bg-white/[0.03]">
-                  {STAFF_ROLES.map((r) => (
-                    <button
-                      key={r.val}
-                      type="button"
-                      onClick={() => setRole(r.val)}
-                      className={`apple-button py-2 px-2.5 text-xs font-bold rounded-xl transition-all text-center ${
-                        role === r.val
-                          ? "bg-surface text-foreground shadow-xs font-extrabold ring-1 ring-black/10 dark:ring-white/15"
-                          : "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
-                      }`}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="text-xs font-semibold text-foreground/80">
+                    Assigned Functional Roles <span className="text-primary font-bold">(Select multiple roles)</span>
+                  </label>
+                  <span className="text-[11px] font-medium text-muted-foreground">
+                    {selectedRoles.length} active role(s)
+                  </span>
                 </div>
-                <p className="mt-2 text-[11px] text-muted-foreground bg-black/[0.02] dark:bg-white/[0.02] p-2.5 rounded-xl border border-black/5 dark:border-white/5">
-                  {STAFF_ROLES.find((r) => r.val === role)?.desc}
-                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                  {STAFF_ROLE_DEFINITIONS.map((r) => {
+                    const isSelected = selectedRoles.includes(r.val);
+                    return (
+                      <button
+                        key={r.val}
+                        type="button"
+                        onClick={() => toggleRole(r.val)}
+                        className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? "border-[#7e2562] bg-[#faedf5] text-foreground shadow-xs ring-1 ring-[#7e2562]/30"
+                            : "border-black/8 bg-surface text-muted-foreground hover:bg-black/5 hover:text-foreground dark:border-white/10 dark:bg-surface-muted/30"
+                        }`}
+                      >
+                        <div
+                          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
+                            isSelected
+                              ? "border-[#7e2562] bg-[#7e2562] text-white"
+                              : "border-black/20 bg-white dark:border-white/20 dark:bg-surface"
+                          }`}
+                        >
+                          {isSelected && (
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-xs font-bold text-foreground block">{r.label}</span>
+                          <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight mt-0.5">
+                            {r.desc}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div>
@@ -671,14 +748,14 @@ export default function TeamClient({
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="apple-button flex-1 rounded-xl border border-black/12 bg-black/[0.02] py-2.5 text-xs font-bold text-foreground hover:bg-black/[0.05] dark:border-white/15 dark:bg-white/[0.04] dark:hover:bg-white/[0.08]"
+                  className="apple-button flex-1 rounded-xl border border-black/12 bg-black/[0.02] py-2.5 text-xs font-bold text-foreground hover:bg-black/[0.05] dark:border-white/15 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="apple-button flex-1 rounded-xl bg-[#7e2562] py-2.5 text-xs font-bold text-white shadow-plum-sm hover:bg-[#681d50] hover:shadow-plum transition-all disabled:opacity-50"
+                  className="apple-button flex-1 rounded-xl bg-[#7e2562] py-2.5 text-xs font-bold text-white shadow-plum-sm hover:bg-[#681d50] hover:shadow-plum transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? "Saving..." : "Save Changes"}
                 </button>

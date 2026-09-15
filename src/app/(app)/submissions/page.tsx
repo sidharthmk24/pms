@@ -3,7 +3,8 @@ import Link from "next/link";
 import { requireCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatIST, formatTimeIST } from "@/lib/time";
-import { can } from "@/lib/roles";
+import { can, hasRole } from "@/lib/roles";
+import { parseContractNotes } from "@/lib/contracts";
 import SubmissionsFilterBar from "./submissions-filter-bar";
 import ReassignSelect from "./reassign-select";
 
@@ -45,42 +46,49 @@ const GENRE_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-export default async function SubmissionsListPage({ searchParams }: PageProps<"/submissions">) {
+export default async function SubmissionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const user = await requireCapability("submissions.read");
-  const isManager = can(user.role, "submissions.manage");
+  const isManager = can(user.role, "submissions.manage") || hasRole(user.role, "owner");
 
-  const { status, editor, sort } = await searchParams;
+  const params = await searchParams;
+  const filterStatus = typeof params.status === "string" ? params.status : "all";
+  const filterEditor = typeof params.editor === "string" ? params.editor : "";
+  const filterSearch = typeof params.q === "string" ? params.q.trim() : "";
+  const filterSort = typeof params.sort === "string" ? params.sort : "newest";
 
-  const filterStatus = typeof status === "string" ? status : undefined;
-  const filterEditor = typeof editor === "string" ? editor : undefined;
-  const filterSort = typeof sort === "string" ? sort : "submitted_desc";
-
+  // Build sorting
   let orderBy: Record<string, "asc" | "desc"> = { submitted_at: "desc" };
-  if (filterSort === "submitted_asc") {
-    orderBy = { submitted_at: "asc" };
-  } else if (filterSort === "title_asc") {
-    orderBy = { title: "asc" };
-  } else if (filterSort === "title_desc") {
-    orderBy = { title: "desc" };
-  } else if (filterSort === "author_asc") {
-    orderBy = { author_name: "asc" };
-  } else if (filterSort === "author_desc") {
-    orderBy = { author_name: "desc" };
-  } else if (filterSort === "ref_desc") {
-    orderBy = { ref_no: "desc" };
-  } else if (filterSort === "ref_asc") {
-    orderBy = { ref_no: "asc" };
-  }
+  if (filterSort === "oldest") orderBy = { submitted_at: "asc" };
+  if (filterSort === "title") orderBy = { title: "asc" };
+  if (filterSort === "author") orderBy = { author_name: "asc" };
 
-  const [submissions, editors] = await Promise.all([
+  const [submissions, allActiveStaff] = await Promise.all([
     prisma.submissions.findMany({
       where: {
-        ...(filterStatus
-          ? filterStatus === "new" || filterStatus === "pending_review"
+        ...(isManager
+          ? filterEditor
+            ? { reviewed_by: filterEditor }
+            : {}
+          : { reviewed_by: user.id }),
+        ...(filterSearch
+          ? {
+              OR: [
+                { title: { contains: filterSearch, mode: "insensitive" } },
+                { author_name: { contains: filterSearch, mode: "insensitive" } },
+                { email: { contains: filterSearch, mode: "insensitive" } },
+                { ref_no: { contains: filterSearch, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+        ...(filterStatus !== "all"
+          ? filterStatus === "pending"
             ? { status: { in: ["new", "pending_review"] } }
             : { status: filterStatus }
           : {}),
-        ...(filterEditor ? { reviewed_by: filterEditor } : {}),
       },
       orderBy,
       include: {
@@ -88,29 +96,56 @@ export default async function SubmissionsListPage({ searchParams }: PageProps<"/
       },
     }),
     prisma.users.findMany({
-      where: { active: true, role: "editor" },
+      where: {
+        active: true,
+        role: { not: "author" },
+      },
       select: { id: true, name: true, role: true },
       orderBy: { name: "asc" },
     }),
   ]);
+
+  const acceptedSubIds = submissions.filter((s) => s.status === "accepted").map((s) => s.id);
+  const acceptedSubRefs = submissions.filter((s) => s.status === "accepted").map((s) => s.ref_no);
+
+  const relatedContracts = acceptedSubIds.length > 0
+    ? await prisma.contracts.findMany({
+        where: {
+          OR: [
+            ...acceptedSubIds.map((id) => ({ term_notes: { contains: id } })),
+            ...acceptedSubRefs.map((ref) => ({ term_notes: { contains: ref } })),
+          ],
+        },
+        select: {
+          id: true,
+          signed_on: true,
+          term_notes: true,
+        },
+      })
+    : [];
+
+  const editors = allActiveStaff.filter(
+    (u) => hasRole(u.role, "editor") || hasRole(u.role, "owner")
+  );
 
   return (
     <div className="mx-auto max-w-6xl animate-apple-in space-y-6">
       {/* Header */}
       <header className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
-        
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Manuscript Submissions
           </h1>
-          <p className="mt-1.5 text-base  text-muted-foreground">
-            Review and evaluate submitted book manuscripts
+          <p className="mt-1.5 text-base text-muted-foreground">
+            {isManager
+              ? "Review and evaluate submitted book manuscripts"
+              : "Manuscripts assigned to your editorial desk for evaluation"}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="rounded-full border border-[#7e2562]/20 bg-white px-4 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs">
-            {submissions.length} Total Submissions
+            {submissions.length} {isManager ? "Total Submissions" : "Assigned Manuscripts"}
           </span>
         </div>
       </header>
@@ -122,6 +157,7 @@ export default async function SubmissionsListPage({ searchParams }: PageProps<"/
         currentStatus={filterStatus}
         currentEditor={filterEditor}
         currentSort={filterSort}
+        showEditorFilter={isManager}
       />
 
       {/* Submissions Table Card */}
@@ -152,9 +188,35 @@ export default async function SubmissionsListPage({ searchParams }: PageProps<"/
               </thead>
               <tbody className="divide-y divide-[#7e2562]/8">
                 {submissions.map((sub) => {
-                  const statusClass =
-                    STATUS_BADGE_STYLES[sub.status] ??
-                    "bg-[#7e2562]/8 text-[#7e2562]";
+                  const linkedContract = relatedContracts.find((c) => {
+                    const meta = parseContractNotes(c.term_notes);
+                    return (
+                      (meta.submission_id && meta.submission_id === sub.id) ||
+                      (meta.submission_ref && meta.submission_ref === sub.ref_no) ||
+                      (c.term_notes && (c.term_notes.includes(sub.id) || c.term_notes.includes(sub.ref_no)))
+                    );
+                  });
+
+                  const contractMeta = linkedContract ? parseContractNotes(linkedContract.term_notes) : null;
+                  const isRenegotiation = contractMeta?.renegotiation_requested ?? false;
+                  const isContractDeclined = contractMeta?.status === "declined" || Boolean(contractMeta?.declined_at);
+                  const isSigned = Boolean(linkedContract?.signed_on);
+
+                  const displayLabel = isContractDeclined
+                    ? "Offer Concluded"
+                    : isRenegotiation
+                    ? "Terms Review Requested"
+                    : isSigned
+                    ? "Dual-Signed / In Production"
+                    : STATUS_LABELS[sub.status] ?? sub.status;
+
+                  const statusClass = isContractDeclined
+                    ? "bg-rose-100 text-rose-800 border border-rose-300 font-bold"
+                    : isRenegotiation
+                    ? "bg-amber-100 text-amber-900 border border-amber-300 font-bold shadow-2xs"
+                    : isSigned
+                    ? "bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold shadow-2xs"
+                    : STATUS_BADGE_STYLES[sub.status] ?? "bg-[#7e2562]/8 text-[#7e2562]";
 
                   return (
                     <tr
@@ -176,8 +238,12 @@ export default async function SubmissionsListPage({ searchParams }: PageProps<"/
                       </td>
                       <td className="px-6 py-4.5 whitespace-nowrap">
                         <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap ${statusClass}`}>
-                          {sub.status === "accepted" && <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />}
-                          {STATUS_LABELS[sub.status] ?? sub.status}
+                          {isRenegotiation ? (
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-600 animate-pulse" />
+                          ) : isSigned || sub.status === "accepted" ? (
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                          ) : null}
+                          {displayLabel}
                         </span>
                       </td>
                       <td className="px-6 py-4.5 whitespace-nowrap">

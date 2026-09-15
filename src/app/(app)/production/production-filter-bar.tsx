@@ -50,7 +50,9 @@ export default function ProductionFilterBar({
   ];
 
   return (
-    <section className="relative z-20 rounded-xl border border-[#7e2562]/15 bg-white p-3.5 sm:p-4 shadow-plum-sm">
+    <section className={`relative z-20 rounded-xl border bg-white p-3.5 sm:p-4 transition-all duration-200 ${
+      hasFilter ? "border-[#7e2562]/35 shadow-plum-md" : "border-[#7e2562]/15 shadow-plum-sm"
+    }`}>
       <div className="flex flex-wrap items-center gap-3.5">
         {/* Stage / Status Filter */}
         <div className="w-56">
@@ -61,6 +63,11 @@ export default function ProductionFilterBar({
             onChange={(val) => onFilterChange("status", val)}
             ariaLabel="Filter by active stage"
             placeholder="All Stages"
+            buttonClassName={
+              currentStatus
+                ? "!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
+                : ""
+            }
             options={[
               { value: "", label: "All Stages" },
               ...Object.entries(statusLabels).map(([val, label]) => ({
@@ -81,6 +88,11 @@ export default function ProductionFilterBar({
               onChange={(val) => onFilterChange("category", val)}
               ariaLabel="Filter by genre / category"
               placeholder="All Categories"
+              buttonClassName={
+                currentCategory
+                  ? "!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
+                  : ""
+              }
               options={[
                 { value: "", label: "All Categories" },
                 ...categories.map((cat) => ({
@@ -101,6 +113,7 @@ export default function ProductionFilterBar({
             onChange={(val) => onFilterChange("sort", val)}
             ariaLabel="Sort production projects"
             placeholder="Sort by"
+            buttonClassName="!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
             options={sortOptions}
           />
         </div>
@@ -109,9 +122,10 @@ export default function ProductionFilterBar({
         {hasFilter && (
           <Link
             href="/production"
-            className="apple-button inline-flex items-center rounded-xl border border-black/15 bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-xs hover:bg-black/5 dark:border-white/15 dark:bg-surface-muted/60 dark:hover:bg-white/10"
+            className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/20 bg-[#faedf5]/30 px-3.5 py-2 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition-all"
           >
-            Clear Filters
+            <span className="text-sm">✕</span>
+            <span>Clear Filters</span>
           </Link>
         )}
       </div>

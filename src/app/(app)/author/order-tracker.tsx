@@ -28,6 +28,8 @@ export type TrackerData = {
   reviewNotes?: string | null;
   contractId?: string | null;
   contractSignedOn?: string | null;
+  contractStatus?: string | null;
+  renegotiationRequested?: boolean;
   productionId?: string | null;
   productionStatus?: string | null;
   courierDocket?: string | null;
@@ -124,10 +126,18 @@ export function OrderTracker({ data }: { data: TrackerData }) {
       key: "contract",
       title: "Publishing Agreement",
       subtitle: "Royalty schedule & formal contract offer",
-      date: data.contractSignedOn ? `Signed: ${data.contractSignedOn}` : data.contractId ? "Draft Agreement Ready" : null,
+      date: data.contractSignedOn
+        ? `Signed: ${data.contractSignedOn}`
+        : data.renegotiationRequested
+        ? "Terms Review in Progress"
+        : data.contractId
+        ? "Draft Agreement Ready"
+        : null,
       location: "Legal & Contracts Cell",
       status: data.contractSignedOn || data.productionId
         ? "completed"
+        : data.renegotiationRequested
+        ? "alert"
         : data.contractId || data.statusCode === "accepted"
         ? "current"
         : "upcoming",
@@ -160,7 +170,11 @@ export function OrderTracker({ data }: { data: TrackerData }) {
   let badgeColor = "bg-[#7e2562] text-white";
   let estimatedDelivery = "Estimated evaluation: ~3–4 weeks from submission";
 
-  if (data.statusCode === "accepted") {
+  if (data.statusCode === "renegotiation_requested" || data.renegotiationRequested) {
+    mainHeadline = "Publishing Agreement: Terms Revision in Review";
+    badgeColor = "bg-amber-600 text-white";
+    estimatedDelivery = "Editorial team is reviewing your requested contract revisions";
+  } else if (data.statusCode === "accepted") {
     mainHeadline = "Milestone Achieved: Manuscript Approved for Publication!";
     badgeColor = "bg-emerald-600 text-white";
     estimatedDelivery = "Next: Executing publishing contract & DTP scheduling";
@@ -172,9 +186,9 @@ export function OrderTracker({ data }: { data: TrackerData }) {
     mainHeadline = "Under Active Review by Literary Committee";
     badgeColor = "bg-blue-600 text-white";
     estimatedDelivery = "Decision expected within 1–2 weeks";
-  } else if (data.statusCode === "declined") {
-    mainHeadline = "Editorial Evaluation Concluded";
-    badgeColor = "bg-gray-600 text-white";
+  } else if (data.statusCode === "declined" || data.statusCode === "rejected") {
+    mainHeadline = "Editorial Evaluation Concluded: Submission Declined";
+    badgeColor = "bg-red-600 text-white shadow-red-500/20";
     estimatedDelivery = "Manuscript evaluation completed";
   } else if (data.productionStatus) {
     mainHeadline = `In Production: ${data.productionStatus.replace(/_/g, " ").toUpperCase()}`;
@@ -202,7 +216,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
             <span className="text-xs text-muted-foreground font-medium">{data.language}</span>
           </div>
 
-          <h3 className="text-xl sm:text-2xl font-extrabold text-foreground font-serif tracking-tight">
+          <h3 className="text-xl sm:text-2xl font-extrabold text-foreground   tracking-tight">
             {data.title}
           </h3>
           {data.titleMl && (
@@ -388,7 +402,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
                 <span className="text-xs text-muted-foreground font-semibold">·</span>
                 <span className="text-xs font-semibold text-amber-900">Editorial Board Evaluation</span>
               </div>
-              <h4 className="mt-1 text-base font-extrabold text-foreground font-serif">
+              <h4 className="mt-1 text-base font-extrabold text-foreground  ">
                 Revisions Requested for &ldquo;{data.title}&rdquo;
               </h4>
               <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
@@ -543,7 +557,9 @@ export function OrderTracker({ data }: { data: TrackerData }) {
       {data.courierDocket && (
         <div className="my-4 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-xs flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 font-bold text-emerald-900">
-            <span>📦</span>
+            <svg className="h-4 w-4 text-emerald-800 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
             <span>Author Copies Dispatched: Docket #{data.courierDocket}</span>
           </div>
           {data.authorCopiesQty && (
@@ -574,17 +590,37 @@ export function OrderTracker({ data }: { data: TrackerData }) {
         </button>
 
         <div className="flex items-center gap-2">
-          {data.statusCode === "accepted" && (
+          {data.contractId ? (
+            <Link
+              href={`/publish/contract/${data.contractId}`}
+              className={`apple-button inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold text-white transition-all ${
+                data.contractSignedOn
+                  ? "bg-emerald-600 shadow-emerald-sm hover:bg-emerald-700"
+                  : data.renegotiationRequested
+                  ? "bg-amber-600 shadow-xs hover:bg-amber-700"
+                  : "bg-[#7e2562] shadow-plum-sm hover:bg-[#681b50]"
+              }`}
+            >
+              <span>
+                {data.contractSignedOn
+                  ? "View Signed Agreement"
+                  : data.renegotiationRequested
+                  ? "Review Requested · View Status"
+                  : "Review & Sign Agreement"}
+              </span>
+              <span>&rarr;</span>
+            </Link>
+          ) : data.statusCode === "accepted" ? (
             <Link
               href="#contracts"
               className="apple-button inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-emerald-sm hover:bg-emerald-700 transition-all"
             >
-              <span>View Publishing Agreement</span>
+              <span>Publishing Agreements</span>
               <span>&rarr;</span>
             </Link>
-          )}
+          ) : null}
 
-          {data.productionId && (
+          {/* {data.productionId && (
             <Link
               href="#production"
               className="apple-button inline-flex items-center gap-1.5 rounded-xl bg-[#7e2562] px-3.5 py-1.5 text-xs font-bold text-white shadow-plum-sm hover:bg-[#681b50] transition-all"
@@ -592,7 +628,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
               <span>Production Pipeline</span>
               <span>&rarr;</span>
             </Link>
-          )}
+          )} */}
         </div>
       </div>
 

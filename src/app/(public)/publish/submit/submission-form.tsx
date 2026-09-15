@@ -44,6 +44,21 @@ export default function SubmissionForm({
     title?: string;
   } | null>(null);
 
+  function handleMalayalamKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+      e.preventDefault();
+    }
+  }
+
+  function handleMalayalamInput(e: React.FormEvent<HTMLInputElement>) {
+    const input = e.currentTarget;
+    const filtered = input.value.replace(/[a-zA-Z]/g, "");
+    if (filtered !== input.value) {
+      input.value = filtered;
+    }
+  }
+
   function resetForm() {
     setSubmittedData(null);
     setCurrentStep(isAuthorPortal ? 2 : 1);
@@ -169,7 +184,7 @@ export default function SubmissionForm({
           Manuscript Received
         </span>
 
-        <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl font-serif">
+        <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl  ">
           Manuscript Submitted Successfully!
         </h2>
         <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
@@ -238,18 +253,11 @@ export default function SubmissionForm({
                 <span className="text-xs font-bold text-foreground">
                   Author: <strong className="text-[#7e2562]">{initialAuthorName}</strong>
                 </span>
-                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  ✓ Verified Account
-                </span>
               </div>
               <p className="text-[11px] text-muted-foreground font-mono">{initialEmail}</p>
             </div>
           </div>
-          <div className="text-right">
-            <span className="text-[11px] font-bold text-[#7e2562] bg-white px-3 py-1.5 rounded-lg border border-[#7e2562]/20 shadow-2xs">
-              Direct Manuscript Intake
-            </span>
-          </div>
+        
         </div>
       ) : (
         <div className="rounded-3xl border border-[#7e2562]/15 bg-white p-4 shadow-2xs">
@@ -368,9 +376,12 @@ export default function SubmissionForm({
                   id="author_name_ml"
                   name="author_name_ml"
                   type="text"
+                  onKeyDown={handleMalayalamKeyDown}
+                  onInput={handleMalayalamInput}
                   placeholder="e.g. എം. ടി. വാസുദേവൻ നായർ"
                   className="font-ml w-full rounded-xl border border-[#7e2562]/20 bg-white px-4 py-3 text-base font-semibold text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15"
                 />
+                <p className="mt-1 text-xs text-muted-foreground/80">മലയാളം അക്ഷരങ്ങൾ മാത്രം നൽകുക (English letters disabled)</p>
               </div>
 
               <div>
@@ -432,9 +443,12 @@ export default function SubmissionForm({
                 id="title_ml"
                 name="title_ml"
                 type="text"
+                onKeyDown={handleMalayalamKeyDown}
+                onInput={handleMalayalamInput}
                 placeholder="പുസ്തകത്തിന്റെ പേര്"
                 className="font-ml w-full rounded-xl border border-[#7e2562]/20 bg-white px-4 py-3 text-base font-semibold text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15"
               />
+              <p className="mt-1 text-xs text-muted-foreground/80">മലയാളം അക്ഷരങ്ങൾ മാത്രം നൽകുക (English letters disabled)</p>
             </div>
 
             <div>
@@ -626,6 +640,17 @@ function Field({
         type={type}
         defaultValue={defaultValue}
         placeholder={placeholder}
+        onKeyDown={malayalam ? (e) => {
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
+          if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+            e.preventDefault();
+          }
+        } : undefined}
+        onInput={malayalam ? (e) => {
+          const input = e.currentTarget;
+          const filtered = input.value.replace(/[a-zA-Z]/g, "");
+          if (filtered !== input.value) input.value = filtered;
+        } : undefined}
         className={`w-full rounded-xl border border-[#7e2562]/20 bg-white px-4 py-3 text-base font-semibold text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15 ${malayalam ? "font-ml" : ""}`}
       />
       {hint && !error && <p className="mt-1.5 text-xs font-medium text-muted-foreground">{hint}</p>}

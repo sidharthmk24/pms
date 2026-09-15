@@ -81,7 +81,7 @@ export default function AuthorSetupClient({
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-foreground text-background font-black text-xl shadow-md">
               K
             </span>
-            <span className="text-2xl font-black tracking-tight text-foreground font-serif">
+            <span className="text-2xl font-black tracking-tight text-foreground  ">
               Kairali Books
             </span>
           </Link>

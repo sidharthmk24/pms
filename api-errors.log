@@ -36,3 +36,124 @@ Unique constraint failed on the fields: (`isbn`)
     at async requestHandlerImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:565:13)
     at async Server.requestListener (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\start-server.js:225:13)
 
+[2026-09-14T09:34:37.913Z] PrismaClientKnownRequestError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].users.create()` invocation in
+D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__04k9vsx._.js:185:159
+
+  182 const password_hash = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$bcryptjs$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].hash(data.password, 12);
+  183 const now = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$time$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["stamp"])();
+  184 const userId = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$node$3a$crypto__$5b$external$5d$__$28$node$3a$crypto$2c$__cjs$29$__["randomUUID"])();
+→ 185 const user = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].users.create(
+Database error. Code: `23514`. Message: `new row for relation "users" violates check constraint "users_role_valid"`
+    at Jr.handleRequestError (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:8286)
+    at Jr.handleAndLogRequestError (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:7581)
+    at Jr.request (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:7288)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async a (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:99:6862)
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__04k9vsx._.js:185:18
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__1510hhw._.js:1069:20
+    at async AppRouteRouteModule.do (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:42793)
+    at async AppRouteRouteModule.handle (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:50547)
+    at async responseGenerator (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_0--z5gq._.js:5328:30)
+    at async AppRouteRouteModule.handleResponse (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:250160)
+    at async handleResponse (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_0--z5gq._.js:5400:32)
+    at async Module.handler (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_0--z5gq._.js:5520:9)
+    at async DevServer.renderToResponseWithComponentsImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1537:9)
+    at async DevServer.renderPageComponent (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1589:24)
+    at async DevServer.renderToResponseImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1639:32)
+    at async DevServer.pipeImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1088:25)
+    at async NextNodeServer.handleCatchallRenderRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:979:17)
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\dev\next-dev-server.js:426:20
+    at async Span.traceAsyncFn (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\dev\next-dev-server.js:422:24)
+    at async invokeRender (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:306:21)
+    at async handleRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:508:24)
+    at async requestHandlerImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:565:13)
+    at async Server.requestListener (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\start-server.js:225:13)
+
+[2026-09-14T09:36:11.502Z] PrismaClientKnownRequestError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].users.create()` invocation in
+D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__04k9vsx._.js:185:159
+
+  182 const password_hash = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$bcryptjs$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].hash(data.password, 12);
+  183 const now = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$time$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["stamp"])();
+  184 const userId = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$node$3a$crypto__$5b$external$5d$__$28$node$3a$crypto$2c$__cjs$29$__["randomUUID"])();
+→ 185 const user = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].users.create(
+Database error. Code: `23514`. Message: `new row for relation "users" violates check constraint "users_role_valid"`
+    at Jr.handleRequestError (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:8286)
+    at Jr.handleAndLogRequestError (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:7581)
+    at Jr.request (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:7288)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async a (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:99:6862)
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__04k9vsx._.js:185:18
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__1510hhw._.js:1069:20
+    at async AppRouteRouteModule.do (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:42793)
+    at async AppRouteRouteModule.handle (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:50547)
+    at async responseGenerator (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_0--z5gq._.js:5328:30)
+    at async AppRouteRouteModule.handleResponse (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:250160)
+    at async handleResponse (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_0--z5gq._.js:5400:32)
+    at async Module.handler (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_0--z5gq._.js:5520:9)
+    at async DevServer.renderToResponseWithComponentsImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1537:9)
+    at async DevServer.renderPageComponent (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1589:24)
+    at async DevServer.renderToResponseImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1639:32)
+    at async DevServer.pipeImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1088:25)
+    at async NextNodeServer.handleCatchallRenderRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:979:17)
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\dev\next-dev-server.js:426:20
+    at async Span.traceAsyncFn (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\dev\next-dev-server.js:422:24)
+    at async invokeRender (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:306:21)
+    at async handleRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:508:24)
+    at async requestHandlerImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:565:13)
+    at async Server.requestListener (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\start-server.js:225:13)
+
+[2026-09-14T09:37:29.877Z] PrismaClientKnownRequestError: 
+Invalid `prisma.sessions.findUnique()` invocation:
+
+
+
+    at Jr.handleRequestError (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:8286)
+    at Jr.handleAndLogRequestError (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:7581)
+    at Jr.request (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:7288)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async a (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:99:6862)
+    at async getSessionUser (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__1510hhw._.js:2129:17)
+    at async requireApiUser (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__1510hhw._.js:1195:18)
+    at async requireApiCapability (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__1510hhw._.js:1200:18)
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__04k9vsx._.js:158:19
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__1510hhw._.js:1069:20
+    at async AppRouteRouteModule.do (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:42793)
+    at async AppRouteRouteModule.handle (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:50547)
+    at async responseGenerator (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_0--z5gq._.js:5328:30)
+    at async AppRouteRouteModule.handleResponse (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:250160)
+    at async handleResponse (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_0--z5gq._.js:5400:32)
+    at async Module.handler (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_0--z5gq._.js:5520:9)
+    at async DevServer.renderToResponseWithComponentsImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1537:9)
+    at async DevServer.renderPageComponent (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1589:24)
+    at async DevServer.renderToResponseImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1639:32)
+    at async DevServer.pipeImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1088:25)
+    at async NextNodeServer.handleCatchallRenderRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:979:17)
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\dev\next-dev-server.js:426:20
+    at async Span.traceAsyncFn (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\dev\next-dev-server.js:422:24)
+    at async invokeRender (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:306:21)
+    at async handleRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:508:24)
+    at async requestHandlerImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:565:13)
+    at async Server.requestListener (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\start-server.js:225:13)
+
+[2026-09-15T03:56:48.014Z] SyntaxError: Bad escaped character in JSON at position 9 (line 1 column 10)
+    at JSON.parse (<anonymous>)
+    at parseJSONFromBytes (node:internal/deps/undici/undici:4259:19)
+    at successSteps (node:internal/deps/undici/undici:6882:27)
+    at readAllBytes (node:internal/deps/undici/undici:5807:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+
+[2026-09-15T03:57:42.390Z] SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at JSON.parse (<anonymous>)
+    at parseJSONFromBytes (node:internal/deps/undici/undici:4259:19)
+    at successSteps (node:internal/deps/undici/undici:6882:27)
+    at readAllBytes (node:internal/deps/undici/undici:5807:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+

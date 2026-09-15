@@ -3,6 +3,7 @@ import Image from "next/image";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { navFor } from "@/lib/nav";
+import { formatRoleLabel } from "@/lib/roles";
 import SidebarNav from "@/components/sidebar-nav";
 import UserMenu from "@/components/user-menu";
 
@@ -56,24 +57,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           </div>
         </div>
 
-        {/* Sidebar Footer / System Badge */}
-        <div className="border-t border-[#7e2562]/10 pt-3 text-[11px] text-muted-foreground">
-          <div className="flex items-center justify-between px-2 mb-2">
-            <span>PMS v1.0 · Connected</span>
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            </span>
-          </div>
-          <Link
-            href="/publish"
-            target="_blank"
-            className="flex items-center justify-between px-2 py-1.5 rounded-lg text-[11px] font-semibold text-primary hover:bg-[#7e2562]/8 transition-colors"
-          >
-            <span>Public Author Portal</span>
-            <span aria-hidden="true">↗</span>
-          </Link>
-        </div>
+   
       </aside>
 
       {/* Main Area */}
@@ -94,7 +78,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-muted-foreground">
               <span className="text-[#7e2562] font-bold">Kairali Books</span>
               <span>/</span>
-              <span className="capitalize">{user.role} workspace</span>
+              <span>{formatRoleLabel(user.role)} Workspace</span>
             </div>
           </div>
 

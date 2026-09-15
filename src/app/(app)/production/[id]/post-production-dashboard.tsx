@@ -107,7 +107,7 @@ export default function PostProductionDashboard({
                   READY FOR SALE
                 </span>
               </div>
-              <h2 className="text-xl font-bold text-foreground font-serif mt-0.5">
+              <h2 className="text-xl font-bold text-foreground   mt-0.5">
                 PMS to BMS Handover Complete
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -282,7 +282,7 @@ export default function PostProductionDashboard({
       {showDispatchModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
           <div className="w-full max-w-md rounded-2xl border border-black/10 bg-surface p-6 shadow-xl dark:border-white/10">
-            <h3 className="text-base font-bold text-foreground font-serif">
+            <h3 className="text-base font-bold text-foreground  ">
               Record Author Copies Dispatch
             </h3>
             <p className="text-xs text-muted-foreground mt-1">

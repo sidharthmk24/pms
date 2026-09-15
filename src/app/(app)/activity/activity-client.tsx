@@ -742,63 +742,7 @@ export default function ActivityClient({
         </div> */}
       </header>
 
-      {/* KPI Overview Tiles */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="flex flex-col justify-between rounded-2xl border border-[#7e2562]/12 bg-white p-5 shadow-plum-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Events</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#7e2562]/10 text-[#7e2562]">
-              <Layers className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-extrabold text-foreground">{stats.total}</span>
-            <p className="mt-0.5 text-xs text-muted-foreground">Recorded telemetry events</p>
-          </div>
-        </div>
-
-        <div className="flex flex-col justify-between rounded-2xl border border-[#7e2562]/12 bg-white p-5 shadow-plum-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Today's Activity</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
-              <Clock className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-extrabold text-emerald-700">{stats.today}</span>
-            <p className="mt-0.5 text-xs text-muted-foreground">Events logged in past 24 hours</p>
-          </div>
-        </div>
-
-        <div className="flex flex-col justify-between rounded-2xl border border-[#7e2562]/12 bg-white p-5 shadow-plum-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Active Actors</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
-              <User className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-extrabold text-foreground">{stats.actorsCount}</span>
-            <p className="mt-0.5 text-xs text-muted-foreground">Distinct staff &amp; author accounts</p>
-          </div>
-        </div>
-
-        <div className="flex flex-col justify-between rounded-2xl border border-[#7e2562]/12 bg-white p-5 shadow-plum-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Integrity Ledger</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600">
-              <Shield className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600">
-              <CheckCircle2 className="h-4 w-4" />
-              100% Append-Only
-            </span>
-            <p className="mt-0.5 text-xs text-muted-foreground">Immutable audit compliance</p>
-          </div>
-        </div>
-      </section>
+   
 
       {/* Category Tabs Pill Navigation */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -829,7 +773,9 @@ export default function ActivityClient({
       </div>
 
       {/* Filter and Search Toolbar */}
-      <section className="rounded-sm border border-[#7e2562]/12 bg-white p-4 shadow-plum-sm space-y-3">
+      <section className={`rounded-xl border bg-white p-4 transition-all duration-200 space-y-3 ${
+        hasActiveFilters ? "border-[#7e2562]/35 shadow-plum-md" : "border-[#7e2562]/15 shadow-plum-sm"
+      }`}>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
           {/* Search Bar */}
           <div className="relative lg:col-span-4">
@@ -838,7 +784,7 @@ export default function ActivityClient({
               placeholder="Search by actor, action, book, author name or details..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-sm border border-black/10 bg-slate-50/70 px-4 py-2 pl-10 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-[#7e2562] focus:bg-white focus:ring-2 focus:ring-[#7e2562]/10"
+              className="w-full rounded-xl border border-black/10 bg-slate-50/70 px-4 py-2 pl-10 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-[#7e2562] focus:bg-white focus:ring-2 focus:ring-[#7e2562]/10"
             />
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             {searchQuery && (
@@ -858,6 +804,11 @@ export default function ActivityClient({
               value={selectedActor}
               onChange={setSelectedActor}
               ariaLabel="Filter by actor"
+              buttonClassName={
+                selectedActor && selectedActor !== "all"
+                  ? "!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
+                  : ""
+              }
               options={[
                 { value: "all", label: "All Actors / Users" },
                 { value: "__system__", label: "System (Automated)" },
@@ -873,6 +824,11 @@ export default function ActivityClient({
               value={selectedEntity}
               onChange={setSelectedEntity}
               ariaLabel="Filter by entity type"
+              buttonClassName={
+                selectedEntity && selectedEntity !== "all"
+                  ? "!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
+                  : ""
+              }
               options={[
                 { value: "all", label: "All Entity Types" },
                 ...uniqueEntities.map((ent) => ({
@@ -890,6 +846,11 @@ export default function ActivityClient({
               value={selectedTimeframe}
               onChange={setSelectedTimeframe}
               ariaLabel="Filter by timeframe"
+              buttonClassName={
+                selectedTimeframe && selectedTimeframe !== "all"
+                  ? "!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
+                  : ""
+              }
               options={[
                 { value: "all", label: "All Time" },
                 { value: "today", label: "Today" },
@@ -919,10 +880,10 @@ export default function ActivityClient({
             {hasActiveFilters && (
               <button
                 onClick={handleResetFilters}
-                className="inline-flex items-center gap-1 text-xs font-bold text-[#7e2562] hover:underline cursor-pointer"
+                className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/20 bg-[#faedf5]/30 px-3 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition-all cursor-pointer"
               >
                 <RotateCcw className="h-3 w-3" />
-                Reset Filters
+                <span>Reset Filters</span>
               </button>
             )}
 
@@ -1413,40 +1374,12 @@ export default function ActivityClient({
                           <Sparkles className="h-3 w-3 text-[#7e2562]" />
                           <span>Readable View</span>
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setPayloadViewMode("raw")}
-                          className={`inline-flex items-center gap-1 rounded-md px-2 py-1 transition-all ${
-                            payloadViewMode === "raw"
-                              ? "bg-white text-foreground shadow-2xs font-extrabold"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          <Code className="h-3 w-3" />
-                          <span>Raw JSON</span>
-                        </button>
+                       
                       </div>
                     )}
                   </div>
 
-                  {inspectItem.detail && (
-                    <button
-                      onClick={() => handleCopy(inspectItem.detail!, "modal-detail")}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-[#7e2562] hover:underline"
-                    >
-                      {copiedId === "modal-detail" ? (
-                        <>
-                          <Check className="h-3.5 w-3.5 text-emerald-600" />
-                          <span>Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-3.5 w-3.5" />
-                          <span>Copy Payload</span>
-                        </>
-                      )}
-                    </button>
-                  )}
+         
                 </div>
 
                 {inspectItem.detail ? (

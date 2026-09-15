@@ -4,9 +4,11 @@ import { notFound } from "next/navigation";
 import { requireCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatIST } from "@/lib/time";
-import { can } from "@/lib/roles";
+import { can, hasRole } from "@/lib/roles";
+import { parseContractNotes } from "@/lib/contracts";
 import ReviewForm from "./review-form";
 import ReassignSelect from "../reassign-select";
+import ContractActions from "./contract-actions";
 
 export const metadata: Metadata = { title: "Submission Review" };
 export const dynamic = "force-dynamic";
@@ -28,78 +30,94 @@ const GENRE_LABELS: Record<string, string> = {
   poetry: "Poetry",
   essays: "Essays / Non-Fiction",
   biography: "Biography / Memoir",
-  childrens: "Children's Literature",
+  academic: "Academic / Textbook",
+  children: "Children's Literature",
   translation: "Translation",
-  drama: "Drama",
-  travelogue: "Travelogue",
-  academic: "Academic / Reference",
   other: "Other",
 };
 
-export default async function SubmissionDetailPage({ params }: PageProps<"/submissions/[id]">) {
+export default async function SubmissionReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireCapability("submissions.read");
   const { id } = await params;
 
   const sub = await prisma.submissions.findUnique({
     where: { id },
     include: {
-      users: { select: { id: true, name: true, role: true } },
+      users: { select: { id: true, name: true, email: true, role: true } },
     },
   });
 
   if (!sub) notFound();
 
-  const isManager = can(user.role, "submissions.manage");
-  const isEditorOrOwner = user.role === "editor" || user.role === "owner";
+  const isManager = can(user.role, "submissions.manage") || hasRole(user.role, "owner");
+  if (!isManager && sub.reviewed_by !== user.id) {
+    notFound();
+  }
+
+  const isEditorOrOwner = hasRole(user.role, "editor") || hasRole(user.role, "owner");
   const isAssignedEditor = sub.reviewed_by === user.id;
-  const canReview = isEditorOrOwner && (isAssignedEditor || user.role === "owner") && ["new", "pending_review", "under_review", "needs_revision"].includes(sub.status);
+  const canReview = isEditorOrOwner && (isAssignedEditor || hasRole(user.role, "owner")) && ["new", "pending_review", "under_review", "needs_revision"].includes(sub.status);
 
   let editors: { id: string; name: string; role: string }[] = [];
   if (isManager) {
-    editors = await prisma.users.findMany({
-      where: { active: true, role: "editor" },
+    const activeStaff = await prisma.users.findMany({
+      where: {
+        active: true,
+        role: { not: "author" },
+      },
       select: { id: true, name: true, role: true },
       orderBy: { name: "asc" },
     });
+    editors = activeStaff.filter(
+      (u) => hasRole(u.role, "editor") || hasRole(u.role, "owner")
+    );
   }
 
-  // If accepted, retrieve contract if it exists for additional context
-  let contract = null;
-  if (sub.status === "accepted") {
-    // Look up the contract linked to this submission
-    // A submission acceptance creates a title with author, term notes mention sub.ref_no
-    contract = await prisma.contracts.findFirst({
-      where: {
-        term_notes: { contains: sub.ref_no },
-      },
-      include: {
-        titles: { select: { name: true } },
-        authors: { select: { name: true } },
-      },
-    });
-  }
+  // Retrieve linked contract if it exists for this submission
+  const contract = await prisma.contracts.findFirst({
+    where: {
+      OR: [
+        { term_notes: { contains: sub.id } },
+        { term_notes: { contains: sub.ref_no } },
+      ],
+    },
+    include: {
+      titles: { select: { id: true, name: true } },
+      authors: { select: { id: true, name: true, email: true } },
+    },
+  });
 
-  const statusClass = {
-    new: "bg-[#faedf5] text-[#7e2562] border border-[#7e2562]/25 font-bold",
-    pending_review: "bg-[#faedf5] text-[#7e2562] border border-[#7e2562]/25 font-bold",
-    under_review: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
-    needs_revision: "bg-orange-50 text-orange-800 border border-orange-300 font-bold",
-    accepted: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold shadow-2xs",
-    declined: "bg-rose-50 text-rose-800 border border-rose-300 font-bold",
-    archived: "bg-gray-100 text-gray-700 border border-gray-200 font-semibold",
-    withdrawn: "bg-gray-100 text-gray-700 border border-gray-200 font-semibold",
-  }[sub.status] ?? "bg-gray-100 text-gray-700 border border-gray-200";
+  const contractMeta = contract ? parseContractNotes(contract.term_notes) : null;
+  const isRenegotiation = contractMeta?.renegotiation_requested ?? false;
+  const isContractDeclined = contractMeta?.status === "declined" || Boolean(contractMeta?.declined_at);
+  const isSigned = Boolean(contract?.signed_on);
 
-  const statusDot = {
-    new: "bg-[#7e2562]",
-    pending_review: "bg-[#7e2562]",
-    under_review: "bg-amber-600",
-    needs_revision: "bg-orange-600",
-    accepted: "bg-emerald-600",
-    declined: "bg-rose-600",
-    archived: "bg-gray-500",
-    withdrawn: "bg-gray-500",
-  }[sub.status] ?? "bg-gray-500";
+  const displayStatusLabel = isContractDeclined
+    ? "Contract Declined / Closed"
+    : isRenegotiation
+    ? "Terms Review Requested"
+    : isSigned
+    ? "Dual-Signed / In Production"
+    : sub.status === "accepted"
+    ? "Accepted (Awaiting Author Signature)"
+    : STATUS_LABELS[sub.status] ?? sub.status;
+
+  const statusClass = isContractDeclined
+    ? "bg-rose-100 text-rose-800 border border-rose-300 font-bold"
+    : isRenegotiation
+    ? "bg-amber-100 text-amber-900 border border-amber-300 font-bold shadow-2xs"
+    : isSigned
+    ? "bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold shadow-2xs"
+    : {
+        new: "bg-[#faedf5] text-[#7e2562] border border-[#7e2562]/25 font-bold",
+        pending_review: "bg-[#faedf5] text-[#7e2562] border border-[#7e2562]/25 font-bold",
+        under_review: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
+        needs_revision: "bg-orange-50 text-orange-800 border border-orange-300 font-bold",
+        accepted: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold shadow-2xs",
+        declined: "bg-rose-50 text-rose-800 border border-rose-300 font-bold",
+        archived: "bg-gray-100 text-gray-700 border border-gray-200 font-semibold",
+        withdrawn: "bg-gray-100 text-gray-700 border border-gray-200 font-semibold",
+      }[sub.status] ?? "bg-gray-100 text-gray-700 border border-gray-200";
 
   return (
     <div className="mx-auto max-w-6xl animate-apple-in space-y-6">
@@ -133,8 +151,8 @@ export default async function SubmissionDetailPage({ params }: PageProps<"/submi
 
         <div className="flex items-center gap-3">
           <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs ${statusClass}`}>
-            {/* <span className={`h-2 w-2 rounded-full ${statusDot}`} /> */}
-            {STATUS_LABELS[sub.status] ?? sub.status}
+            {isRenegotiation && <span className="h-1.5 w-1.5 rounded-full bg-amber-600 animate-pulse" />}
+            {displayStatusLabel}
           </span>
         </div>
       </header>
@@ -256,7 +274,7 @@ export default async function SubmissionDetailPage({ params }: PageProps<"/submi
             </div>
           )}
 
-          {sub.status === "accepted" && contract && (
+          {contract && (
             <div className="rounded-3xl border border-emerald-500/25 bg-emerald-50/40 p-6 shadow-plum-sm">
               <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-3">
                 Generated Contract &amp; Publishing Details
@@ -288,20 +306,20 @@ export default async function SubmissionDetailPage({ params }: PageProps<"/submi
                     )}
                   </span>
                 </div>
-                <div className="pt-2 flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs text-muted-foreground font-medium">Author Agreement Link</span>
-                  <a
-                    href={`/publish/contract/${contract.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:underline"
-                  >
-                    <span>Open Author Signing Link</span>
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                </div>
+
+                <ContractActions
+                  contract={{
+                    id: contract.id,
+                    royalty_pct: contract.royalty_pct,
+                    basis: contract.basis,
+                    advance_paise: contract.advance_paise,
+                    signed_on: contract.signed_on,
+                    term_notes: contract.term_notes,
+                    titles: contract.titles,
+                    authors: contract.authors,
+                  }}
+                  canManage={isEditorOrOwner}
+                />
               </div>
             </div>
           )}

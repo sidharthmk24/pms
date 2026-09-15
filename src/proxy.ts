@@ -3,39 +3,48 @@ import { NextResponse, type NextRequest } from "next/server";
 const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "kairali_session";
 
 /**
- * Routes served to the public, signed in or not — the "Publish With Us" flow
- * (Flow 7). Everything else in the app is staff-only.
+ * Routes served to the public, signed in or not:
+ * - "/publish", "/author/register", "/author/setup"
+ * - "/login" and all subroutes (including "/login/reset-password", "/login/forgot-password")
  */
-const PUBLIC_PREFIXES = ["/publish", "/author/register", "/author/setup"];
+const PUBLIC_PREFIXES = [
+  "/publish",
+  "/author/register",
+  "/author/setup",
+  "/login",
+];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 /**
- * Cheap edge gate: it only checks whether a session cookie is present, so it
- * can run without database access. Real validation (expiry, revocation, the
- * user still being active) happens in requireUser() on the server.
+ * Cheap edge gate: it checks whether a session cookie is present for protected routes.
+ * Real validation (expiry, revocation, user active status) happens in requireUser() on the server.
  */
 export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
-  if (isPublic(pathname)) return NextResponse.next();
+  // 1. Allow public routes without authentication
+  if (isPublic(pathname)) {
+    const hasCookie = Boolean(req.cookies.get(COOKIE_NAME)?.value);
+    // If logged in and visiting the bare "/login" page (not reset-password or forgot-password), redirect to /dashboard
+    if (hasCookie && pathname === "/login") {
+      const url = req.nextUrl.clone();
+      url.pathname = "/dashboard";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
 
   const hasCookie = Boolean(req.cookies.get(COOKIE_NAME)?.value);
-  const isLogin = pathname === "/login";
 
-  if (!hasCookie && !isLogin) {
+  // 2. Protected routes accessed without a session cookie -> redirect to /login
+  if (!hasCookie) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(pathname + search)}`;
-    return NextResponse.redirect(url);
-  }
-
-  if (hasCookie && isLogin) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.search = "";
     return NextResponse.redirect(url);
   }
 

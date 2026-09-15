@@ -2,7 +2,7 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { fail, handler } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
-import { resolveManuscript } from "@/lib/storage";
+import { resolveManuscript, buildSafeContentDisposition } from "@/lib/storage";
 import { getSessionUser } from "@/lib/session";
 
 export const GET = handler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
@@ -68,34 +68,47 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
     if (!sub) return fail(403, "Unauthorized access to production files");
   }
 
-  const mode = searchParams.get("mode") || "inline"; // "inline" by default for modal viewing, "download" for forced download
+  const mode = searchParams.get("mode") || "inline"; // "inline" or "download"
 
   const filePath = type === "cover" ? proj.final_cover_path : proj.final_layout_path;
   if (!filePath) return fail(404, "File not uploaded yet");
 
   const isStaff = sessionUser && (sessionUser.role === "owner" || sessionUser.role === "production");
 
+  const rawFilename = filePath.split("/").pop() || filePath.split("\\").pop() || (type === "cover" ? "cover.jpg" : "layout.pdf");
+  const ext = rawFilename.split(".").pop()?.toLowerCase() || (type === "cover" ? "jpg" : "pdf");
+  const safeFilename = `${type === "cover" ? "cover_proof" : "layout_proof"}.${ext}`;
+
+  const dispositionType = isStaff && mode === "download" ? "attachment" : "inline";
+  const contentDisposition = buildSafeContentDisposition(dispositionType, safeFilename);
+
+  let mime = type === "cover" ? "image/jpeg" : "application/pdf";
+  if (ext === "pdf") mime = "application/pdf";
+  else if (ext === "png") mime = "image/png";
+  else if (ext === "jpg" || ext === "jpeg") mime = "image/jpeg";
+  else if (ext === "webp") mime = "image/webp";
+
+  const secureHeaders: Record<string, string> = {
+    "Content-Type": mime,
+    "Content-Disposition": contentDisposition,
+    "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy": "default-src 'none'; sandbox",
+    "Cache-Control": "private, no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
+  };
+
   try {
     if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
       const res = await fetch(filePath);
       if (!res.ok) return fail(404, "Proof file not found at remote storage");
-      const filename = filePath.split("/").pop() || (type === "cover" ? "cover" : "layout");
-      const contentDisposition = isStaff && mode === "download"
-        ? `attachment; filename="${encodeURIComponent(filename)}"`
-        : `inline; filename="${encodeURIComponent(filename)}"`;
       return new Response(res.body, {
-        headers: {
-          "Content-Type": res.headers.get("Content-Type") || (type === "cover" ? "image/jpeg" : "application/pdf"),
-          "Content-Disposition": contentDisposition,
-          "Cache-Control": "no-store, no-cache, must-revalidate, private",
-          "X-Content-Type-Options": "nosniff",
-        },
+        headers: secureHeaders,
       });
     }
 
     const fullPath = resolveManuscript(filePath);
     const fileStats = await stat(fullPath);
-    const filename = filePath.split("/").pop() || filePath.split("\\").pop() || (type === "cover" ? "cover" : "layout");
 
     const nodeStream = createReadStream(fullPath);
     const webStream = new ReadableStream({
@@ -106,28 +119,13 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
       },
       cancel() {
         nodeStream.destroy();
-      }
+      },
     });
-
-    const ext = filename.split(".").pop()?.toLowerCase();
-    let mime = type === "cover" ? "image/jpeg" : "application/pdf";
-    if (ext === "pdf") mime = "application/pdf";
-    else if (ext === "png") mime = "image/png";
-    else if (ext === "jpg" || ext === "jpeg") mime = "image/jpeg";
-    else if (ext === "webp") mime = "image/webp";
-
-    // Authors and public viewers are strictly restricted to inline viewing; downloads disallowed
-    const disposition = isStaff && mode === "download"
-      ? `attachment; filename="${encodeURIComponent(filename)}"`
-      : `inline; filename="${encodeURIComponent(filename)}"`;
 
     return new Response(webStream, {
       headers: {
-        "Content-Type": mime,
+        ...secureHeaders,
         "Content-Length": fileStats.size.toString(),
-        "Content-Disposition": disposition,
-        "Cache-Control": "no-store, no-cache, must-revalidate, private",
-        "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (err) {

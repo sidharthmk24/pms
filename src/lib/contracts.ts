@@ -1,7 +1,17 @@
 export type PublishingTrack = "kairali_funded" | "self_publishing";
 
+export type ContractStatus =
+  | "draft"
+  | "awaiting_publisher"
+  | "awaiting_author"
+  | "renegotiation_requested"
+  | "signed"
+  | "declined";
+
 export type ContractMetadata = {
   contract_ref?: string;
+  submission_id?: string;
+  submission_ref?: string;
   publishing_type: PublishingTrack;
   term_years: number;
   free_copies: number;
@@ -23,6 +33,13 @@ export type ContractMetadata = {
   author_signer_ip?: string | null;
   author_signer_ua?: string | null;
   notes?: string;
+  // Renegotiation & Decline
+  renegotiation_requested?: boolean;
+  author_feedback?: string | null;
+  renegotiation_requested_at?: string | null;
+  declined_at?: string | null;
+  decline_reason?: string | null;
+  status?: ContractStatus;
 };
 
 export const PUBLISHER_DETAILS = {
@@ -78,6 +95,14 @@ export function parseContractNotes(termNotes: string | null | undefined): Contra
         author_signer_ua: parsed.author_signer_ua ?? null,
         notes: parsed.notes,
         contract_ref: parsed.contract_ref,
+        submission_id: parsed.submission_id,
+        submission_ref: parsed.submission_ref,
+        renegotiation_requested: parsed.renegotiation_requested ?? false,
+        author_feedback: parsed.author_feedback ?? null,
+        renegotiation_requested_at: parsed.renegotiation_requested_at ?? null,
+        declined_at: parsed.declined_at ?? null,
+        decline_reason: parsed.decline_reason ?? null,
+        status: parsed.status,
       };
     }
   } catch {
@@ -93,14 +118,14 @@ export function parseContractNotes(termNotes: string | null | undefined): Contra
   };
 }
 
-export type ContractStatus = "draft" | "awaiting_publisher" | "awaiting_author" | "signed";
-
 export function getContractStatus(contract: {
   signed_on: string | null;
   term_notes: string | null;
 }): ContractStatus {
   if (contract.signed_on) return "signed";
   const meta = parseContractNotes(contract.term_notes);
+  if (meta.status === "declined" || meta.declined_at) return "declined";
+  if (meta.renegotiation_requested) return "renegotiation_requested";
   if (!meta.publisher_signed_at) return "awaiting_publisher";
   if (!meta.author_signed_at) return "awaiting_author";
   return "signed";

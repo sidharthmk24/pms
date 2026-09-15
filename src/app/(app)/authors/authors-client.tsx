@@ -116,7 +116,13 @@ function parseAuthorNotes(rawNotes: string | null): ParsedNotes {
   return { bio: null, avatar: null, interests: null, pastPublications: null, plainNotes: rawNotes };
 }
 
-export default function AuthorsClient({ initialAuthors }: { initialAuthors: AuthorDetailItem[] }) {
+export default function AuthorsClient({
+  initialAuthors,
+  isOwner = false,
+}: {
+  initialAuthors: AuthorDetailItem[];
+  isOwner?: boolean;
+}) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -298,7 +304,7 @@ export default function AuthorsClient({ initialAuthors }: { initialAuthors: Auth
       )}
 
       {/* Header Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Authors &amp; Contributors</h1>
           <p className="mt-1 text-base text-muted-foreground">
@@ -325,7 +331,7 @@ export default function AuthorsClient({ initialAuthors }: { initialAuthors: Auth
           </svg>
           <span>Add Author</span>
         </button>
-      </div>
+      </div> */}
 
       {/* Bento KPI Summary Cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -351,16 +357,7 @@ export default function AuthorsClient({ initialAuthors }: { initialAuthors: Auth
           <p className="mt-1 text-xs text-muted-foreground">With signed book agreements</p>
         </div>
 
-        <div className="rounded-sm border border-black/[0.08] bg-surface/90 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <svg className="h-4 w-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-            </svg>
-            <span>Portal Accounts</span>
-          </div>
-          <p className="mt-2 text-3xl font-black text-emerald-600 dark:text-emerald-400">{stats.portalUsers}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Active online portal logins</p>
-        </div>
+
 
         <div className="rounded-sm border border-black/[0.08] bg-surface/90 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -383,7 +380,7 @@ export default function AuthorsClient({ initialAuthors }: { initialAuthors: Auth
             placeholder="Search by author name, Malayalam, email, phone, location..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-2xl border border-black/10 bg-surface px-4 py-2.5 pl-10 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/10 dark:border-white/10 dark:bg-surface"
+            className="w-full rounded-2xl border border-black/10 bg-surface px-4 py-2.5 pl-10 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/15 dark:border-white/10 dark:bg-surface"
           />
           <svg
             className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
@@ -427,12 +424,12 @@ export default function AuthorsClient({ initialAuthors }: { initialAuthors: Auth
                 onClick={() => setActiveTab(tab.key as FilterTab)}
                 className={`apple-button rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                   activeTab === tab.key
-                    ? "bg-foreground text-background shadow-xs font-extrabold"
-                    : "border border-black/8 bg-surface text-muted-foreground hover:bg-black/5 hover:text-foreground dark:border-white/10 dark:bg-surface-muted/50"
+                    ? "bg-[#7e2562] text-white shadow-plum-sm font-extrabold"
+                    : "border border-[#7e2562]/15 bg-surface text-muted-foreground hover:bg-[#faedf5]/40 hover:text-foreground dark:border-white/10 dark:bg-surface-muted/50"
                 }`}
               >
                 {tab.label}
-                <span className={`ml-1.5 text-[10px] ${activeTab === tab.key ? "opacity-80" : "opacity-60"}`}>
+                <span className={`ml-1.5 text-[10px] ${activeTab === tab.key ? "opacity-90" : "opacity-60"}`}>
                   ({tab.count})
                 </span>
               </button>
@@ -445,6 +442,7 @@ export default function AuthorsClient({ initialAuthors }: { initialAuthors: Auth
               value={sortField}
               onChange={(val) => setSortField(val as SortField)}
               ariaLabel="Sort authors"
+              buttonClassName="!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
               options={[
                 { value: "name", label: "Name (A → Z)" },
                 { value: "books", label: "Most Books" },
@@ -631,23 +629,25 @@ export default function AuthorsClient({ initialAuthors }: { initialAuthors: Auth
                             Details
                           </button>
 
-                          <button
-                            onClick={() => {
-                              setFormName(author.name);
-                              setFormNameMl(author.name_ml || "");
-                              setFormEmail(author.email || "");
-                              setFormPhone(author.phone || "");
-                              setFormAddress(author.address || "");
-                              setFormPan(author.pan || "");
-                              const { plainNotes, bio } = parseAuthorNotes(author.notes);
-                              setFormNotes(plainNotes || bio || author.notes || "");
-                              setError(null);
-                              setEditingAuthor(author);
-                            }}
-                            className="apple-button rounded-xl border border-black/10 bg-surface px-3 py-1.5 text-xs font-bold text-foreground hover:bg-black/5 dark:border-white/15 dark:bg-surface-muted/60 cursor-pointer"
-                          >
-                            Edit
-                          </button>
+                          {isOwner && (
+                            <button
+                              onClick={() => {
+                                setFormName(author.name);
+                                setFormNameMl(author.name_ml || "");
+                                setFormEmail(author.email || "");
+                                setFormPhone(author.phone || "");
+                                setFormAddress(author.address || "");
+                                setFormPan(author.pan || "");
+                                const { plainNotes, bio } = parseAuthorNotes(author.notes);
+                                setFormNotes(plainNotes || bio || author.notes || "");
+                                setError(null);
+                                setEditingAuthor(author);
+                              }}
+                              className="apple-button rounded-xl border border-black/10 bg-surface px-3 py-1.5 text-xs font-bold text-foreground hover:bg-black/5 dark:border-white/15 dark:bg-surface-muted/60 cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1087,23 +1087,25 @@ export default function AuthorsClient({ initialAuthors }: { initialAuthors: Auth
                 >
                   Close
                 </button>
-                <button
-                  onClick={() => {
-                    setFormName(currentSelectedAuthor.name);
-                    setFormNameMl(currentSelectedAuthor.name_ml || "");
-                    setFormEmail(currentSelectedAuthor.email || "");
-                    setFormPhone(currentSelectedAuthor.phone || "");
-                    setFormAddress(currentSelectedAuthor.address || "");
-                    setFormPan(currentSelectedAuthor.pan || "");
-                    const { plainNotes, bio } = parseAuthorNotes(currentSelectedAuthor.notes);
-                    setFormNotes(plainNotes || bio || currentSelectedAuthor.notes || "");
-                    setError(null);
-                    setEditingAuthor(currentSelectedAuthor);
-                  }}
-                  className="apple-button rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary-hover cursor-pointer"
-                >
-                  Edit Profile
-                </button>
+                {isOwner && (
+                  <button
+                    onClick={() => {
+                      setFormName(currentSelectedAuthor.name);
+                      setFormNameMl(currentSelectedAuthor.name_ml || "");
+                      setFormEmail(currentSelectedAuthor.email || "");
+                      setFormPhone(currentSelectedAuthor.phone || "");
+                      setFormAddress(currentSelectedAuthor.address || "");
+                      setFormPan(currentSelectedAuthor.pan || "");
+                      const { plainNotes, bio } = parseAuthorNotes(currentSelectedAuthor.notes);
+                      setFormNotes(plainNotes || bio || currentSelectedAuthor.notes || "");
+                      setError(null);
+                      setEditingAuthor(currentSelectedAuthor);
+                    }}
+                    className="apple-button rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary-hover cursor-pointer"
+                  >
+                    Edit Profile
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -1111,7 +1113,7 @@ export default function AuthorsClient({ initialAuthors }: { initialAuthors: Auth
       )}
 
       {/* MODAL: Add Author */}
-      {isAddOpen && mounted && createPortal(
+      {/* {isAddOpen && mounted && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 dark:bg-black/40">
           <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-black/10 bg-surface shadow-2xl dark:border-white/15 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-black/[0.06] px-6 py-4 dark:border-white/[0.08]">
@@ -1249,7 +1251,7 @@ export default function AuthorsClient({ initialAuthors }: { initialAuthors: Auth
           </div>
         </div>,
         document.body
-      )}
+      )} */}
 
       {/* MODAL: Edit Author */}
       {editingAuthor && mounted && createPortal(

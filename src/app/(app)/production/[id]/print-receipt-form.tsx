@@ -1,7 +1,41 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { SmoothDropdown, type DropdownOption } from "@/components/dropdown";
+
+const DEFAULT_PAPER_SPECS = [
+  "80gsm Natural Shade Cream (Standard Book)",
+  "70gsm Natural Shade Cream",
+  "70gsm Maplitho White",
+  "80gsm Maplitho White",
+  "100gsm Art Paper (Gloss / Matte)",
+  "130gsm Art Paper",
+  "70gsm Bulky Book Paper",
+];
+
+const BINDING_OPTIONS: DropdownOption[] = [
+  {
+    value: "Perfect Paperback",
+    label: "Perfect Paperback (Softcover)",
+    description: "Standard glue spine paperback binding",
+  },
+  {
+    value: "Hardbound Case Binding",
+    label: "Hardbound Case Binding",
+    description: "Rigid board cover case bound",
+  },
+  {
+    value: "Saddle Stitch",
+    label: "Saddle Stitch (Booklet)",
+    description: "Center staple binding",
+  },
+  {
+    value: "Hardbound with Dust Jacket",
+    label: "Hardbound with Dust Jacket",
+    description: "Casebound with printed outer jacket",
+  },
+];
 
 export default function PrintReceiptForm({
   projectId,
@@ -19,7 +53,11 @@ export default function PrintReceiptForm({
 
   // Printing Press Run Specifications
   const [qty, setQty] = useState(1000);
-  const [paper, setPaper] = useState("80gsm Natural Shade");
+  const [paper, setPaper] = useState("80gsm Natural Shade Cream (Standard Book)");
+  const [customPaperSpecs, setCustomPaperSpecs] = useState<string[]>([]);
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customInput, setCustomInput] = useState("");
+
   const [binding, setBinding] = useState("Perfect Paperback");
   const [vendor, setVendor] = useState("Kairali Press Kozhikode");
   const [costRupees, setCostRupees] = useState(45000);
@@ -27,6 +65,60 @@ export default function PrintReceiptForm({
 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Load custom specs from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("kairali_custom_paper_specs");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCustomPaperSpecs(parsed);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  function handleAddCustomPaper() {
+    const trimmed = customInput.trim();
+    if (!trimmed) return;
+
+    // Prepend to custom list so newest added is placed at the very top
+    const updated = [trimmed, ...customPaperSpecs.filter((s) => s.toLowerCase() !== trimmed.toLowerCase())];
+    setCustomPaperSpecs(updated);
+    setPaper(trimmed);
+    setShowCustomInput(false);
+    setCustomInput("");
+
+    try {
+      localStorage.setItem("kairali_custom_paper_specs", JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+  }
+
+  // Build options for SmoothDropdown with custom specs placed on top
+  const paperDropdownOptions = useMemo<DropdownOption[]>(() => {
+    return [
+      ...customPaperSpecs.map((spec) => ({
+        value: spec,
+        label: spec,
+        description: "Custom Added Spec",
+      })),
+      ...DEFAULT_PAPER_SPECS.map((spec) => ({
+        value: spec,
+        label: spec,
+        description: "Standard Paper Stock",
+      })),
+      {
+        value: "__CUSTOM__",
+        label: "+ Other / Custom GSM Spec…",
+        description: "Add a new paper specification",
+      },
+    ];
+  }, [customPaperSpecs]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -67,7 +159,7 @@ export default function PrintReceiptForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10 space-y-6 font-sans">
+    <form onSubmit={onSubmit} className="rounded-3xl border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10 space-y-6 font-sans">
       {/* Header Banner */}
       <div className="border-b border-black/10 pb-4 dark:border-white/10">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -75,7 +167,7 @@ export default function PrintReceiptForm({
             <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1 text-xs font-bold text-foreground">
               Step 6 of 8 · Offset Printing Press Run
             </span>
-            <h3 className="mt-2 text-lg font-bold text-foreground font-serif">
+            <h3 className="mt-2 text-lg font-bold text-foreground">
               Printing Press Order &amp; Execution Specifications
             </h3>
           </div>
@@ -83,7 +175,7 @@ export default function PrintReceiptForm({
             className={`rounded-full px-3.5 py-1 text-xs font-bold ${
               isSelfPublishing
                 ? "border border-accent/20 bg-accent/10 text-accent"
-                : "border border-primary/20 bg-primary/10 text-primary"
+                : "border border-[#7e2562]/20 bg-[#faedf5] text-[#7e2562]"
             }`}
           >
             {isSelfPublishing ? "Self-Publishing Track" : "Kairali Books Publishing Track"}
@@ -108,7 +200,7 @@ export default function PrintReceiptForm({
               required
               value={qty}
               onChange={(e) => setQty(Number(e.target.value))}
-              className="w-full rounded-xl border border-black/15 bg-surface px-3.5 py-2 text-sm font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 dark:border-white/15"
+              className="w-full rounded-xl border border-black/15 bg-surface px-3.5 py-2 text-sm font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-[#7e2562]/20 dark:border-white/15"
             />
             <p className="text-[11px] text-muted-foreground">Contracted print run batch size.</p>
           </div>
@@ -124,7 +216,7 @@ export default function PrintReceiptForm({
               required
               value={costRupees}
               onChange={(e) => setCostRupees(Number(e.target.value))}
-              className="w-full rounded-xl border border-black/15 bg-surface px-3.5 py-2 text-sm font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 dark:border-white/15"
+              className="w-full rounded-xl border border-black/15 bg-surface px-3.5 py-2 text-sm font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-[#7e2562]/20 dark:border-white/15"
             />
             <p className="text-[11px] text-muted-foreground">Total press invoice amount.</p>
           </div>
@@ -142,42 +234,112 @@ export default function PrintReceiptForm({
               value={vendor}
               onChange={(e) => setVendor(e.target.value)}
               placeholder="e.g. Kairali Press Kozhikode, Anaswara Kochi"
-              className="w-full rounded-xl border border-black/15 bg-surface px-3.5 py-2 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 dark:border-white/15"
+              className="w-full rounded-xl border border-black/15 bg-surface px-3.5 py-2 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-[#7e2562]/20 dark:border-white/15"
             />
           </div>
 
+          {/* Paper Stock Dropdown with Custom GSM addition */}
           <div className="space-y-1.5">
-            <label htmlFor="print_paper" className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Paper &amp; Text Stock Specs <span className="text-danger">*</span>
-            </label>
-            <input
-              id="print_paper"
-              type="text"
-              required
-              value={paper}
-              onChange={(e) => setPaper(e.target.value)}
-              placeholder="e.g. 80gsm Natural Shade Cream, 70gsm Maplitho"
-              className="w-full rounded-xl border border-black/15 bg-surface px-3.5 py-2 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 dark:border-white/15"
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Paper &amp; Text Stock Specs <span className="text-danger">*</span>
+              </label>
+              {!showCustomInput && (
+                <button
+                  type="button"
+                  onClick={() => setShowCustomInput(true)}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#7e2562] hover:underline dark:text-pink-400 cursor-pointer"
+                >
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Add Custom GSM</span>
+                </button>
+              )}
+            </div>
+
+            <SmoothDropdown
+              size="md"
+              value={showCustomInput ? "__CUSTOM__" : paper}
+              onChange={(val) => {
+                if (val === "__CUSTOM__") {
+                  setShowCustomInput(true);
+                } else {
+                  setShowCustomInput(false);
+                  setPaper(val);
+                }
+              }}
+              options={paperDropdownOptions}
+              placeholder="Select paper stock…"
+              ariaLabel="Select Paper and text stock specs"
             />
+
+            {/* Custom GSM Input Box */}
+            {showCustomInput && (
+              <div className="mt-2 rounded-2xl border border-[#7e2562]/20 bg-[#faedf5]/50 p-3 dark:bg-[#7e2562]/10 dark:border-pink-500/30 space-y-2 animate-apple-in">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#7e2562] dark:text-pink-300">
+                    Enter Custom Paper Specification
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCustomInput(false);
+                      setCustomInput("");
+                    }}
+                    className="flex h-5 w-5 items-center justify-center rounded-full bg-black/5 text-muted-foreground hover:bg-black/10 hover:text-foreground cursor-pointer dark:bg-white/10"
+                  >
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customInput}
+                    onChange={(e) => setCustomInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddCustomPaper();
+                      }
+                    }}
+                    placeholder="e.g. 90gsm Holmen Book Cream, 120gsm Sunshine"
+                    className="flex-1 rounded-xl border border-black/15 bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/10 dark:bg-surface dark:border-white/15"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomPaper}
+                    disabled={!customInput.trim()}
+                    className="rounded-xl bg-[#7e2562] px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#681d50] disabled:opacity-50 cursor-pointer transition-all shrink-0"
+                  >
+                    Add &amp; Select
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Newly added GSM specs are automatically saved to the top of the dropdown for fast access.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
+          {/* Binding Dropdown using common component */}
           <div className="space-y-1.5">
-            <label htmlFor="print_binding" className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Binding Specification <span className="text-danger">*</span>
             </label>
-            <select
-              id="print_binding"
+            <SmoothDropdown
+              size="md"
               value={binding}
-              onChange={(e) => setBinding(e.target.value)}
-              className="w-full rounded-xl border border-black/15 bg-surface px-3.5 py-2 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 dark:border-white/15"
-            >
-              <option value="Perfect Paperback">Perfect Paperback (Softcover)</option>
-              <option value="Hardbound Case Binding">Hardbound Case Binding</option>
-              <option value="Saddle Stitch">Saddle Stitch (Booklet)</option>
-              <option value="Hardbound with Dust Jacket">Hardbound with Dust Jacket</option>
-            </select>
+              onChange={(val) => setBinding(val)}
+              options={BINDING_OPTIONS}
+              placeholder="Select binding type…"
+              ariaLabel="Select binding specification"
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -190,7 +352,7 @@ export default function PrintReceiptForm({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Matte lamination with spot UV on title heading"
-              className="w-full rounded-xl border border-black/15 bg-surface px-3.5 py-2 text-sm text-foreground dark:border-white/15"
+              className="w-full rounded-xl border border-black/15 bg-surface px-3.5 py-2 text-sm text-foreground dark:border-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#7e2562]/20"
             />
           </div>
         </div>
@@ -206,9 +368,9 @@ export default function PrintReceiptForm({
         <button
           type="submit"
           disabled={pending || qty <= 0}
-          className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-sm hover:bg-primary-hover transition disabled:opacity-60 cursor-pointer text-center"
+          className="rounded-xl bg-[#7e2562] px-6 py-3 text-sm font-bold text-white shadow-plum-sm hover:bg-[#681d50] hover:shadow-plum transition disabled:opacity-60 cursor-pointer text-center"
         >
-          {pending ? "Recording Press Order..." : "✓ Confirm Print Run & Advance to Post-Production →"}
+          {pending ? "Recording Press Order..." : "Confirm Print Run & Advance to Post-Production →"}
         </button>
       </div>
     </form>

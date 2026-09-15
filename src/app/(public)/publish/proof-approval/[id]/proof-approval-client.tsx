@@ -207,7 +207,7 @@ export default function ProofApprovalClient({
             <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-primary">
               Author Verification &amp; Acceptance
             </span>
-            <h3 className="text-lg font-bold text-foreground font-serif mt-1">
+            <h3 className="text-lg font-bold text-foreground   mt-1">
               Final Proof Approval Sign-Off
             </h3>
             <p className="text-xs text-muted-foreground mt-1">

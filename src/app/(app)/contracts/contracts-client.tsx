@@ -4,13 +4,14 @@ import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { SmoothDropdown } from "@/components/dropdown";
-import { formatPaise } from "@/lib/money";
+import { formatPaise, paiseToRupees } from "@/lib/money";
 import {
   parseContractNotes,
   getContractStatus,
   PUBLISHER_DETAILS,
   type ContractMetadata,
   type ContractStatus,
+  type PublishingTrack,
 } from "@/lib/contracts";
 
 type ContractItem = {
@@ -66,11 +67,62 @@ export default function ContractsClient({
   const [signingContract, setSigningContract] = useState<EnrichedContract | null>(null);
   const [publisherSignature, setPublisherSignature] = useState("Radhika Menon");
   const [loading, setLoading] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Owner Reassign / Revise / Decline Modal State
+  const [revisingContract, setRevisingContract] = useState<EnrichedContract | null>(null);
+  const [revPublishingType, setRevPublishingType] = useState<PublishingTrack>("kairali_funded");
+  const [revRoyaltyPct, setRevRoyaltyPct] = useState<number>(10);
+  const [revBasis, setRevBasis] = useState<"mrp" | "net">("mrp");
+  const [revAdvanceRupees, setRevAdvanceRupees] = useState<number>(0);
+  const [revTermYears, setRevTermYears] = useState<number>(3);
+  const [revFreeCopies, setRevFreeCopies] = useState<number>(10);
+  const [revAuthorDiscountPct, setRevAuthorDiscountPct] = useState<number>(40);
+  const [revPackageCostRupees, setRevPackageCostRupees] = useState<number>(0);
+  const [revEditorNotes, setRevEditorNotes] = useState<string>("");
+  const [declineReason, setDeclineReason] = useState<string>("");
+  const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
+  const [showAcceptConfirm, setShowAcceptConfirm] = useState(false);
+  const [acceptNotes, setAcceptNotes] = useState<string>("");
+  const [isSubmittingRevise, setIsSubmittingRevise] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  function openReviseModal(c: EnrichedContract) {
+    setRevisingContract(c);
+    setRevPublishingType(c.meta.publishing_type || "kairali_funded");
+    setRevRoyaltyPct(c.royalty_pct || 10);
+    setRevBasis((c.basis === "net" ? "net" : "mrp"));
+    setRevAdvanceRupees(paiseToRupees(c.advance_paise || 0));
+    setRevTermYears(c.meta.term_years || 3);
+    setRevFreeCopies(c.meta.free_copies || 10);
+    setRevAuthorDiscountPct(c.meta.author_discount_pct || 40);
+    setRevPackageCostRupees(c.meta.package_cost_rupees || 0);
+    setRevEditorNotes(c.meta.notes || "");
+    setDeclineReason("");
+    setAcceptNotes("");
+    setShowDeclineConfirm(false);
+    setShowAcceptConfirm(false);
+  }
+
+  function openAcceptModal(c: EnrichedContract) {
+    openReviseModal(c);
+    setShowAcceptConfirm(true);
+    setShowDeclineConfirm(false);
+  }
+
+  function openDeclineModal(c: EnrichedContract) {
+    openReviseModal(c);
+    setShowDeclineConfirm(true);
+    setShowAcceptConfirm(false);
+  }
+
+  function openCounterModal(c: EnrichedContract) {
+    openReviseModal(c);
+    setShowAcceptConfirm(false);
+    setShowDeclineConfirm(false);
+  }
 
   const enrichedContracts = useMemo(() => {
     return contracts.map((c) => {
@@ -122,6 +174,7 @@ export default function ContractsClient({
 
   const totalCount = contracts.length;
   const signedCount = enrichedContracts.filter((c) => c.status === "signed").length;
+  const renegotiationCount = enrichedContracts.filter((c) => c.status === "renegotiation_requested").length;
   const pendingAuthorCount = enrichedContracts.filter((c) => c.status === "awaiting_author").length;
   const pendingPublisherCount = enrichedContracts.filter((c) => c.status === "awaiting_publisher").length;
 
@@ -155,12 +208,99 @@ export default function ContractsClient({
     }
   }
 
-  function copyAuthorLink(contractId: string) {
-    const url = `${window.location.origin}/publish/contract/${contractId}`;
-    navigator.clipboard.writeText(url);
-    setCopiedId(contractId);
-    setTimeout(() => setCopiedId(null), 2500);
+  async function handleReviseSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!revisingContract) return;
+
+    setIsSubmittingRevise(true);
+    try {
+      const res = await fetch(`/api/contracts/${revisingContract.id}/revise`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "revise",
+          publishingType: revPublishingType,
+          royaltyPct: Number(revRoyaltyPct),
+          basis: revBasis,
+          advanceRupees: Number(revAdvanceRupees) || 0,
+          termYears: Number(revTermYears) || 3,
+          freeCopies: Number(revFreeCopies) || 10,
+          authorDiscountPct: Number(revAuthorDiscountPct) || 40,
+          packageCostRupees: Number(revPackageCostRupees) || 0,
+          editorNotes: revEditorNotes.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        alert(data?.error ?? "Failed to update contract terms");
+      } else {
+        setRevisingContract(null);
+        router.refresh();
+      }
+    } catch {
+      alert("Network error while updating contract");
+    } finally {
+      setIsSubmittingRevise(false);
+    }
   }
+
+  async function handleDeclineSubmit() {
+    if (!revisingContract) return;
+
+    setIsSubmittingRevise(true);
+    try {
+      const res = await fetch(`/api/contracts/${revisingContract.id}/revise`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "decline",
+          reason: declineReason.trim() || "Publisher and author could not reach agreement on publishing terms.",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        alert(data?.error ?? "Failed to decline contract offer");
+      } else {
+        setRevisingContract(null);
+        setShowDeclineConfirm(false);
+        router.refresh();
+      }
+    } catch {
+      alert("Network error while declining contract");
+    } finally {
+      setIsSubmittingRevise(false);
+    }
+  }
+
+  async function handleAcceptSubmit() {
+    if (!revisingContract) return;
+
+    setIsSubmittingRevise(true);
+    try {
+      const res = await fetch(`/api/contracts/${revisingContract.id}/revise`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "accept",
+          notes: acceptNotes.trim() || "Publisher accepted author terms request.",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        alert(data?.error ?? "Failed to accept contract terms");
+      } else {
+        setRevisingContract(null);
+        setShowAcceptConfirm(false);
+        router.refresh();
+      }
+    } catch {
+      alert("Network error while accepting contract");
+    } finally {
+      setIsSubmittingRevise(false);
+    }
+  }
+
+
 
   return (
     <div className="space-y-6">
@@ -174,64 +314,110 @@ export default function ContractsClient({
           <span className="text-xs font-bold text-emerald-800">Fully Dual-Signed</span>
           <p className="mt-1 text-2xl font-black text-emerald-900">{signedCount}</p>
         </div>
-        <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4.5 shadow-2xs">
-          <span className="text-xs font-bold text-amber-800">Awaiting Author Sign</span>
-          <p className="mt-1 text-2xl font-black text-amber-900">{pendingAuthorCount}</p>
+        <div className={`rounded-2xl border p-4.5 shadow-2xs ${renegotiationCount > 0 ? "border-amber-400 bg-amber-50/70" : "border-amber-200 bg-amber-50/50"}`}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-amber-800">Review Requested</span>
+            {renegotiationCount > 0 && (
+              <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-white animate-pulse">
+                Action Req.
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-2xl font-black text-amber-950">{renegotiationCount}</p>
         </div>
         <div className="rounded-2xl border border-[#7e2562]/20 bg-[#faedf5]/60 p-4.5 shadow-2xs">
-          <span className="text-xs font-bold text-[#7e2562]">Awaiting Publisher</span>
-          <p className="mt-1 text-2xl font-black text-[#7e2562]">{pendingPublisherCount}</p>
+          <span className="text-xs font-bold text-[#7e2562]">Awaiting Author</span>
+          <p className="mt-1 text-2xl font-black text-[#7e2562]">{pendingAuthorCount}</p>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="relative z-20 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <input
-            type="text"
-            placeholder="Search by title, author, or contract ID..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-black/12 bg-surface px-3.5 py-2.5 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-foreground/40 focus:ring-2 focus:ring-foreground/5 dark:border-white/15"
-          />
-        </div>
+      {(() => {
+        const hasFilter = Boolean(search || statusFilter !== "all" || (sortBy && sortBy !== "recent"));
+        return (
+          <div className={`relative z-20 flex flex-col gap-3 rounded-2xl border bg-white p-4 transition-all duration-200 sm:flex-row sm:items-center sm:justify-between ${
+            hasFilter ? "border-[#7e2562]/35 shadow-plum-md" : "border-[#7e2562]/15 shadow-plum-sm"
+          }`}>
+            <div className="relative flex-1 max-w-md">
+              <input
+                type="text"
+                placeholder="Search by title, author, or contract ID..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-xl border border-black/10 bg-background px-3.5 py-2 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20 dark:border-white/10"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="w-44">
-            <SmoothDropdown
-              size="sm"
-              value={statusFilter}
-              onChange={(val) => setStatusFilter(val as any)}
-              ariaLabel="Filter by status"
-              options={[
-                { value: "all", label: "All Statuses" },
-                { value: "signed", label: "Fully Signed" },
-                { value: "awaiting_author", label: "Awaiting Author" },
-                { value: "awaiting_publisher", label: "Awaiting Publisher" },
-              ]}
-            />
-          </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="w-48">
+                <SmoothDropdown
+                  size="sm"
+                  value={statusFilter}
+                  onChange={(val) => setStatusFilter(val as any)}
+                  ariaLabel="Filter by status"
+                  buttonClassName={
+                    statusFilter && statusFilter !== "all"
+                      ? "!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
+                      : ""
+                  }
+                  options={[
+                    { value: "all", label: "All Statuses" },
+                    { value: "renegotiation_requested", label: "Review Requested" },
+                    { value: "signed", label: "Fully Signed" },
+                    { value: "awaiting_author", label: "Awaiting Author" },
+                    { value: "awaiting_publisher", label: "Awaiting Publisher" },
+                    { value: "declined", label: "Declined / Concluded" },
+                  ]}
+                />
+              </div>
 
-          <div className="w-48">
-            <SmoothDropdown
-              size="sm"
-              value={sortBy}
-              onChange={(val) => setSortBy(val)}
-              ariaLabel="Sort contracts"
-              options={[
-                { value: "recent", label: "Newest Created" },
-                { value: "oldest", label: "Oldest Created" },
-                { value: "title_asc", label: "Title (A → Z)" },
-                { value: "title_desc", label: "Title (Z → A)" },
-                { value: "author_asc", label: "Author (A → Z)" },
-                { value: "author_desc", label: "Author (Z → A)" },
-                { value: "royalty_desc", label: "Royalty (High → Low)" },
-                { value: "advance_desc", label: "Advance (High → Low)" },
-              ]}
-            />
+              <div className="w-48">
+                <SmoothDropdown
+                  size="sm"
+                  value={sortBy}
+                  onChange={(val) => setSortBy(val)}
+                  ariaLabel="Sort contracts"
+                  buttonClassName="!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
+                  options={[
+                    { value: "recent", label: "Newest Created" },
+                    { value: "oldest", label: "Oldest Created" },
+                    { value: "title_asc", label: "Title (A → Z)" },
+                    { value: "title_desc", label: "Title (Z → A)" },
+                    { value: "author_asc", label: "Author (A → Z)" },
+                    { value: "author_desc", label: "Author (Z → A)" },
+                    { value: "royalty_desc", label: "Royalty (High → Low)" },
+                    { value: "advance_desc", label: "Advance (High → Low)" },
+                  ]}
+                />
+              </div>
+
+              {hasFilter && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    setStatusFilter("all");
+                    setSortBy("recent");
+                  }}
+                  className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/20 bg-[#faedf5]/30 px-3 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition-all cursor-pointer"
+                >
+                  <span className="text-sm">✕</span>
+                  <span>Clear</span>
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Contracts Table */}
       <section className="relative z-10 overflow-hidden rounded-3xl border border-[#7e2562]/15 bg-white shadow-plum-sm">
@@ -257,6 +443,8 @@ export default function ContractsClient({
               ) : (
                 filtered.map((c) => {
                   const isSigned = c.status === "signed";
+                  const isRenegotiation = c.status === "renegotiation_requested";
+                  const isDeclined = c.status === "declined";
                   const isAwaitingAuthor = c.status === "awaiting_author";
                   const isAwaitingPublisher = c.status === "awaiting_publisher";
 
@@ -279,6 +467,23 @@ export default function ContractsClient({
                       <td className="px-6 py-4">
                         <p className="font-bold text-foreground">{c.authors.name}</p>
                         <span className="text-xs text-muted-foreground">{c.authors.email || "No email"}</span>
+                        {c.meta.author_feedback && (
+                          <div className="mt-2 max-w-sm rounded-xl border border-amber-300 bg-amber-50/95 p-2.5 text-xs text-amber-950 shadow-2xs">
+                            <div className="flex items-center gap-1 font-bold text-amber-900 text-[11px]">
+                              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-white font-black text-[9px]">!</span>
+                              <span>Author Renegotiation Request:</span>
+                            </div>
+                            <p className="mt-1   italic text-foreground text-xs leading-snug line-clamp-3">
+                              &ldquo;{c.meta.author_feedback}&rdquo;
+                            </p>
+                          </div>
+                        )}
+                        {!c.meta.author_feedback && c.meta.decline_reason && (
+                          <div className="mt-2 max-w-sm rounded-xl border border-rose-200 bg-rose-50/90 p-2 text-xs text-rose-900 line-clamp-2">
+                            <span className="font-bold">Decline Reason: </span>
+                            <span className="italic">&ldquo;{c.meta.decline_reason}&rdquo;</span>
+                          </div>
+                        )}
                       </td>
 
                       {/* Track & Terms */}
@@ -288,7 +493,7 @@ export default function ContractsClient({
                             {c.meta.publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali-Funded"}
                           </span>
                           <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                            {c.royalty_pct}% on {c.basis.toUpperCase()} · {c.meta.term_years} Yrs
+                            {c.royalty_pct}% on {c.basis.toUpperCase()} · {c.meta.term_years} Yrs · {c.meta.free_copies} Copies
                           </p>
                         </div>
                       </td>
@@ -306,13 +511,25 @@ export default function ContractsClient({
                             Dual-Signed
                           </span>
                         )}
-                        {isAwaitingAuthor && (
+                        {isRenegotiation && (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900 border border-amber-300 shadow-2xs animate-pulse">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-600" />
+                            Review Requested
+                          </span>
+                        )}
+                        {isDeclined && (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-800 border border-rose-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-rose-600" />
+                            Offer Declined
+                          </span>
+                        )}
+                        {!isSigned && !isRenegotiation && !isDeclined && isAwaitingAuthor && (
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-300">
                             <span className="h-1.5 w-1.5 rounded-full bg-amber-600" />
                             Awaiting Author
                           </span>
                         )}
-                        {isAwaitingPublisher && (
+                        {!isSigned && !isRenegotiation && !isDeclined && isAwaitingPublisher && (
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-[#faedf5] px-3 py-1 text-xs font-bold text-[#7e2562] border border-[#7e2562]/25">
                             <span className="h-1.5 w-1.5 rounded-full bg-[#7e2562]" />
                             Awaiting Publisher
@@ -322,7 +539,55 @@ export default function ContractsClient({
 
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {isRenegotiation && (
+                            <>
+                              {/* 1. Accept */}
+                              <button
+                                onClick={() => openAcceptModal(c)}
+                                title="Accept author request and reissue agreement"
+                                className="apple-button inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-emerald-700 active:scale-[0.98] transition-all cursor-pointer"
+                              >
+                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Accept</span>
+                              </button>
+
+                              {/* 2. Decline */}
+                              <button
+                                onClick={() => openDeclineModal(c)}
+                                title="Decline / terminate agreement offer"
+                                className="apple-button inline-flex items-center gap-1 rounded-xl border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-800 hover:bg-rose-100 active:scale-[0.98] transition-all cursor-pointer"
+                              >
+                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                <span>Decline</span>
+                              </button>
+                            </>
+                          )}
+
+                          {isDeclined && (
+                            <button
+                              onClick={() => openReviseModal(c)}
+                              className="apple-button inline-flex items-center gap-1.5 rounded-xl bg-[#7e2562] px-3 py-1.5 text-xs font-extrabold text-white shadow-plum-sm hover:bg-[#681b50] transition-all cursor-pointer"
+                            >
+                              <span>Reassign Contract</span>
+                              <span>&rarr;</span>
+                            </button>
+                          )}
+
+                          {!isSigned && !isDeclined && !isRenegotiation && (
+                            <button
+                              onClick={() => openReviseModal(c)}
+                              title="Modify agreement terms"
+                              className="apple-button inline-flex items-center gap-1 rounded-xl border border-black/15 bg-white px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-black/5 transition-all cursor-pointer"
+                            >
+                              Edit Terms
+                            </button>
+                          )}
+
                           <button
                             onClick={() => setViewingContract(c)}
                             className="apple-button inline-flex items-center gap-1 rounded-xl border border-[#7e2562]/25 bg-white px-3 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition-all cursor-pointer"
@@ -345,20 +610,7 @@ export default function ContractsClient({
                             </button>
                           )}
 
-                          <button
-                            onClick={() => copyAuthorLink(c.id)}
-                            title="Copy secure author signing link"
-                            className={`apple-button inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
-                              copiedId === c.id
-                                ? "border-emerald-600 bg-emerald-600 text-white shadow-2xs"
-                                : "border-black/15 bg-white text-muted-foreground hover:text-foreground hover:bg-black/5 hover:border-black/25 shadow-2xs"
-                            }`}
-                          >
-                            <svg className="h-3.5 w-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            <span>{copiedId === c.id ? "Copied!" : "Author Link"}</span>
-                          </button>
+
                         </div>
                       </td>
                     </tr>
@@ -372,7 +624,7 @@ export default function ContractsClient({
 
       {/* MODAL: Full Legal Agreement Viewer */}
       {viewingContract && mounted && createPortal(
-        <div className="printable-contract-container fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/15 dark:bg-black/40">
+        <div className="printable-contract-container fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
           <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-black/10 bg-surface dark:border-white/15">
             {/* Header (Hidden on Print) */}
             <div className="no-print flex items-center justify-between border-b border-black/[0.06] px-6 py-4 dark:border-white/[0.08]">
@@ -387,7 +639,7 @@ export default function ContractsClient({
               <button
                 type="button"
                 onClick={() => setViewingContract(null)}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-muted-foreground transition-colors hover:bg-black/10 hover:text-foreground dark:bg-white/10 dark:hover:bg-white/20"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-muted-foreground transition-colors hover:bg-black/10 hover:text-foreground dark:bg-white/10 dark:hover:bg-white/20 cursor-pointer"
               >
                 ✕
               </button>
@@ -490,7 +742,23 @@ export default function ContractsClient({
 
                 <div className="signature-box rounded-2xl border border-black/10 p-4 bg-black/[0.015] dark:border-white/10 dark:bg-white/[0.015]">
                   <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Signed by Author</span>
-                  <p className="mt-2 text-sm font-bold text-foreground">{viewingContract.authors.name}</p>
+                  
+                  {viewingContract.meta.author_signature?.startsWith("data:image/") ? (
+                    <div className="my-2 p-1.5 bg-white border border-black/10 rounded-xl inline-block shadow-2xs">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={viewingContract.meta.author_signature}
+                        alt="Author Signature"
+                        className="h-10 max-w-[180px] object-contain"
+                      />
+                    </div>
+                  ) : viewingContract.meta.author_signature ? (
+                    <p className="font-serif italic text-sm text-foreground my-1">
+                      {viewingContract.meta.author_signature}
+                    </p>
+                  ) : null}
+
+                  <p className="mt-1 text-sm font-bold text-foreground">{viewingContract.authors.name}</p>
                   <p className="text-xs text-muted-foreground">PAN: {viewingContract.meta.author_pan || viewingContract.authors.pan || "On Record"}</p>
                   {viewingContract.meta.author_signed_at ? (
                     <div className="mt-3 text-[11px] text-success font-semibold border-t border-black/5 pt-2">
@@ -510,18 +778,26 @@ export default function ContractsClient({
 
             {/* Modal Footer (Hidden on Print) */}
             <div className="no-print border-t border-black/[0.06] bg-surface p-4 flex items-center justify-between dark:border-white/[0.08]">
-              <button
-                type="button"
-                onClick={() => copyAuthorLink(viewingContract.id)}
-                className="apple-button rounded-xl border border-black/10 px-4 py-2 text-xs font-bold text-foreground hover:bg-black/5 dark:border-white/15"
-              >
-                Copy Author Signing Link
-              </button>
+              <div className="flex items-center gap-2">
+                {!viewingContract.signed_on && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const c = viewingContract;
+                      setViewingContract(null);
+                      openReviseModal(c);
+                    }}
+                    className="apple-button rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-900 hover:bg-amber-100 cursor-pointer"
+                  >
+                    Edit / Reassign Terms
+                  </button>
+                )}
+              </div>
 
               <button
                 type="button"
                 onClick={() => window.open(`/contracts/${viewingContract.id}/print`, "_blank")}
-                className="apple-button rounded-xl bg-foreground px-4 py-2 text-xs font-bold text-background shadow-xs hover:opacity-90"
+                className="apple-button rounded-xl bg-foreground px-4 py-2 text-xs font-bold text-background shadow-xs hover:opacity-90 cursor-pointer"
               >
                 Print / Save Official PDF
               </button>
@@ -533,7 +809,7 @@ export default function ContractsClient({
 
       {/* MODAL: Publisher Digital Sign */}
       {signingContract && mounted && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/15 dark:bg-black/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
           <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-black/10 bg-surface dark:border-white/15">
             <div className="flex items-center justify-between border-b border-black/[0.06] px-6 py-4 dark:border-white/[0.08]">
               <div>
@@ -543,7 +819,7 @@ export default function ContractsClient({
               <button
                 type="button"
                 onClick={() => setSigningContract(null)}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-muted-foreground transition-colors hover:bg-black/10 hover:text-foreground dark:bg-white/10 dark:hover:bg-white/20"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-muted-foreground transition-colors hover:bg-black/10 hover:text-foreground dark:bg-white/10 dark:hover:bg-white/20 cursor-pointer"
               >
                 ✕
               </button>
@@ -571,19 +847,341 @@ export default function ContractsClient({
                 <button
                   type="button"
                   onClick={() => setSigningContract(null)}
-                  className="apple-button flex-1 rounded-xl border border-black/12 bg-black/[0.02] py-2.5 text-xs font-bold text-foreground hover:bg-black/[0.05] dark:border-white/15 dark:bg-white/[0.04]"
+                  className="apple-button flex-1 rounded-xl border border-black/12 bg-black/[0.02] py-2.5 text-xs font-bold text-foreground hover:bg-black/[0.05] dark:border-white/15 dark:bg-white/[0.04] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="apple-button flex-1 rounded-xl bg-foreground py-2.5 text-xs font-bold text-background shadow-xs hover:opacity-90 disabled:opacity-50"
+                  className="apple-button flex-1 rounded-xl bg-foreground py-2.5 text-xs font-bold text-background shadow-xs hover:opacity-90 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? "Signing..." : "Affix Digital Signature"}
                 </button>
               </div>
             </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL: Owner Review, Reassign Terms or Decline */}
+      {revisingContract && mounted && createPortal(
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setRevisingContract(null);
+          }}
+        >
+          <div className="relative flex max-h-[88vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl animate-in zoom-in-95 duration-150 my-auto">
+            {/* Header */}
+            <div className="shrink-0 flex items-center justify-between border-b border-border bg-slate-50/80 px-5 py-3.5">
+              <div>
+                <h3 className="text-sm font-bold text-foreground">
+                  Review &amp; Reassign Publishing Terms
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">{revisingContract.titles.name}</span> · Author: <span className="font-semibold text-[#7e2562]">{revisingContract.authors.name}</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRevisingContract(null)}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-black/5 hover:text-foreground cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable Form Body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+              {/* Author's Requested Revision / Feedback Alert (if present) */}
+              {(revisingContract.meta.author_feedback || revisingContract.meta.decline_reason) && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-amber-950 text-xs">Author&apos;s Requested Changes:</span>
+                    {revisingContract.meta.renegotiation_requested_at && (
+                      <span className="font-mono text-[10px] text-amber-800">
+                        {revisingContract.meta.renegotiation_requested_at.slice(0, 10)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="rounded-lg border border-amber-200/80 bg-white p-2.5">
+                    <p className="text-foreground   italic text-xs leading-relaxed whitespace-pre-wrap">
+                      &ldquo;{revisingContract.meta.author_feedback || revisingContract.meta.decline_reason}&rdquo;
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Form to Update Terms */}
+              <form onSubmit={handleReviseSubmit} id="revise-contract-form" className="space-y-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block font-semibold text-foreground">Publishing Track</label>
+                    <SmoothDropdown
+                      options={[
+                        { value: "kairali_funded", label: "Kairali Books Funded Track" },
+                        { value: "self_publishing", label: "Self-Publishing Track" },
+                      ]}
+                      value={revPublishingType}
+                      onChange={(val) => setRevPublishingType(val as PublishingTrack)}
+                      size="sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block font-semibold text-foreground">Royalty Basis</label>
+                    <SmoothDropdown
+                      options={[
+                        { value: "mrp", label: "Percentage of MRP (Printed Price)" },
+                        { value: "net", label: "Percentage of Net Receipts" },
+                      ]}
+                      value={revBasis}
+                      onChange={(val) => setRevBasis(val as "mrp" | "net")}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block font-semibold text-foreground">
+                      Royalty Rate (%) <span className="text-rose-600">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.5}
+                        required
+                        value={revRoyaltyPct}
+                        onChange={(e) => setRevRoyaltyPct(parseFloat(e.target.value) || 0)}
+                        className="w-full rounded-lg border border-input bg-white px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block font-semibold text-foreground">
+                      Advance on Signing (₹)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₹</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={500}
+                        value={revAdvanceRupees}
+                        onChange={(e) => setRevAdvanceRupees(parseInt(e.target.value, 10) || 0)}
+                        className="w-full rounded-lg border border-input bg-white pl-7 pr-3 py-2 text-xs font-medium text-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="mb-1 block font-semibold text-foreground">Term (Years)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={10}
+                      required
+                      value={revTermYears}
+                      onChange={(e) => setRevTermYears(parseInt(e.target.value, 10) || 1)}
+                      className="w-full rounded-lg border border-input bg-white px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block font-semibold text-foreground">Free Copies</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={500}
+                      required
+                      value={revFreeCopies}
+                      onChange={(e) => setRevFreeCopies(parseInt(e.target.value, 10) || 0)}
+                      className="w-full rounded-lg border border-input bg-white px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block font-semibold text-foreground">Author Disc (%)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      required
+                      value={revAuthorDiscountPct}
+                      onChange={(e) => setRevAuthorDiscountPct(parseFloat(e.target.value) || 0)}
+                      className="w-full rounded-lg border border-input bg-white px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20"
+                    />
+                  </div>
+                </div>
+
+                {revPublishingType === "self_publishing" && (
+                  <div>
+                    <label className="mb-1 block font-semibold text-foreground">Package Cost (₹)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={revPackageCostRupees}
+                      onChange={(e) => setRevPackageCostRupees(parseInt(e.target.value, 10) || 0)}
+                      className="w-full rounded-lg border border-input bg-white px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="mb-1 block font-semibold text-foreground">
+                    Explanation / Note to Author <span className="text-muted-foreground font-normal">(Included in Email)</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={revEditorNotes}
+                    onChange={(e) => setRevEditorNotes(e.target.value)}
+                    placeholder="e.g. We have reviewed your request and updated the contract terms accordingly..."
+                    className="w-full rounded-lg border border-input bg-white p-2.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20 resize-y"
+                  />
+                </div>
+              </form>
+
+              {/* Accept Confirmation Area (if toggled) */}
+              {showAcceptConfirm && (
+                <div className="rounded-xl border border-emerald-300 bg-emerald-50/90 p-4 space-y-2.5 animate-in fade-in">
+                  <div className="flex items-center gap-2 font-bold text-emerald-950 text-xs">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white font-black text-[10px]">✓</span>
+                    <span>Confirm Acceptance of Author&apos;s Request:</span>
+                  </div>
+                  <p className="text-emerald-900 leading-relaxed text-xs">
+                    This will approve the author&apos;s requested terms and notify <strong>{revisingContract.authors.name}</strong> so they can proceed with signing.
+                  </p>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-emerald-950 mb-1">
+                      Message to Author <span className="text-muted-foreground font-normal">(Optional)</span>
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={acceptNotes}
+                      onChange={(e) => setAcceptNotes(e.target.value)}
+                      placeholder="e.g. We have accepted your requested terms. The contract is ready for your digital signature."
+                      className="w-full rounded-lg border border-emerald-300 bg-white p-2.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-600 resize-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowAcceptConfirm(false)}
+                      className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-900 hover:bg-emerald-100 cursor-pointer"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSubmittingRevise}
+                      onClick={handleAcceptSubmit}
+                      className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isSubmittingRevise ? "Accepting..." : "Confirm & Accept"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Decline Confirmation Area (if toggled) */}
+              {showDeclineConfirm && (
+                <div className="rounded-xl border border-rose-300 bg-rose-50/90 p-4 space-y-2.5 animate-in fade-in">
+                  <div className="flex items-center gap-2 font-bold text-rose-950 text-xs">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-white font-black text-[10px]">✕</span>
+                    <span>Confirm Decline / Offer Withdrawal:</span>
+                  </div>
+                  <p className="text-rose-900 leading-relaxed text-xs">
+                    This will mark the publishing contract offer as <strong>Declined</strong> and notify the author.
+                  </p>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-rose-950 mb-1">
+                      Reason for Author <span className="text-muted-foreground font-normal">(Optional)</span>
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={declineReason}
+                      onChange={(e) => setDeclineReason(e.target.value)}
+                      placeholder="e.g. We are unable to accommodate the requested royalty terms at our current scale..."
+                      className="w-full rounded-lg border border-rose-300 bg-white p-2.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-rose-600 resize-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowDeclineConfirm(false)}
+                      className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-900 hover:bg-rose-100 cursor-pointer"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSubmittingRevise}
+                      onClick={handleDeclineSubmit}
+                      className="rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-rose-700 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isSubmittingRevise ? "Declining..." : "Confirm & Decline"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="shrink-0 border-t border-border bg-slate-50 px-5 py-3 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {!showDeclineConfirm && !showAcceptConfirm && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAcceptConfirm(true);
+                        setShowDeclineConfirm(false);
+                      }}
+                      className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-900 hover:bg-emerald-100 cursor-pointer"
+                    >
+                      ✓ Accept...
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDeclineConfirm(true);
+                        setShowAcceptConfirm(false);
+                      }}
+                      className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 hover:bg-rose-100 cursor-pointer"
+                    >
+                      ✕ Decline...
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={() => setRevisingContract(null)}
+                  className="rounded-lg border border-input bg-white px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  form="revise-contract-form"
+                  disabled={isSubmittingRevise}
+                  className="rounded-lg bg-[#7e2562] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#681b50] disabled:opacity-50 cursor-pointer"
+                >
+                  {isSubmittingRevise ? "Saving..." : "Save & Reassign Contract"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>,
         document.body

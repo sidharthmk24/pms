@@ -1,18 +1,18 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile, chmod } from "node:fs/promises";
 import path from "node:path";
 import { put, del } from "@vercel/blob";
+import {
+  inspectAndValidateFile,
+  MAX_UPLOAD_BYTES,
+  SecurityValidationError,
+  buildSafeContentDisposition,
+} from "@/lib/file-security";
+import { audit } from "@/lib/audit";
 
-export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB
-
-const ALLOWED: Record<string, string[]> = {
-  "application/pdf": ["pdf"],
-  "application/msword": ["doc"],
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ["docx"],
-  "application/vnd.oasis.opendocument.text": ["odt"],
-};
+export { MAX_UPLOAD_BYTES, SecurityValidationError, buildSafeContentDisposition };
 
 export const ACCEPT_ATTR = ".pdf,.doc,.docx,.odt";
 export const ALLOWED_LABEL = "PDF, DOC, DOCX or ODT";
@@ -43,55 +43,121 @@ export type StoredFile = {
 export class UploadError extends Error {}
 
 /**
- * Validates and writes a manuscript.
- * - If BLOB_READ_WRITE_TOKEN is set (Vercel Blob), uploads directly to cloud storage.
- * - Otherwise, writes to disk (using /tmp on Vercel to avoid read-only filesystem errors).
+ * Validates, scans, and safely writes a manuscript file to disk or cloud storage.
+ * 1. Checks size, double extensions, null bytes, SVG prohibition.
+ * 2. Inspects true binary magic bytes (e.g. %PDF-).
+ * 3. Scans for trojans, malware & EICAR test signatures.
+ * 4. Generates a random UUID filename and writes outside web root with stripped execute permissions (0o644).
+ * 5. Logs audit trail.
  */
-export async function storeManuscript(file: File): Promise<StoredFile> {
-  if (file.size === 0) throw new UploadError("The manuscript file is empty.");
-  if (file.size > MAX_UPLOAD_BYTES) {
-    throw new UploadError(`Manuscript must be under ${MAX_UPLOAD_BYTES / 1024 / 1024} MB.`);
-  }
-
-  const ext = (file.name.split(".").pop() ?? "").toLowerCase();
-  const allowedExts = ALLOWED[file.type];
-  if (!allowedExts || !allowedExts.includes(ext)) {
-    throw new UploadError(`Manuscript must be a ${ALLOWED_LABEL} file.`);
+export async function storeManuscript(
+  file: File,
+  userId?: string | null
+): Promise<StoredFile> {
+  let validated;
+  try {
+    validated = await inspectAndValidateFile(file, "manuscript", userId);
+  } catch (err) {
+    if (err instanceof SecurityValidationError) {
+      throw new UploadError(err.message);
+    }
+    throw err;
   }
 
   const now = new Date();
   const year = String(now.getUTCFullYear());
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const relativePath = `${year}/${month}/${randomUUID()}.${ext}`;
+  const storedId = randomUUID();
+  const relativePath = `${year}/${month}/${storedId}.${validated.detectedExt}`;
 
-  // If Vercel Blob is configured, upload to cloud storage
+  // If Vercel Blob is configured
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(relativePath, file, { access: "public" });
+    const blob = await put(relativePath, validated.buffer, {
+      access: "public",
+      contentType: validated.detectedMime,
+      addRandomSuffix: false,
+    });
+
+    await auditUploadSuccess(userId, validated.originalFilename, storedId, validated.sizeBytes, validated.detectedExt);
+
     return {
       relativePath: blob.url,
       absolutePath: blob.url,
-      filename: file.name.slice(0, 200),
-      size: file.size,
-      mime: file.type,
+      filename: validated.sanitizedFilename,
+      size: validated.sizeBytes,
+      mime: validated.detectedMime,
     };
   }
 
   const writableRoot = getWritableStorageRoot();
-  const absolutePath = path.join(/*turbopackIgnore: true*/ writableRoot, ...relativePath.split("/"));
+  const absolutePath = path.join(writableRoot, ...relativePath.split("/"));
 
+  // Ensure directory exists
   await mkdir(path.dirname(absolutePath), { recursive: true });
-  await writeFile(absolutePath, Buffer.from(await file.arrayBuffer()));
+
+  // Write file with non-executable permissions (0o644 - read/write for owner, read-only for group/others)
+  await writeFile(absolutePath, validated.buffer, { mode: 0o644 });
+  await chmod(absolutePath, 0o644).catch(() => {});
+
+  await auditUploadSuccess(userId, validated.originalFilename, storedId, validated.sizeBytes, validated.detectedExt);
 
   return {
     relativePath,
     absolutePath,
-    filename: file.name.slice(0, 200),
-    size: file.size,
-    mime: file.type,
+    filename: validated.sanitizedFilename,
+    size: validated.sizeBytes,
+    mime: validated.detectedMime,
   };
 }
 
-/** Best-effort cleanup when the surrounding transaction fails. */
+/**
+ * Validates, scans, and stores production visual artwork and layout files.
+ */
+export async function storeProductionFile(
+  file: File,
+  _allowedTypes?: string[],
+  _allowedExts?: string[],
+  userId?: string | null
+): Promise<string> {
+  let validated;
+  try {
+    validated = await inspectAndValidateFile(file, "production", userId);
+  } catch (err) {
+    if (err instanceof SecurityValidationError) {
+      throw new UploadError(err.message);
+    }
+    throw err;
+  }
+
+  const now = new Date();
+  const year = String(now.getUTCFullYear());
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const storedId = randomUUID();
+  const relativePath = `production/${year}/${month}/${storedId}.${validated.detectedExt}`;
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(relativePath, validated.buffer, {
+      access: "public",
+      contentType: validated.detectedMime,
+      addRandomSuffix: false,
+    });
+    await auditUploadSuccess(userId, validated.originalFilename, storedId, validated.sizeBytes, validated.detectedExt);
+    return blob.url;
+  }
+
+  const writableRoot = getWritableStorageRoot();
+  const absolutePath = path.join(writableRoot, ...relativePath.split("/"));
+
+  await mkdir(path.dirname(absolutePath), { recursive: true });
+  await writeFile(absolutePath, validated.buffer, { mode: 0o644 });
+  await chmod(absolutePath, 0o644).catch(() => {});
+
+  await auditUploadSuccess(userId, validated.originalFilename, storedId, validated.sizeBytes, validated.detectedExt);
+
+  return relativePath;
+}
+
+/** Best-effort cleanup when surrounding database transaction fails. */
 export async function discardManuscript(pathOrUrl: string): Promise<void> {
   if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) {
     if (process.env.BLOB_READ_WRITE_TOKEN) {
@@ -102,7 +168,7 @@ export async function discardManuscript(pathOrUrl: string): Promise<void> {
   await unlink(pathOrUrl).catch(() => {});
 }
 
-/** Resolve a stored relative path or URL for downloads. */
+/** Resolve a stored relative path or URL for safe downloads. */
 export function resolveManuscript(relativePath: string): string {
   if (relativePath.startsWith("http://") || relativePath.startsWith("https://")) {
     return relativePath;
@@ -111,7 +177,12 @@ export function resolveManuscript(relativePath: string): string {
   const normalized = relativePath.replace(/\\/g, "/").replace(/^\/+/, "");
   const segments = normalized.split("/").filter(Boolean);
 
-  // Check candidate read locations
+  // Prevent path traversal escape
+  if (segments.some((s) => s === ".." || s === ".")) {
+    throw new SecurityValidationError("Path traversal attempt detected.", "PATH_TRAVERSAL");
+  }
+
+  // Candidate read locations
   const candidates = [
     ...(process.env.SUBMISSION_STORAGE_DIR ? [path.resolve(process.env.SUBMISSION_STORAGE_DIR, ...segments)] : []),
     path.resolve(process.cwd(), "storage", "submissions", ...segments),
@@ -127,39 +198,31 @@ export function resolveManuscript(relativePath: string): string {
   return path.resolve(getWritableStorageRoot(), ...segments);
 }
 
-export async function storeProductionFile(
-  file: File,
-  allowedTypes: string[],
-  allowedExts: string[]
-): Promise<string> {
-  if (file.size === 0) throw new UploadError("The file is empty.");
-  if (file.size > MAX_UPLOAD_BYTES) {
-    throw new UploadError(`File must be under ${MAX_UPLOAD_BYTES / 1024 / 1024} MB.`);
+/**
+ * Record successful upload in the audit log
+ */
+async function auditUploadSuccess(
+  userId: string | null | undefined,
+  filename: string,
+  storedId: string,
+  size: number,
+  ext: string
+) {
+  try {
+    await audit({
+      userId: userId || null,
+      action: "file_upload_validated",
+      entity: "file_security",
+      entityId: storedId,
+      detail: {
+        original_filename: filename.slice(0, 200),
+        stored_id: storedId,
+        size_bytes: size,
+        detected_ext: ext,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  } catch (err) {
+    console.error("[storage] Failed to audit upload success:", err);
   }
-
-  const ext = (file.name.split(".").pop() ?? "").toLowerCase();
-  const typeOk = allowedTypes.includes(file.type);
-  const extOk = allowedExts.includes(ext);
-  if (!typeOk && !extOk) {
-    throw new UploadError(`Invalid file format. Allowed: ${allowedExts.join(", ")}`);
-  }
-
-  const now = new Date();
-  const year = String(now.getUTCFullYear());
-  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const relativePath = `production/${year}/${month}/${randomUUID()}.${ext}`;
-
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(relativePath, file, { access: "public" });
-    return blob.url;
-  }
-
-  const writableRoot = getWritableStorageRoot();
-  const absolutePath = path.join(/*turbopackIgnore: true*/ writableRoot, ...relativePath.split("/"));
-
-  await mkdir(path.dirname(absolutePath), { recursive: true });
-  await writeFile(absolutePath, Buffer.from(await file.arrayBuffer()));
-
-  return relativePath;
 }
-

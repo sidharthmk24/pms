@@ -18,13 +18,13 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
         <div className="absolute right-10 top-20 h-[300px] w-[300px] rounded-full bg-[#7e2562]/[0.04] blur-2xl" />
       </div>
 
-      {/* Top Banner Notice - Smooth Slide Down Intro */}
+      {/* Top Banner Notice (Hidden on Print) */}
       <AnimatedSection
         as="div"
         animation="fade-down"
         duration={0.65}
         delayMs={0}
-        className="border-b border-[#7e2562]/10 bg-gradient-to-r from-[#faf2f7] via-[#ffffff] to-[#faf2f7] px-4 py-2 text-center text-xs font-semibold text-[#7e2562]"
+        className="no-print border-b border-[#7e2562]/10 bg-gradient-to-r from-[#faf2f7] via-[#ffffff] to-[#faf2f7] px-4 py-2 text-center text-xs font-semibold text-[#7e2562]"
       >
         <span className="inline-flex items-center gap-2">
           <span className="relative flex h-2 w-2">
@@ -40,13 +40,13 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
         </span>
       </AnimatedSection>
 
-      {/* Luxury Translucent Header - Staggered Slide Down Intro */}
+      {/* Luxury Translucent Header (Hidden completely on print to avoid duplicate logo) */}
       <AnimatedSection
         as="header"
         animation="fade-down"
         duration={0.7}
         delayMs={90}
-        className="sticky top-0 z-40 border-b border-[#7e2562]/10 bg-white/90 backdrop-blur-2xl shadow-[0_2px_12px_-4px_rgba(126,37,98,0.06)]"
+        className="no-print sticky top-0 z-40 border-b border-[#7e2562]/10 bg-white/90 backdrop-blur-2xl shadow-[0_2px_12px_-4px_rgba(126,37,98,0.06)]"
       >
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
           {/* Logo & Brand Tag */}
@@ -59,10 +59,9 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
               priority
               className="h-8 w-auto object-contain transition-transform group-hover:scale-[1.02]"
             />
-           
           </Link>
 
-          {/* Center Navigation Links (Desktop) */}
+          {/* Center Navigation Links (Hidden on Print) */}
           <nav className="hidden md:flex items-center gap-7 text-[13px] font-semibold text-foreground/80">
             <Link href="/publish#guidelines" className="hover:text-primary transition-colors">
               Guidelines
@@ -73,13 +72,13 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
             <Link href="/publish#process" className="hover:text-primary transition-colors">
               How It Works
             </Link>
-            <Link href="/publish/status" className="hover:text-primary transition-colors inline-flex items-center gap-1.5">
+            {/* <Link href="/publish/status" className="hover:text-primary transition-colors inline-flex items-center gap-1.5">
               <span>Track Manuscript</span>
-            </Link>
+            </Link> */}
           </nav>
 
-          {/* Right Action CTAs */}
-          <div className="flex items-center gap-3">
+          {/* Right Action CTAs (Hidden on Print) */}
+          <div className="no-print flex items-center gap-3">
             <Link
               href="/publish/status"
               className="apple-button hidden sm:inline-flex rounded-sm border border-[#7e2562]/20 bg-white px-4 py-2.5 text-xs font-bold text-primary shadow-xs hover:bg-[#faedf5] transition-all"
@@ -91,7 +90,6 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
               mode="login"
               className="apple-button inline-flex items-center gap-1.5 rounded-sm border border-[#7e2562]/25 bg-white px-4 py-2.5 text-xs font-bold text-[#7e2562] shadow-xs hover:bg-[#faedf5] transition-all cursor-pointer"
             >
-            
               <span>Author Sign In</span>
             </AuthorModalTrigger>
 
@@ -112,8 +110,8 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
         {children}
       </AnimatedSection>
 
-      {/* Editorial Publishing Footer */}
-      <AnimatedSection as="footer" animation="fade-up" delayMs={60} className="border-t border-[#7e2562]/10 bg-gradient-to-b from-white to-[#faf6f9]">
+      {/* Editorial Publishing Footer (Hidden on Print) */}
+      <AnimatedSection as="footer" animation="fade-up" delayMs={60} className="no-print border-t border-[#7e2562]/10 bg-gradient-to-b from-white to-[#faf6f9]">
         <div className="mx-auto max-w-6xl px-6 py-14">
           <div className="grid gap-10 md:grid-cols-4 sm:grid-cols-2">
             {/* Col 1: Brand Info */}

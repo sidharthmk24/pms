@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from "react";
 import { createPortal } from "react-dom";
+import { formatRoleLabel } from "@/lib/roles";
 
 export default function UserMenu({
   name: initialName,
@@ -221,9 +222,9 @@ export default function UserMenu({
             <span className="text-xs sm:text-sm font-bold text-foreground truncate block group-hover:text-[#7e2562] transition-colors">
               {name}
             </span>
-            <span className="text-[10px] text-muted-foreground capitalize block truncate font-medium">
-              {role} Portal
-            </span>
+            {/* <span className="text-[10px] text-muted-foreground block truncate font-medium">
+              {role === "author" ? "Author Portal" : formatRoleLabel(role)}
+            </span> */}
           </div>
 
           {/* Chevron Indicator */}
@@ -328,10 +329,7 @@ export default function UserMenu({
               <div className="flex items-start justify-between border-b border-[#7e2562]/10 pb-5">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#faedf5] border border-[#7e2562]/25 px-3 py-0.5 text-xs font-bold text-[#7e2562]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Kairali Author Workspace
-                    </span>
+                    y
                     <span className="text-xs text-muted-foreground font-medium">Account Settings</span>
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-black text-foreground  tracking-tight">
@@ -387,7 +385,7 @@ export default function UserMenu({
                     />
                   </div>
 
-                  <h4 className="text-lg font-bold text-foreground font-serif">{editName || name}</h4>
+                  <h4 className="text-lg font-bold text-foreground  ">{editName || name}</h4>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-[200px]">{email}</p>
 
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -449,13 +447,10 @@ export default function UserMenu({
 
                     {/* Email Address (Bound & Read-only) */}
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
+                      <div className="mb-1.5">
                         <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                           Registered Email Address
                         </label>
-                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
-                          ✓ Verified &amp; Bound to Manuscripts
-                        </span>
                       </div>
                       <input
                         type="email"

@@ -24,6 +24,8 @@ const RegisterAuthorSchema = z.object({
   path: ["confirmPassword"],
 });
 
+import { sanitizeAvatarDataUrl } from "@/lib/file-security";
+
 export const POST = handler(async (req: Request) => {
   const json = await req.json().catch(() => null);
   const data = RegisterAuthorSchema.parse(json);
@@ -31,6 +33,7 @@ export const POST = handler(async (req: Request) => {
   const emailKey = data.email.toLowerCase().trim();
   const passwordHash = await bcrypt.hash(data.password, 12);
   const now = stamp();
+  const sanitizedAvatar = sanitizeAvatarDataUrl(data.avatar);
 
   // Reject if user already exists
   const existingUser = await prisma.users.findFirst({
@@ -60,7 +63,7 @@ export const POST = handler(async (req: Request) => {
   });
 
   const notesObj = {
-    avatar: data.avatar || null,
+    avatar: sanitizedAvatar || null,
     bio: data.bio?.trim() || null,
     interests: data.interests || null,
     past_publications: data.pastPublications?.trim() || null,

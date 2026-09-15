@@ -288,78 +288,96 @@ export function TitlesClient({
       </div>
 
       {/* Search & Filter Toolbar */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-black/[0.08] bg-surface p-4 shadow-xs dark:border-white/[0.08] md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-1 flex-wrap items-center gap-3">
-          {/* Search Input */}
-          <div className="relative min-w-[240px] flex-1 max-w-md">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by title, Malayalam title, author, or ISBN..."
-              className="w-full rounded-xl border border-black/10 bg-background pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-white/10"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-              >
-                ✕
-              </button>
-            )}
+      {(() => {
+        const hasFilter = Boolean(search || selectedCategory !== "all" || stockFilter !== "all");
+        return (
+          <div className={`relative z-20 flex flex-col gap-3 rounded-2xl border bg-white p-4 transition-all duration-200 md:flex-row md:items-center md:justify-between ${
+            hasFilter ? "border-[#7e2562]/35 shadow-plum-md" : "border-[#7e2562]/15 shadow-plum-sm"
+          }`}>
+            <div className="flex flex-1 flex-wrap items-center gap-3">
+              {/* Search Input */}
+              <div className="relative min-w-[240px] flex-1 max-w-md">
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by title, Malayalam title, author, or ISBN..."
+                  className="w-full rounded-xl border border-black/10 bg-background pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-[#7e2562] focus:outline-none focus:ring-2 focus:ring-[#7e2562]/20 dark:border-white/10"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Genre / Category Filter */}
+              <div className="w-48">
+                <SmoothDropdown
+                  options={categoryOptions}
+                  value={selectedCategory}
+                  onChange={(val) => setSelectedCategory(val)}
+                  size="sm"
+                  placeholder="All Genres"
+                  buttonClassName={
+                    selectedCategory && selectedCategory !== "all"
+                      ? "!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
+                      : ""
+                  }
+                />
+              </div>
+
+              {/* Stock Availability Filter */}
+              <div className="w-56">
+                <SmoothDropdown
+                  options={stockOptions}
+                  value={stockFilter}
+                  onChange={(val) => setStockFilter(val as any)}
+                  size="sm"
+                  placeholder="All Inventory Status"
+                  buttonClassName={
+                    stockFilter && stockFilter !== "all"
+                      ? "!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
+                      : ""
+                  }
+                />
+              </div>
+
+              {hasFilter && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    setSelectedCategory("all");
+                    setStockFilter("all");
+                  }}
+                  className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/20 bg-[#faedf5]/30 px-3.5 py-2 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition-all cursor-pointer"
+                >
+                  <span className="text-sm">✕</span>
+                  <span>Reset Filters</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Showing <strong className="text-foreground">{filteredTitles.length}</strong> of {initialTitles.length} titles</span>
+            </div>
           </div>
-
-          {/* Genre / Category Filter */}
-          <div className="w-48">
-            <SmoothDropdown
-              options={categoryOptions}
-              value={selectedCategory}
-              onChange={(val) => setSelectedCategory(val)}
-              size="sm"
-              placeholder="All Genres"
-            />
-          </div>
-
-          {/* Stock Availability Filter */}
-          <div className="w-56">
-            <SmoothDropdown
-              options={stockOptions}
-              value={stockFilter}
-              onChange={(val) => setStockFilter(val as any)}
-              size="sm"
-              placeholder="All Inventory Status"
-            />
-          </div>
-
-          {(search || selectedCategory !== "all" || stockFilter !== "all") && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearch("");
-                setSelectedCategory("all");
-                setStockFilter("all");
-              }}
-              className="rounded-xl border border-black/10 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
-            >
-              Reset Filters
-            </button>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Showing <strong className="text-foreground">{filteredTitles.length}</strong> of {initialTitles.length} titles</span>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Main Titles Table */}
       <div className="relative z-10 rounded-3xl border border-[#7e2562]/15 bg-white shadow-plum-sm overflow-hidden">
@@ -539,46 +557,13 @@ export function TitlesClient({
                       {/* Action buttons */}
                       <td className="py-3 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Deliverable preview if project linked */}
-                          {title.production_projects?.id && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPreviewProject({
-                                  id: title.production_projects!.id,
-                                  title: title.name,
-                                  hasLayout: Boolean(title.production_projects!.final_layout_path),
-                                  hasCover: Boolean(title.production_projects!.final_cover_path),
-                                });
-                              }}
-                              title="Preview typeset layout and cover"
-                              className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-xl border border-[#7e2562]/20 bg-white text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition cursor-pointer"
-                            >
-                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
-                          )}
-
-                          {/* Link to production pipeline if active */}
-                          {title.production_projects?.id ? (
-                            <Link
-                              href={`/production/${title.production_projects.id}`}
-                              className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/25 bg-white px-3 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#7e2562] hover:text-white hover:border-[#7e2562] hover:shadow-plum-sm transition-all group"
-                            >
-                              <span>Pipeline</span>
-                              <span className="group-hover:translate-x-0.5 transition-transform">&rarr;</span>
-                            </Link>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setSelectedBook(title)}
-                              className="apple-button inline-flex items-center gap-1 rounded-xl border border-black/15 bg-white px-3 py-1.5 text-xs font-bold text-foreground shadow-2xs hover:bg-black/5 hover:border-black/30 transition cursor-pointer"
-                            >
-                              <span>Details</span>
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBook(title)}
+                            className="apple-button inline-flex items-center gap-1 rounded-xl border border-[#7e2562]/20 bg-[#faedf5]/30 px-3 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#7e2562] hover:text-white hover:border-[#7e2562] transition cursor-pointer"
+                          >
+                            <span>Details</span>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -607,7 +592,7 @@ export function TitlesClient({
                 <span className="text-[10px] font-mono font-bold uppercase text-primary tracking-wider">
                   Book Specifications · {selectedBook.language}
                 </span>
-                <h3 className="text-lg font-black text-foreground font-serif leading-snug">
+                <h3 className="text-lg font-black text-foreground   leading-snug">
                   {selectedBook.name}
                 </h3>
                 {selectedBook.name_ml && (
@@ -720,14 +705,34 @@ export function TitlesClient({
 
               {/* Production Project Action */}
               {selectedBook.production_projects?.id && (
-                <div className="pt-2">
-                  <Link
+                <div className="space-y-2 pt-2">
+                  {(selectedBook.production_projects.final_cover_path || selectedBook.production_projects.final_layout_path) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewProject({
+                          id: selectedBook.production_projects!.id,
+                          title: selectedBook.name,
+                          hasLayout: Boolean(selectedBook.production_projects!.final_layout_path),
+                          hasCover: Boolean(selectedBook.production_projects!.final_cover_path),
+                        });
+                      }}
+                      className="apple-button flex w-full items-center justify-center gap-2 rounded-xl border border-[#7e2562]/20 bg-[#faedf5]/40 py-2.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition cursor-pointer"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <span>Preview Digital Galleys &amp; Cover</span>
+                    </button>
+                  )}
+                  {/* <Link
                     href={`/production/${selectedBook.production_projects.id}`}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary-hover transition cursor-pointer"
+                    className="apple-button flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary-hover transition cursor-pointer"
                   >
                     <span>Open Production Pipeline Project</span>
                     <span>&rarr;</span>
-                  </Link>
+                  </Link> */}
                 </div>
               )}
             </div>

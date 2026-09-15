@@ -13,12 +13,15 @@ const UpdateProfileSchema = z.object({
   place: z.string().trim().optional(),
 });
 
+import { sanitizeAvatarDataUrl } from "@/lib/file-security";
+
 export const PATCH = handler(async (req: Request) => {
   const user = await requireUser();
   const json = await req.json().catch(() => null);
   const data = UpdateProfileSchema.parse(json);
 
   const updatedName = data.name?.trim() || user.name;
+  let newAvatar = sanitizeAvatarDataUrl(data.avatar);
 
   // 1. Update users table
   await prisma.users.update({
@@ -32,8 +35,6 @@ export const PATCH = handler(async (req: Request) => {
   const authorRecord = await prisma.authors.findFirst({
     where: { email: { equals: user.email, mode: "insensitive" } },
   });
-
-  let newAvatar = data.avatar;
 
   if (authorRecord) {
     let notesObj: Record<string, unknown> = {};

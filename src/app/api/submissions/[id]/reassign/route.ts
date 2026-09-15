@@ -5,6 +5,8 @@ import { requireApiCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { stamp } from "@/lib/time";
 
+import { hasRole } from "@/lib/roles";
+
 const ReassignSchema = z.object({
   editorId: z.string().nullable(),
 });
@@ -23,9 +25,15 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
 
   if (editorId) {
     const editor = await prisma.users.findFirst({
-      where: { id: editorId, active: true, role: "editor" },
+      where: {
+        id: editorId,
+        active: true,
+        role: { not: "author" },
+      },
     });
-    if (!editor) return fail(422, "Invalid editor selected: user must have an active Editor account");
+    if (!editor || (!hasRole(editor.role, "editor") && !hasRole(editor.role, "owner"))) {
+      return fail(422, "Invalid editor selected: user must have an active Editor account");
+    }
   }
 
   const now = stamp();

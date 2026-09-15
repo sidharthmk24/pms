@@ -1,6 +1,5 @@
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { nextDocNo } from "@/lib/counters";
 import { addHours, stamp } from "@/lib/time";
@@ -69,14 +68,6 @@ export async function createSubmission(
     const refNo = await nextDocNo(tx, "submission", "SUB");
     const now = stamp();
 
-    const activeEditors = await tx.users.findMany({
-      where: { active: true, role: "editor" },
-      orderBy: { email: "asc" },
-    });
-    const subCount = await tx.submissions.count();
-    const editorId = activeEditors.length > 0 ? activeEditors[subCount % activeEditors.length].id : null;
-    const assignedAt = editorId ? now : null;
-
     const row = await tx.submissions.create({
       data: {
         id: randomUUID(),
@@ -96,8 +87,8 @@ export async function createSubmission(
         manuscript_size: manuscript?.size ?? null,
         manuscript_mime: manuscript?.mime ?? null,
         status: "new",
-        reviewed_by: editorId,
-        assigned_at: assignedAt,
+        reviewed_by: null,
+        assigned_at: null,
         source: "web",
         submitted_at: now,
         updated_at: now,

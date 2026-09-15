@@ -64,7 +64,7 @@ export const POST = handler(async (req: Request) => {
 
   let stored: Awaited<ReturnType<typeof storeManuscript>>;
   try {
-    stored = await storeManuscript(file);
+    stored = await storeManuscript(file, sessionUser.id);
   } catch (err) {
     console.error("[public-submissions] storeManuscript failed:", err);
     if (err instanceof UploadError) {

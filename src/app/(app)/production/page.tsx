@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { formatIST, formatTimeIST } from "@/lib/time";
 import ProductionFilterBar from "./production-filter-bar";
 
+import { parseUserRoles, hasRole } from "@/lib/roles";
+
 export const metadata: Metadata = { title: "Production Pipeline · Kairali PMS" };
 export const dynamic = "force-dynamic";
 
@@ -51,7 +53,7 @@ export default async function ProductionListPage({
   searchParams,
 }: PageProps<"/production">) {
   const user = await requireCapability("production_pipeline.read");
-  const isManager = user.role === "owner" || user.role === "accounts" || user.role === "production";
+  const isOwner = hasRole(user.role, "owner");
 
   const { status, category, sort } = await searchParams;
 
@@ -59,15 +61,30 @@ export default async function ProductionListPage({
   const filterCategory = typeof category === "string" ? category : undefined;
   const filterSort = typeof sort === "string" ? sort : "updated_desc";
 
-  const baseWhere = isManager
+  const baseWhere = isOwner
     ? {}
     : {
         OR: [
-          { AND: [{ status: "dtp" }, { OR: [{ dtp_assigned_to: user.id }, { dtp_assignees: { contains: user.id } }] }] },
-          { AND: [{ status: "editing" }, { OR: [{ editing_assigned_to: user.id }, { editing_assignees: { contains: user.id } }] }] },
-          { AND: [{ status: "cover_design" }, { OR: [{ cover_assigned_to: user.id }, { cover_assignees: { contains: user.id } }] }] },
-          { AND: [{ status: "isbn_registration" }, { OR: [{ isbn_assigned_to: user.id }, { isbn_assignees: { contains: user.id } }] }] },
-          { AND: [{ status: "final_proof" }, { OR: [{ proof_assigned_to: user.id }, { proof_assignees: { contains: user.id } }] }] },
+          { dtp_assigned_to: user.id },
+          { dtp_assigned_to: user.name },
+          { dtp_assignees: { contains: user.id } },
+          { dtp_assignees: { contains: user.name } },
+          { editing_assigned_to: user.id },
+          { editing_assigned_to: user.name },
+          { editing_assignees: { contains: user.id } },
+          { editing_assignees: { contains: user.name } },
+          { cover_assigned_to: user.id },
+          { cover_assigned_to: user.name },
+          { cover_assignees: { contains: user.id } },
+          { cover_assignees: { contains: user.name } },
+          { isbn_assigned_to: user.id },
+          { isbn_assigned_to: user.name },
+          { isbn_assignees: { contains: user.id } },
+          { isbn_assignees: { contains: user.name } },
+          { proof_assigned_to: user.id },
+          { proof_assigned_to: user.name },
+          { proof_assignees: { contains: user.id } },
+          { proof_assignees: { contains: user.name } },
         ],
       };
 
@@ -131,16 +148,16 @@ export default async function ProductionListPage({
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Production Flow
           </h1>
-          <p className="mt-1.5 text-base  text-muted-foreground">
-            {isManager
-              ? "Track publishing schedules, assignments, and print runs"
-              : "Review and complete your active production milestones"}
+          <p className="mt-1.5 text-base text-muted-foreground">
+            {isOwner
+              ? "Track publishing schedules, assignments, and print runs across all titles"
+              : "Books and production milestones assigned to your desk"}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="rounded-full border border-[#7e2562]/20 bg-white px-4 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs">
-            {projects.length} Active Projects
+            {projects.length} {isOwner ? "Total Books in Pipeline" : "Assigned Books"}
           </span>
         </div>
       </header>
@@ -248,7 +265,7 @@ export default async function ProductionListPage({
                           href={`/production/${proj.id}`}
                           className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/25 bg-white px-3.5 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#7e2562] hover:text-white hover:border-[#7e2562] hover:shadow-plum-sm transition-all group"
                         >
-                          <span>{isManager ? "Manage" : "Update Tasks"}</span>
+                          <span>{isOwner ? "Manage" : "View / Update"}</span>
                           <svg className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                           </svg>

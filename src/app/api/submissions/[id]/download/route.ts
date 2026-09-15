@@ -3,7 +3,7 @@ import { stat } from "node:fs/promises";
 import { fail, handler } from "@/lib/api";
 import { requireApiCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { resolveManuscript } from "@/lib/storage";
+import { resolveManuscript, buildSafeContentDisposition } from "@/lib/storage";
 
 export const GET = handler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   await requireApiCapability("submissions.read");
@@ -14,15 +14,25 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
   });
   if (!sub || !sub.manuscript_path) return fail(404, "Manuscript file not found");
 
+  const safeFilename = sub.manuscript_filename || "manuscript.pdf";
+  const contentDisposition = buildSafeContentDisposition("attachment", safeFilename);
+
+  const secureHeaders: Record<string, string> = {
+    "Content-Type": "application/octet-stream",
+    "Content-Disposition": contentDisposition,
+    "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy": "default-src 'none'; sandbox",
+    "Cache-Control": "private, no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
+  };
+
   if (sub.manuscript_path.startsWith("http://") || sub.manuscript_path.startsWith("https://")) {
     try {
       const res = await fetch(sub.manuscript_path);
       if (!res.ok) return fail(404, "Manuscript file not found in remote storage");
       return new Response(res.body, {
-        headers: {
-          "Content-Type": sub.manuscript_mime || res.headers.get("Content-Type") || "application/octet-stream",
-          "Content-Disposition": `attachment; filename="${encodeURIComponent(sub.manuscript_filename || "manuscript")}"`,
-        },
+        headers: secureHeaders,
       });
     } catch (err) {
       console.error("[download] remote fetch error", err);
@@ -44,14 +54,13 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
       },
       cancel() {
         nodeStream.destroy();
-      }
+      },
     });
 
     return new Response(webStream, {
       headers: {
-        "Content-Type": sub.manuscript_mime || "application/octet-stream",
+        ...secureHeaders,
         "Content-Length": fileStats.size.toString(),
-        "Content-Disposition": `attachment; filename="${encodeURIComponent(sub.manuscript_filename || "manuscript")}"`,
       },
     });
   } catch (err) {

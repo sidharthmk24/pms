@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import { requireCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasRole } from "@/lib/roles";
 import AuthorsClient, { type AuthorDetailItem } from "./authors-client";
 
 export const metadata: Metadata = { title: "Authors & Contributors" };
 export const dynamic = "force-dynamic";
 
 export default async function AuthorsPage() {
-  await requireCapability("authors.read");
+  const user = await requireCapability("authors.read");
+  const isOwner = hasRole(user.role, "owner");
 
   const [authors, authorUsers, submissions] = await Promise.all([
     prisma.authors.findMany({
@@ -166,7 +168,7 @@ export default async function AuthorsPage() {
 
   return (
     <div className="space-y-6">
-      <AuthorsClient initialAuthors={fullAuthors} />
+      <AuthorsClient initialAuthors={fullAuthors} isOwner={isOwner} />
     </div>
   );
 }

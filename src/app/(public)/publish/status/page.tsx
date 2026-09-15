@@ -30,7 +30,10 @@ export default async function StatusTrackingPage({ searchParams }: PageProps<"/p
     } else if (submission.status === "accepted") {
       contract = await prisma.contracts.findFirst({
         where: {
-          term_notes: { contains: submission.ref_no },
+          OR: [
+            { term_notes: { contains: submission.id } },
+            { term_notes: { contains: submission.ref_no } },
+          ],
         },
       });
       if (contract) {

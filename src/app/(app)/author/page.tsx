@@ -21,7 +21,8 @@ const STATUS_LABELS: Record<string, { label: string; class: string }> = {
   under_review: { label: "Under Review", class: "bg-warning/10 text-warning border-warning/20" },
   needs_revision: { label: "Needs Revision", class: "bg-accent/10 text-accent border-accent/20" },
   accepted: { label: "Approved & Accepted", class: "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-2xs" },
-  declined: { label: "Declined", class: "bg-muted text-muted-foreground border-border" },
+  declined: { label: "Declined", class: "bg-rose-50 text-rose-700 border-rose-300 font-bold" },
+  rejected: { label: "Declined", class: "bg-rose-50 text-rose-700 border-rose-300 font-bold" },
   archived: { label: "Archived", class: "bg-muted text-muted-foreground border-border" },
   withdrawn: { label: "Withdrawn", class: "bg-muted text-muted-foreground border-border" },
 };
@@ -185,15 +186,10 @@ export default async function AuthorDashboardPage({
 
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#faedf5] border border-[#7e2562]/20 px-3 py-0.5 text-xs font-bold text-[#7e2562]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Kairali Author Portal
-                </span>
-                <span className="text-xs font-medium text-muted-foreground">
-                  {user.email}
-                </span>
+
+
               </div>
-              <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl font-serif">
+              <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl  ">
                 Welcome, {authorDisplayName}
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
@@ -205,7 +201,7 @@ export default async function AuthorDashboardPage({
           <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/author/submit"
-              className="apple-button inline-flex items-center gap-2 rounded-xl bg-foreground px-5 py-3 text-xs font-extrabold text-background shadow-xs hover:opacity-90 transition-all"
+              className="apple-button inline-flex items-center gap-2 rounded-xl bg-[#7E2562] px-5 py-3 text-xs font-extrabold text-background shadow-xs hover:opacity-90 transition-all"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -320,7 +316,7 @@ export default async function AuthorDashboardPage({
                       <span className="text-[11px] font-mono font-bold uppercase text-primary">
                         Production Track · {project.titles.language || "Malayalam"}
                       </span>
-                      <h3 className="text-base font-extrabold text-foreground font-serif">
+                      <h3 className="text-base font-extrabold text-foreground  ">
                         {project.titles.name}
                       </h3>
                       {project.titles.name_ml && (
@@ -495,17 +491,24 @@ export default async function AuthorDashboardPage({
         ) : (
           <div className="mt-6 space-y-6">
             {submissions.map((sub) => {
-              const matchedContract = contracts.find(
-                (c) =>
-                  c.titles.name.toLowerCase() === sub.title.toLowerCase() ||
-                  (sub.title_ml && c.titles.name_ml?.toLowerCase() === sub.title_ml.toLowerCase())
-              );
+              const matchedContract = contracts.find((c) => {
+                const meta = parseContractNotes(c.term_notes);
+                if (meta.submission_id && meta.submission_id === sub.id) return true;
+                if (meta.submission_ref && meta.submission_ref === sub.ref_no) return true;
+                if (c.titles.name.toLowerCase() === sub.title.toLowerCase()) return true;
+                if (sub.title_ml && c.titles.name_ml?.toLowerCase() === sub.title_ml.toLowerCase()) return true;
+                return false;
+              });
 
               const matchedProject = projects.find(
                 (p) =>
                   p.titles.name.toLowerCase() === sub.title.toLowerCase() ||
                   (sub.title_ml && p.titles.name_ml?.toLowerCase() === sub.title_ml.toLowerCase())
               );
+
+              const matchedMeta = matchedContract ? parseContractNotes(matchedContract.term_notes) : null;
+              const isRenegotiation = matchedMeta?.renegotiation_requested ?? false;
+              const isContractDeclined = matchedMeta?.status === "declined" || Boolean(matchedMeta?.declined_at);
 
               const trackerData: TrackerData = {
                 id: sub.id,
@@ -515,11 +518,21 @@ export default async function AuthorDashboardPage({
                 genre: sub.genre,
                 language: sub.language,
                 submittedAt: sub.submitted_at,
-                statusCode: sub.status,
-                statusLabel: STATUS_LABELS[sub.status]?.label || sub.status,
+                statusCode: isContractDeclined
+                  ? "declined"
+                  : isRenegotiation
+                  ? "renegotiation_requested"
+                  : sub.status,
+                statusLabel: isContractDeclined
+                  ? "Offer Concluded / Declined"
+                  : isRenegotiation
+                  ? "Terms Review in Progress"
+                  : STATUS_LABELS[sub.status]?.label || sub.status,
                 reviewNotes: sub.review_notes,
                 contractId: matchedContract?.id,
                 contractSignedOn: matchedContract?.signed_on,
+                contractStatus: matchedContract?.signed_on ? "signed" : matchedMeta?.status,
+                renegotiationRequested: isRenegotiation,
                 productionId: matchedProject?.id,
                 productionStatus: matchedProject?.status,
                 courierDocket: matchedProject?.author_dispatch_tracking,
@@ -556,6 +569,8 @@ export default async function AuthorDashboardPage({
             {contracts.map((c) => {
               const meta: ContractMetadata = parseContractNotes(c.term_notes);
               const isFullySigned = !!(meta.author_signed_at && meta.publisher_signed_at);
+              const isRenegotiation = meta.renegotiation_requested;
+              const isDeclined = meta.status === "declined" || !!meta.declined_at;
 
               return (
                 <div
@@ -571,14 +586,24 @@ export default async function AuthorDashboardPage({
                         className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
                           isFullySigned
                             ? "bg-success/10 text-success border border-success/20"
+                            : isRenegotiation
+                            ? "bg-amber-100 text-amber-900 border border-amber-300"
+                            : isDeclined
+                            ? "bg-rose-100 text-rose-800 border border-rose-300"
                             : "bg-warning/10 text-warning border border-warning/20"
                         }`}
                       >
-                        {isFullySigned ? "Fully Dual-Signed" : "Awaiting Signature"}
+                        {isFullySigned
+                          ? "Fully Dual-Signed"
+                          : isRenegotiation
+                          ? "Terms Review in Progress"
+                          : isDeclined
+                          ? "Offer Concluded"
+                          : "Awaiting Signature"}
                       </span>
                     </div>
 
-                    <h3 className="text-base font-extrabold text-foreground font-serif">
+                    <h3 className="text-base font-extrabold text-foreground  ">
                       {c.titles.name}
                     </h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -605,7 +630,7 @@ export default async function AuthorDashboardPage({
                       href={`/publish/contract/${c.id}`}
                       className="apple-button inline-flex items-center gap-1 rounded-xl bg-foreground px-3.5 py-1.5 text-xs font-extrabold text-background shadow-xs hover:opacity-90"
                     >
-                      <span>View Agreement</span>
+                      <span>{isRenegotiation ? "View Status" : "View Agreement"}</span>
                       <span>&rarr;</span>
                     </Link>
                   </div>
@@ -649,10 +674,10 @@ export default async function AuthorDashboardPage({
                     <span className="text-[10px] font-mono uppercase text-muted-foreground">
                       {t.category || "General"} · {t.language}
                     </span>
-                    <h3 className="text-base font-extrabold text-foreground font-serif mt-0.5">
+                    <h3 className="text-base font-extrabold text-foreground   mt-0.5">
                       {t.name}
                     </h3>
-                    {t.name_ml && <p className="text-xs text-muted-foreground font-serif">{t.name_ml}</p>}
+                    {t.name_ml && <p className="text-xs text-muted-foreground  ">{t.name_ml}</p>}
                   </div>
 
                   <div className="flex items-center justify-between text-xs pt-1 border-t border-black/[0.06] dark:border-white/[0.08]">

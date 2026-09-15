@@ -121,12 +121,7 @@ export default async function PublishGuidelinesPage() {
                     {weeks} Weeks
                   </span>
                 </div>
-                <div className="flex items-center justify-between py-1">
-                  <span className="text-muted-foreground font-medium">Reading Charge</span>
-                  <span className="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-sm border border-emerald-200">
-                    ₹0 (Free)
-                  </span>
-                </div>
+
                 <div className="flex items-center justify-between py-1">
                   <span className="text-muted-foreground font-medium">Max Document Size</span>
                   <span className="font-bold text-foreground">{maxMb} MB</span>

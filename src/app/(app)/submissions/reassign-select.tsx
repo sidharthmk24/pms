@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SmoothDropdown, type DropdownOption } from "@/components/dropdown";
+import { formatRoleLabel } from "@/lib/roles";
 
 type Editor = {
   id: string;
@@ -63,7 +64,7 @@ export default function ReassignSelect({
     ...editors.map((e) => ({
       value: e.id,
       label: e.name,
-      description: e.role === "editor" ? "Editorial Reviewer" : e.role,
+      description: formatRoleLabel(e.role),
     })),
   ];
 

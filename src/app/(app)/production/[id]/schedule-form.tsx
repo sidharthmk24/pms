@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MultiSelectDropdown, type DropdownOption } from "@/components/dropdown";
+import { hasAnyRole, formatRoleLabel, parseUserRoles, type Role } from "@/lib/roles";
 
 type UserOption = {
   id: string;
@@ -74,6 +75,77 @@ export default function ScheduleForm({
   );
   const [proofDate, setProofDate] = useState(project.proof_deadline ?? "");
 
+  // Role-filtered dropdown option lists
+  const dtpOptions = useMemo<DropdownOption[]>(() => {
+    return users
+      .filter((u) => {
+        const roles = parseUserRoles(u.role);
+        if (roles.includes("author") && roles.length === 1) return false;
+        return hasAnyRole(u.role, ["dtp", "production"]) || dtpUsers.includes(u.id);
+      })
+      .map((u) => ({
+        value: u.id,
+        label: u.name,
+        description: formatRoleLabel(u.role),
+      }));
+  }, [users, dtpUsers]);
+
+  const editingOptions = useMemo<DropdownOption[]>(() => {
+    return users
+      .filter((u) => {
+        const roles = parseUserRoles(u.role);
+        if (roles.includes("author") && roles.length === 1) return false;
+        return hasAnyRole(u.role, ["editor"]) || editingUsers.includes(u.id);
+      })
+      .map((u) => ({
+        value: u.id,
+        label: u.name,
+        description: formatRoleLabel(u.role),
+      }));
+  }, [users, editingUsers]);
+
+  const coverOptions = useMemo<DropdownOption[]>(() => {
+    return users
+      .filter((u) => {
+        const roles = parseUserRoles(u.role);
+        if (roles.includes("author") && roles.length === 1) return false;
+        return hasAnyRole(u.role, ["designer", "production"]) || coverUsers.includes(u.id);
+      })
+      .map((u) => ({
+        value: u.id,
+        label: u.name,
+        description: formatRoleLabel(u.role),
+      }));
+  }, [users, coverUsers]);
+
+  const isbnOptions = useMemo<DropdownOption[]>(() => {
+    return users
+      .filter((u) => {
+        const roles = parseUserRoles(u.role);
+        if (roles.includes("author") && roles.length === 1) return false;
+        return hasAnyRole(u.role, ["isbn", "editor", "production"]) || isbnUsers.includes(u.id);
+      })
+      .map((u) => ({
+        value: u.id,
+        label: u.name,
+        description: formatRoleLabel(u.role),
+      }));
+  }, [users, isbnUsers]);
+
+  const proofOptions = useMemo<DropdownOption[]>(() => {
+    return users
+      .filter((u) => {
+        const roles = parseUserRoles(u.role);
+        if (roles.includes("author") && roles.length === 1) return false;
+        return hasAnyRole(u.role, ["proofreader", "editor"]) || proofUsers.includes(u.id);
+      })
+      .map((u) => ({
+        value: u.id,
+        label: u.name,
+        description: formatRoleLabel(u.role),
+      }));
+  }, [users, proofUsers]);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
@@ -98,6 +170,7 @@ export default function ScheduleForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       const body = await res.json();
       if (!res.ok || !body.ok) {
         setError(body?.error ?? "Failed to save schedule");
@@ -111,18 +184,12 @@ export default function ScheduleForm({
     }
   }
 
-  const userOptions: DropdownOption[] = users.map((u) => ({
-    value: u.id,
-    label: u.name,
-    description: u.role.charAt(0).toUpperCase() + u.role.slice(1),
-  }));
-
   return (
     <form onSubmit={onSubmit} className="rounded-xl border border-border bg-surface p-5 space-y-6">
       <div>
         <h2 className="text-base font-semibold text-foreground">Production Schedule & Assignments</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Assign one or more staff members and deadlines for each stage. Saving will transition an "Under Contract" project to active DTP stage.
+          Assign one or more specialized team members and deadlines for each stage. Role filters ensure only qualified staff are listed.
         </p>
       </div>
 
@@ -130,14 +197,19 @@ export default function ScheduleForm({
         {/* DTP */}
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              DTP / Typesetting Assignees
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                DTP / Typesetting Assignees
+              </label>
+              {/* <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
+                DTP / Typesetters
+              </span> */}
+            </div>
             <MultiSelectDropdown
               size="sm"
               values={dtpUsers}
               onChange={(vals) => setDtpUsers(vals)}
-              options={userOptions}
+              options={dtpOptions}
               placeholder="Select DTP assignees…"
               ariaLabel="Select DTP assignees"
             />
@@ -158,14 +230,19 @@ export default function ScheduleForm({
         {/* Editing */}
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              Editing Assignees
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Editing Assignees
+              </label>
+              {/* <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                Editors
+              </span> */}
+            </div>
             <MultiSelectDropdown
               size="sm"
               values={editingUsers}
               onChange={(vals) => setEditingUsers(vals)}
-              options={userOptions}
+              options={editingOptions}
               placeholder="Select editing assignees…"
               ariaLabel="Select editing assignees"
             />
@@ -186,14 +263,19 @@ export default function ScheduleForm({
         {/* Cover */}
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              Cover Design Assignees
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Cover Design Assignees
+              </label>
+              {/* <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/50 px-2 py-0.5 rounded-full border border-pink-200 dark:border-pink-800">
+                Designers
+              </span> */}
+            </div>
             <MultiSelectDropdown
               size="sm"
               values={coverUsers}
               onChange={(vals) => setCoverUsers(vals)}
-              options={userOptions}
+              options={coverOptions}
               placeholder="Select cover design assignees…"
               ariaLabel="Select cover design assignees"
             />
@@ -214,14 +296,19 @@ export default function ScheduleForm({
         {/* ISBN */}
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              ISBN Registration Assignees
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                ISBN Registration Assignees
+              </label>
+              {/* <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                ISBN Specialists
+              </span> */}
+            </div>
             <MultiSelectDropdown
               size="sm"
               values={isbnUsers}
               onChange={(vals) => setIsbnUsers(vals)}
-              options={userOptions}
+              options={isbnOptions}
               placeholder="Select ISBN assignees…"
               ariaLabel="Select ISBN assignees"
             />
@@ -242,14 +329,19 @@ export default function ScheduleForm({
         {/* Proof */}
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              Final Proof Assignees
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Final Proof Assignees
+              </label>
+              {/* <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/50 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">
+                Proofreaders
+              </span> */}
+            </div>
             <MultiSelectDropdown
               size="sm"
               values={proofUsers}
               onChange={(vals) => setProofUsers(vals)}
-              options={userOptions}
+              options={proofOptions}
               placeholder="Select proof assignees…"
               ariaLabel="Select proof assignees"
             />
@@ -273,10 +365,11 @@ export default function ScheduleForm({
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover disabled:opacity-60"
+        className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover disabled:opacity-60 cursor-pointer"
       >
         {pending ? "Saving Schedule..." : "Save Production Schedule"}
       </button>
     </form>
   );
 }
+

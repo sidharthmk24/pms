@@ -87,10 +87,10 @@ export default async function ProofApprovalPage({
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-black/[0.08] pb-6 dark:border-white/[0.1]">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="font-serif font-black text-xl text-primary tracking-tight">Kairali Books</span>
-            <span className="text-xs text-muted-foreground font-serif">· കൈരളി ബുക്സ്</span>
+            <span className="  font-black text-xl text-primary tracking-tight">Kairali Books</span>
+            <span className="text-xs text-muted-foreground  ">· കൈരളി ബുക്സ്</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-serif">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground  ">
             Author Final Proof Sign-Off
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
@@ -112,7 +112,7 @@ export default async function ProofApprovalPage({
             <span className="text-[11px] font-mono uppercase tracking-wider text-primary font-bold">
               Publication Title
             </span>
-            <h2 className="text-xl font-extrabold text-foreground font-serif">
+            <h2 className="text-xl font-extrabold text-foreground  ">
               {proj.titles.name}
             </h2>
             {proj.titles.name_ml && (

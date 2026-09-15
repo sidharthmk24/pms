@@ -5,13 +5,14 @@ import { fail, handler, ok } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { requireApiCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ROLES, isRole } from "@/lib/roles";
+import { parseUserRoles } from "@/lib/roles";
 import { stamp } from "@/lib/time";
 
 const CreateUserSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
   email: z.string().trim().email("Must be a valid email"),
-  role: z.enum(["owner", "editor", "production", "accounts", "store"]),
+  role: z.string().optional(),
+  roles: z.array(z.string()).optional(),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
@@ -47,6 +48,20 @@ export const POST = handler(async (req: Request) => {
   const json = await req.json().catch(() => null);
   const data = CreateUserSchema.parse(json);
 
+  // Normalize multi-roles
+  let roleInput = "";
+  if (data.roles && data.roles.length > 0) {
+    roleInput = data.roles.join(",");
+  } else if (data.role) {
+    roleInput = data.role;
+  }
+
+  const validRoles = parseUserRoles(roleInput).filter((r) => r !== "author");
+  if (validRoles.length === 0) {
+    return fail(400, "Please assign at least one valid team role.");
+  }
+
+  const finalRole = validRoles.join(",");
   const emailKey = data.email.toLowerCase();
 
   const existing = await prisma.users.findUnique({
@@ -66,7 +81,7 @@ export const POST = handler(async (req: Request) => {
       id: userId,
       email: emailKey,
       name: data.name,
-      role: data.role,
+      role: finalRole,
       password_hash,
       active: true,
       created_at: now,
@@ -91,3 +106,4 @@ export const POST = handler(async (req: Request) => {
 
   return ok({ user });
 });
+

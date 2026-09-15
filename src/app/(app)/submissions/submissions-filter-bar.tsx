@@ -15,12 +15,14 @@ export default function SubmissionsFilterBar({
   currentStatus,
   currentEditor,
   currentSort = "submitted_desc",
+  showEditorFilter = true,
 }: {
   statusLabels: Record<string, string>;
   editors: Editor[];
   currentStatus?: string;
   currentEditor?: string;
   currentSort?: string;
+  showEditorFilter?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -38,7 +40,7 @@ export default function SubmissionsFilterBar({
 
   const hasFilter = Boolean(
     currentStatus ||
-    currentEditor ||
+    (showEditorFilter && currentEditor) ||
     (currentSort && currentSort !== "submitted_desc")
   );
 
@@ -54,7 +56,9 @@ export default function SubmissionsFilterBar({
   ];
 
   return (
-    <section className="relative z-20 rounded-xl border border-[#7e2562]/15 bg-white p-3.5 sm:p-4 shadow-plum-sm">
+    <section className={`relative z-20 rounded-xl border bg-white p-3.5 sm:p-4 transition-all duration-200 ${
+      hasFilter ? "border-[#7e2562]/35 shadow-plum-md" : "border-[#7e2562]/15 shadow-plum-sm"
+    }`}>
       <div className="flex flex-wrap items-center gap-3.5">
         {/* Status Filter */}
         <div className="w-52">
@@ -65,6 +69,11 @@ export default function SubmissionsFilterBar({
             onChange={(val) => onFilterChange("status", val)}
             ariaLabel="Filter by status"
             placeholder="All Statuses"
+            buttonClassName={
+              currentStatus
+                ? "!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
+                : ""
+            }
             options={[
               { value: "", label: "All Statuses" },
               ...Object.entries(statusLabels).map(([val, label]) => ({
@@ -75,24 +84,31 @@ export default function SubmissionsFilterBar({
           />
         </div>
 
-        {/* Assigned Editor Filter */}
-        <div className="w-52">
-          <SmoothDropdown
-            id="editor-filter"
-            name="editor"
-            value={currentEditor ?? ""}
-            onChange={(val) => onFilterChange("editor", val)}
-            ariaLabel="Filter by assigned editor"
-            placeholder="All Editors"
-            options={[
-              { value: "", label: "All Editors" },
-              ...editors.map((u) => ({
-                value: u.id,
-                label: u.name,
-              })),
-            ]}
-          />
-        </div>
+        {/* Assigned Editor Filter (Admin / Manager only) */}
+        {showEditorFilter && (
+          <div className="w-52">
+            <SmoothDropdown
+              id="editor-filter"
+              name="editor"
+              value={currentEditor ?? ""}
+              onChange={(val) => onFilterChange("editor", val)}
+              ariaLabel="Filter by assigned editor"
+              placeholder="All Editors"
+              buttonClassName={
+                currentEditor
+                  ? "!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
+                  : ""
+              }
+              options={[
+                { value: "", label: "All Editors" },
+                ...editors.map((u) => ({
+                  value: u.id,
+                  label: u.name,
+                })),
+              ]}
+            />
+          </div>
+        )}
 
         {/* Sort By Dropdown */}
         <div className="w-52">
@@ -103,6 +119,7 @@ export default function SubmissionsFilterBar({
             onChange={(val) => onFilterChange("sort", val)}
             ariaLabel="Sort submissions"
             placeholder="Sort by"
+            buttonClassName="!border-[#7e2562] !ring-2 !ring-[#7e2562]/30 !shadow-plum-sm font-bold bg-[#faedf5]/40 text-black dark:text-white"
             options={sortOptions}
           />
         </div>
@@ -111,7 +128,7 @@ export default function SubmissionsFilterBar({
         {hasFilter && (
           <Link
             href="/submissions"
-            className="apple-button inline-flex items-center rounded-xl border border-black/15 bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-xs hover:bg-black/5 dark:border-white/15 dark:bg-surface-muted/60 dark:hover:bg-white/10"
+            className="apple-button inline-flex items-center rounded-xl border border-[#7e2562]/20 bg-[#faedf5]/30 px-4 py-2.5 text-sm font-bold text-[#7e2562] shadow-xs hover:bg-[#faedf5] transition-all cursor-pointer"
           >
             Clear Filters
           </Link>

@@ -3,6 +3,7 @@ import { fail, handler, ok } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { requireApiCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasRole } from "@/lib/roles";
 
 const UpdateAuthorSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").optional(),
@@ -16,6 +17,9 @@ const UpdateAuthorSchema = z.object({
 
 export const PATCH = handler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireApiCapability("authors.read");
+  if (!hasRole(user.role, "owner")) {
+    return fail(403, "Only the owner is permitted to edit author profiles");
+  }
   const { id } = await params;
 
   const json = await req.json().catch(() => null);
@@ -75,6 +79,9 @@ export const PATCH = handler(async (req: Request, { params }: { params: Promise<
 
 export const DELETE = handler(async (_req: Request, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireApiCapability("authors.read");
+  if (!hasRole(user.role, "owner")) {
+    return fail(403, "Only the owner is permitted to delete author profiles");
+  }
   const { id } = await params;
 
   const existing = await prisma.authors.findUnique({

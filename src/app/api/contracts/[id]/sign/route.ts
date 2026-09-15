@@ -61,7 +61,23 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       detail: { contract_ref: currentMeta.contract_ref, title: contract.titles.name, signer: data.signerName },
     });
   } else {
-    // Author Digital Signing
+    // Author Digital Signing: require valid session matching the author's email
+    const user = await getSessionUser();
+    if (!user) {
+      return fail(401, "Author authentication required. Please log in to execute this publishing agreement.");
+    }
+
+    if (
+      contract.authors.email &&
+      user.email.toLowerCase() !== contract.authors.email.toLowerCase() &&
+      !["owner", "admin", "publisher", "editor"].includes(user.role)
+    ) {
+      return fail(
+        403,
+        `Unauthorized account. Please log in with the author account associated with this contract (${contract.authors.email}).`
+      );
+    }
+
     currentMeta.author_signer_name = data.signerName;
     currentMeta.author_signed_at = now;
     currentMeta.author_signature = data.signature;
@@ -81,7 +97,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     if (data.ifsc) currentMeta.author_ifsc = data.ifsc;
 
     await audit({
-      userId: null,
+      userId: user.id,
       action: "sign_contract_author",
       entity: "contract",
       entityId: id,

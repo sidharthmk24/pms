@@ -7,7 +7,7 @@ import { stamp } from "@/lib/time";
 
 const ProofDecisionSchema = z.object({
   projectId: z.string().min(1),
-  decision: z.enum(["approve", "reject"]),
+  decision: z.enum(["approve", "reject", "rework"]),
   comment: z.string().optional().default(""),
 });
 
@@ -54,7 +54,7 @@ export const POST = handler(async (req: Request) => {
 
   const now = stamp();
 
-  if (data.decision === "reject") {
+  if (data.decision === "reject" || data.decision === "rework") {
     await prisma.production_projects.update({
       where: { id: data.projectId },
       data: {

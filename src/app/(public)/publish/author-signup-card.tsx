@@ -12,7 +12,8 @@ interface AuthorSignupCardProps {
 }
 
 export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps) {
-  const [mode, setMode] = useState<"register" | "login">("register");
+  const [mode, setMode] = useState<"register" | "login" | "forgot">("register");
+  const [forgotSubmitted, setForgotSubmitted] = useState(false);
 
   // Registration state
   const [name, setName] = useState("");
@@ -201,6 +202,42 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
     }
   }
 
+  async function handleForgot(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+
+    if (!loginEmail.trim()) {
+      setError("Please enter your registered email address.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: loginEmail.trim().toLowerCase(),
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.ok) {
+        setError(data?.error ?? "Failed to send reset link. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      setForgotSubmitted(true);
+    } catch {
+      setError("Could not reach the server. Please check your internet connection.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // If user is already authenticated
   if (currentUser) {
     return (
@@ -212,7 +249,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
           Active Author Session
         </span>
-        <h3 className="text-2xl sm:text-3xl font-black text-foreground font-serif tracking-tight">
+        <h3 className="text-2xl sm:text-3xl font-black text-foreground   tracking-tight">
           Welcome back, {currentUser.name}!
         </h3>
         <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
@@ -583,7 +620,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
             </button>
           </div>
         </form>
-      ) : (
+      ) : mode === "login" ? (
         /* ── MODE 2: LOGIN FORM ────────────────────────────────────────── */
         <form onSubmit={handleLogin} className="mt-8 space-y-6 max-w-lg mx-auto animate-in fade-in">
           <div className="rounded-2xl border border-[#7e2562]/15 bg-[#faf6f9]/80 p-4 text-center">
@@ -613,9 +650,17 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
               <label htmlFor="login-password" className="text-xs font-bold uppercase tracking-wider text-foreground">
                 Password <span className="text-rose-600">*</span>
               </label>
-              <Link href="/login" className="text-[11px] font-bold text-[#7e2562] hover:underline">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("forgot");
+                  setError(null);
+                  setForgotSubmitted(false);
+                }}
+                className="text-[11px] font-bold text-[#7e2562] hover:underline cursor-pointer"
+              >
                 Forgot password?
-              </Link>
+              </button>
             </div>
             <div className="relative">
               <input
@@ -682,6 +727,107 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
             </button>
           </div>
         </form>
+      ) : (
+        /* ── MODE 3: FORGOT PASSWORD FORM ──────────────────────────────── */
+        <div className="mt-8 space-y-6 max-w-lg mx-auto animate-in fade-in">
+          {forgotSubmitted ? (
+            <div className="rounded-2xl border border-[#7e2562]/20 bg-[#faedf5]/40 p-8 text-center space-y-4">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7e2562] text-white text-xl font-bold">
+                ✓
+              </div>
+              <h4 className="text-xl font-black text-foreground">Password Reset Link Dispatched</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                If an account is associated with <strong className="text-foreground">{loginEmail}</strong>, we have sent a secure link to create a new password. The link will expire in 1 hour.
+              </p>
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setForgotSubmitted(false)}
+                  className="text-xs font-bold text-[#7e2562] border border-[#7e2562]/25 px-4 py-2 rounded-xl hover:bg-white cursor-pointer"
+                >
+                  Resend Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("login");
+                    setForgotSubmitted(false);
+                    setError(null);
+                  }}
+                  className="apple-button rounded-xl bg-[#7e2562] px-5 py-2 text-xs font-bold text-white shadow-plum-xs cursor-pointer"
+                >
+                  Back to Sign In &rarr;
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleForgot} className="space-y-5">
+              <div className="rounded-2xl border border-[#7e2562]/15 bg-[#faf6f9]/80 p-4 text-center">
+                <span className="text-xs font-bold text-foreground">Reset Author Password</span>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Enter your registered author email to receive a password reset link.
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="forgot-author-email" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
+                  Registered Email Address <span className="text-rose-600">*</span>
+                </label>
+                <input
+                  id="forgot-author-email"
+                  type="email"
+                  required
+                  autoFocus
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="author@example.com"
+                  className="w-full rounded-2xl border border-[#7e2562]/20 bg-white px-4 py-3.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15"
+                />
+              </div>
+
+              {/* Error Feedback */}
+              {error && (
+                <div className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-xs font-bold text-rose-800 animate-in fade-in">
+                  {error}
+                </div>
+              )}
+
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("login");
+                    setError(null);
+                  }}
+                  className="text-xs font-bold text-[#7e2562] hover:underline cursor-pointer"
+                >
+                  &larr; Remember password? Sign in
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="apple-button group inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl bg-[#7e2562] px-8 py-3.5 text-sm font-extrabold text-white shadow-plum-md hover:bg-[#681b50] hover:shadow-plum-lg active:scale-[0.99] transition-all disabled:opacity-60 cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span>Sending Link…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Send Password Reset Link</span>
+                      <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       )}
     </div>
   );

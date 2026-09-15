@@ -3,8 +3,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { addHours, addMinutes, stamp } from "@/lib/time";
-import type { Role } from "@/lib/roles";
-import { isRole } from "@/lib/roles";
+import { parseUserRoles } from "@/lib/roles";
 
 export const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "kairali_session";
 const TTL_HOURS = Number(process.env.SESSION_TTL_HOURS || 12);
@@ -13,7 +12,7 @@ export type SessionUser = {
   id: string;
   email: string;
   name: string;
-  role: Role;
+  role: string;
 };
 
 /**
@@ -67,7 +66,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   if (!row) return null;
   if (row.expires_at <= stamp()) return null;
   if (!row.users.active) return null;
-  if (!isRole(row.users.role)) return null;
+  if (parseUserRoles(row.users.role).length === 0) return null;
 
   // Throttled so a normal page render does not cost a write.
   if (row.last_seen_at < stamp(addMinutes(-5))) {

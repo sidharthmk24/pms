@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/auth";
+import { requireCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasRole } from "@/lib/roles";
 import ActivityClient, { type EntityLookup } from "./activity-client";
 
 export const metadata: Metadata = {
@@ -12,9 +13,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ActivityPage() {
-  const user = await requireUser();
-  if (user.role === "author") {
-    redirect("/author");
+  const user = await requireCapability("users.manage");
+  if (!hasRole(user.role, "owner")) {
+    redirect("/dashboard");
   }
 
   // Fetch audit logs and entity dictionaries in parallel for human-readable resolution

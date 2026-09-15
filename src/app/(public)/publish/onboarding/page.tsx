@@ -412,7 +412,7 @@ export default function AuthorOnboardingPage() {
                   <Sparkles className="w-3 h-3" />
                   Existing Account Detected
                 </div>
-                <h3 className="text-lg font-serif font-bold text-[#2B1B24]">
+                <h3 className="text-lg   font-bold text-[#2B1B24]">
                   User Already Exists
                 </h3>
               </div>
@@ -775,7 +775,7 @@ export default function AuthorOnboardingPage() {
         {step === 2 && (
           <form onSubmit={handleStep2Submit} className="bg-white rounded-sm p-6 sm:p-10 shadow-sm border border-[#7E2562]/10 space-y-6">
             <div className="space-y-1">
-              <h2 className="text-xl font-serif font-bold text-[#2B1B24]">Step 2: Profile & Literary Background</h2>
+              <h2 className="text-xl   font-bold text-[#2B1B24]">Step 2: Profile & Literary Background</h2>
               <p className="text-xs sm:text-sm text-neutral-500">
                 Help our editorial board understand your literary domain and style.
               </p>
@@ -906,7 +906,7 @@ export default function AuthorOnboardingPage() {
         {step === 3 && (
           <div className="bg-white rounded-sm p-6 sm:p-10 shadow-sm border border-[#7E2562]/10 space-y-6">
             <div className="space-y-1">
-              <h2 className="text-xl font-serif font-bold text-[#2B1B24]">Step 3: Choose Your Next Step</h2>
+              <h2 className="text-xl   font-bold text-[#2B1B24]">Step 3: Choose Your Next Step</h2>
               <p className="text-xs sm:text-sm text-neutral-500">
                 Do you have your manuscript file ready to submit today, or would you like to explore your author portal first?
               </p>
@@ -923,7 +923,7 @@ export default function AuthorOnboardingPage() {
                   <div className="w-12 h-12 rounded-sm bg-[#7E2562]/15 text-[#7E2562] flex items-center justify-center mb-4">
                     <BookOpen className="w-6 h-6" />
                   </div>
-                  <h3 className="text-lg font-serif font-bold text-[#2B1B24]">
+                  <h3 className="text-lg   font-bold text-[#2B1B24]">
                     Submit Manuscript Now
                   </h3>
                   <p className="text-xs text-neutral-600 mt-2 leading-relaxed">
@@ -961,7 +961,7 @@ export default function AuthorOnboardingPage() {
                   <div className="w-12 h-12 rounded-sm bg-neutral-100 text-neutral-700 flex items-center justify-center mb-4">
                     <LayoutDashboard className="w-6 h-6" />
                   </div>
-                  <h3 className="text-lg font-serif font-bold text-[#2B1B24]">
+                  <h3 className="text-lg   font-bold text-[#2B1B24]">
                     Skip for Now (Go to Dashboard)
                   </h3>
                   <p className="text-xs text-neutral-600 mt-2 leading-relaxed">
@@ -1021,7 +1021,7 @@ export default function AuthorOnboardingPage() {
         {step === 4 && (
           <form onSubmit={handleFinalSubmission} className="bg-white rounded-sm p-6 sm:p-10 shadow-sm border border-[#7E2562]/10 space-y-6">
             <div className="space-y-1">
-              <h2 className="text-xl font-serif font-bold text-[#2B1B24]">Step 4: Manuscript Details & Upload</h2>
+              <h2 className="text-xl   font-bold text-[#2B1B24]">Step 4: Manuscript Details & Upload</h2>
               <p className="text-xs sm:text-sm text-neutral-500">
                 Provide the details of your book. Upon submission, your account will be created and your manuscript logged with our editors.
               </p>
@@ -1235,7 +1235,7 @@ export default function AuthorOnboardingPage() {
                 <Sparkles className="w-3.5 h-3.5" />
                 Registration & Submission Successful
               </div>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#2B1B24]">
+              <h2 className="text-2xl sm:text-3xl   font-bold text-[#2B1B24]">
                 Welcome to Kairali Books, {name}!
               </h2>
               <p className="text-sm text-neutral-600 max-w-md mx-auto">

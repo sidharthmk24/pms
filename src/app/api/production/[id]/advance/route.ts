@@ -86,7 +86,8 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         final_layout_path = await storeProductionFile(
           file,
           ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
-          ["pdf", "doc", "docx"]
+          ["pdf", "doc", "docx"],
+          user.id
         );
       }
     }
@@ -143,7 +144,8 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         final_layout_path = await storeProductionFile(
           file,
           ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
-          ["pdf", "doc", "docx"]
+          ["pdf", "doc", "docx"],
+          user.id
         );
       }
     }
@@ -200,7 +202,8 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         final_cover_path = await storeProductionFile(
           file,
           ["image/png", "image/jpeg", "image/webp", "application/pdf"],
-          ["png", "jpg", "jpeg", "webp", "pdf"]
+          ["png", "jpg", "jpeg", "webp", "pdf"],
+          user.id
         );
       }
     }
