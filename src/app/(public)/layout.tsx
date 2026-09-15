@@ -24,7 +24,7 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
         animation="fade-down"
         duration={0.65}
         delayMs={0}
-        className="no-print border-b border-[#7e2562]/10 bg-gradient-to-r from-[#faf2f7] via-[#ffffff] to-[#faf2f7] px-4 py-2 text-center text-xs font-semibold text-[#7e2562]"
+        className="no-print border-b border-[#7e2562]/10 bg-[#7E2562] px-4 py-2 text-center text-xs font-semibold text-white"
       >
         <span className="inline-flex items-center gap-2">
           <span className="relative flex h-2 w-2">
@@ -33,9 +33,9 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
           <span>Editorial Submissions Open for 2026 Malayalam &amp; English Manuscripts</span>
           <Link
             href="/publish/onboarding"
-            className="underline decoration-[#7e2562]/40 hover:decoration-[#7e2562] font-bold ml-1"
+            className="underline decoration-white hover:decoration-[#cea4c1] font-bold ml-1"
           >
-            Submit Now &rarr;
+            Submit Now
           </Link>
         </span>
       </AnimatedSection>
@@ -72,9 +72,9 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
             <Link href="/publish#process" className="hover:text-primary transition-colors">
               How It Works
             </Link>
-            {/* <Link href="/publish/status" className="hover:text-primary transition-colors inline-flex items-center gap-1.5">
-              <span>Track Manuscript</span>
-            </Link> */}
+               <Link href="/publish#faq" className="hover:text-primary transition-colors">
+              FAQ's
+            </Link>
           </nav>
 
           {/* Right Action CTAs (Hidden on Print) */}

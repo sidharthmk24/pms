@@ -44,13 +44,13 @@ export default async function PublishGuidelinesPage() {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-10">
           <div className="max-w-3xl">
             {/* Live Submissions Status Badge */}
-            <div className="mb-5 inline-flex items-center gap-2.5 rounded-sm border border-[#7e2562]/20 bg-[#faedf5] px-4 py-1.5 text-xs font-bold text-[#7e2562] shadow-xs">
+            {/* <div className="mb-5 inline-flex items-center gap-2.5 rounded-sm border border-[#7e2562]/20 bg-[#faedf5] px-4 py-1.5 text-xs font-bold text-[#7e2562] shadow-xs">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#7e2562] opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[#7e2562]" />
               </span>
               <span>Kairali Books Editorial Board · Submissions Open</span>
-            </div>
+            </div> */}
 
             {/* Main Headline */}
             <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-6xl sm:leading-[1.12]">
@@ -180,9 +180,7 @@ export default async function PublishGuidelinesPage() {
       {/* ── 2. The Four Pillars of Kairali Publishing ────────────────── */}
       <AnimatedSection animation="fade-up" delayMs={50} className="mb-16">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 rounded-sm bg-[#7e2562]/8 px-3.5 py-1 text-xs font-bold text-primary mb-2">
-            <span>Why Publish With Us</span>
-          </div>
+       
           <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-4xl">
             A Trusted Home for Dedicated Authors
           </h2>
@@ -243,9 +241,7 @@ export default async function PublishGuidelinesPage() {
         <div className="rounded-sm border border-[#7e2562]/15 bg-white p-7 shadow-plum-sm sm:p-10">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-sm bg-[#7e2562]/8 px-3.5 py-1 text-xs font-bold text-primary mb-2">
-                <span>Literature Across Categories</span>
-              </div>
+            
               <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                 Accepted Literary Genres
               </h2>
@@ -295,9 +291,7 @@ export default async function PublishGuidelinesPage() {
       {/* ── 4. What to Prepare Checklist ──────────────────────────── */}
       <AnimatedSection id="guidelines" animation="fade-up" delayMs={50} className="mb-16 scroll-mt-24">
         <div className="mb-12 text-center max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-sm bg-[#7e2562]/8 px-3.5 py-1 text-xs font-bold text-primary mb-2">
-            <span>Manuscript Readiness</span>
-          </div>
+       
           <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             What to Prepare Before Submitting
           </h2>
