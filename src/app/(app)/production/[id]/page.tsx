@@ -252,7 +252,7 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
                   label: "Author Final Proof",
                   completedAt: proj.proof_approved_at,
                   deadline: proj.proof_deadline,
-                  staff: resolveStaffNames(proj.proof_assigned_to, proj.proof_assignees),
+                  staff: "Author & Owner Sign-Off",
                 },
                 {
                   key: "printing",

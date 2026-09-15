@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRef, useState, type FormEvent } from "react";
 import { GENRES, LANGUAGES } from "@/lib/submission-fields";
 import { SmoothDropdown } from "@/components/dropdown";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { PlaceSelect } from "@/components/ui/place-select";
 
 const ACCEPT = ".pdf,.doc,.docx,.odt";
 const MAX_MB = 25;
@@ -400,8 +402,26 @@ export default function SubmissionForm({
                 <ErrorText message={errors.email} />
               </div>
 
-              <Field label="Phone Number" name="phone" type="tel" defaultValue={initialPhone} error={errors.phone} hint="Optional for WhatsApp / phone calls" placeholder="+91 98765 43210" />
-              <Field label="Town / District" name="place" defaultValue={initialPlace} error={errors.place} hint="e.g. Kozhikode, Thrissur, Ernakulam" placeholder="e.g. Kozhikode" className="sm:col-span-2" />
+              <div className="sm:col-span-1">
+                <PhoneInput
+                  id="phone"
+                  name="phone"
+                  label="Phone / WhatsApp Number"
+                  defaultValue={initialPhone}
+                  error={errors.phone}
+                  hint="For editorial correspondence & WhatsApp updates"
+                  isWhatsApp={true}
+                />
+              </div>
+              <div className="sm:col-span-1">
+                <PlaceSelect
+                  id="place"
+                  name="place"
+                  defaultValue={initialPlace}
+                  error={errors.place}
+                  hint="Select your town / district for editorial records"
+                />
+              </div>
             </div>
 
             <div className="mt-8 flex justify-end border-t border-[#7e2562]/10 pt-6">

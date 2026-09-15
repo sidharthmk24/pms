@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { PlaceSelect } from "@/components/ui/place-select";
 import {
   BookOpen,
   ArrowRight,
@@ -707,37 +709,28 @@ export default function AuthorOnboardingPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
-                  Phone / WhatsApp Number <span className="text-rose-600">*</span>
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-neutral-400" />
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98470 00000"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-sm border border-neutral-200 focus:border-[#7E2562] focus:ring-2 focus:ring-[#7E2562]/20 outline-none text-sm transition-all"
-                  />
-                </div>
+                <PhoneInput
+                  id="onboarding-phone"
+                  name="phone"
+                  label="Phone / WhatsApp Number"
+                  value={phone}
+                  onChange={(val) => setPhone(val)}
+                  required={true}
+                  hint="Active WhatsApp or phone number for editorial correspondence"
+                  isWhatsApp={true}
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
-                  Place / City / District <span className="text-rose-600">*</span>
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-neutral-400" />
-                  <input
-                    type="text"
-                    required
-                    value={place}
-                    onChange={(e) => setPlace(e.target.value)}
-                    placeholder="e.g. Kozhikode, Thrissur, Ernakulam"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-sm border border-neutral-200 focus:border-[#7E2562] focus:ring-2 focus:ring-[#7E2562]/20 outline-none text-sm transition-all"
-                  />
-                </div>
+                <PlaceSelect
+                  id="onboarding-place"
+                  name="place"
+                  label="Place / City / District"
+                  value={place}
+                  onChange={(val) => setPlace(val)}
+                  required={true}
+                  hint="Select your city or district"
+                />
               </div>
             </div>
 

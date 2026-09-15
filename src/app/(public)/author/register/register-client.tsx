@@ -2,6 +2,8 @@
 
 import { useState, useRef, type FormEvent, type ChangeEvent } from "react";
 import Link from "next/link";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { PlaceSelect } from "@/components/ui/place-select";
 
 export default function AuthorRegisterClient({
   initialName = "",
@@ -16,6 +18,8 @@ export default function AuthorRegisterClient({
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [place, setPlace] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -81,6 +85,8 @@ export default function AuthorRegisterClient({
           email: email.trim(),
           password,
           confirmPassword,
+          phone: phone.trim() || undefined,
+          place: place.trim() || undefined,
           avatar: avatar || undefined,
           ref: initialRef || undefined,
         }),
@@ -244,6 +250,31 @@ export default function AuthorRegisterClient({
               <p className="mt-1.5 text-[11px] text-muted-foreground">
                 Manuscripts submitted with this email address will be automatically linked to your dashboard.
               </p>
+            </div>
+
+            {/* Phone / WhatsApp Number */}
+            <div>
+              <PhoneInput
+                id="reg-phone"
+                name="phone"
+                label="Phone / WhatsApp Number (Optional)"
+                value={phone}
+                onChange={(val) => setPhone(val)}
+                hint="For editorial calls & direct WhatsApp publishing updates"
+                isWhatsApp={true}
+              />
+            </div>
+
+            {/* Town / District / Region */}
+            <div>
+              <PlaceSelect
+                id="reg-place"
+                name="place"
+                label="Town / District / Region (Optional)"
+                value={place}
+                onChange={(val) => setPlace(val)}
+                hint="Your residence in Kerala or diaspora location"
+              />
             </div>
 
             {/* Password */}

@@ -13,7 +13,7 @@ export const AUTHOR_NAV: NavItem[] = [
   { label: "Author Dashboard", href: "/author", capability: "author_portal.access", ready: true },
   { label: "My Published Books", href: "/author/books", capability: "author_portal.access", ready: true },
   { label: "Submit Manuscript", href: "/author/submit", capability: "author_portal.access", ready: true },
-  { label: "User Guide", href: "/guide", capability: null, ready: true },
+  // { label: "User Guide", href: "/guide", capability: null, ready: true },
 ];
 
 export const NAV: NavItem[] = [
@@ -31,7 +31,7 @@ export const NAV: NavItem[] = [
   { label: "Royalty Payouts", href: "/payouts", capability: "payouts.read", ready: false },
   { label: "Reports", href: "/reports", capability: "reports.read", ready: false },
   { label: "Team", href: "/team", capability: "users.manage", ready: true },
-  { label: "User Guide", href: "/guide", capability: null, ready: true },
+  // { label: "User Guide", href: "/guide", capability: null, ready: true },
   { label: "Settings", href: "/settings", capability: "settings.manage", ready: false },
 ];
 

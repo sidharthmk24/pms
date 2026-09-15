@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from "react";
 import Link from "next/link";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { PlaceSelect } from "@/components/ui/place-select";
 
 interface AuthorSignupCardProps {
   currentUser?: {
@@ -544,34 +546,27 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
 
             {/* Phone Number (Optional) */}
             <div>
-              <label htmlFor="reg-phone" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
-                WhatsApp / Mobile Phone (Optional)
-              </label>
-              <input
+              <PhoneInput
                 id="reg-phone"
-                type="tel"
+                name="phone"
+                label="WhatsApp / Mobile Phone (Optional)"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+91 98765 43210"
-                className="w-full rounded-2xl border border-[#7e2562]/20 bg-white px-4 py-3 text-sm font-semibold text-foreground outline-none transition-all focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15"
+                onChange={(val) => setPhone(val)}
+                hint="For direct editorial WhatsApp updates"
+                isWhatsApp={true}
               />
-              <p className="mt-1 text-[11px] text-muted-foreground">For direct editorial WhatsApp updates</p>
             </div>
 
             {/* Town / Place in Kerala (Optional) */}
             <div>
-              <label htmlFor="reg-place" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
-                Town / District / Region (Optional)
-              </label>
-              <input
+              <PlaceSelect
                 id="reg-place"
-                type="text"
+                name="place"
+                label="Town / District / Region (Optional)"
                 value={place}
-                onChange={(e) => setPlace(e.target.value)}
-                placeholder="e.g. Kozhikode, Thrissur, Ernakulam"
-                className="w-full rounded-2xl border border-[#7e2562]/20 bg-white px-4 py-3 text-sm font-semibold text-foreground outline-none transition-all focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15"
+                onChange={(val) => setPlace(val)}
+                hint="Your residence in Kerala or abroad"
               />
-              <p className="mt-1 text-[11px] text-muted-foreground">Your residence in Kerala or abroad</p>
             </div>
           </div>
 

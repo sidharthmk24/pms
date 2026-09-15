@@ -70,9 +70,6 @@ export default function ScheduleForm({
   );
   const [isbnDate, setIsbnDate] = useState(project.isbn_deadline ?? "");
 
-  const [proofUsers, setProofUsers] = useState<string[]>(() =>
-    initialAssignees(project.proof_assigned_to, project.proof_assignees)
-  );
   const [proofDate, setProofDate] = useState(project.proof_deadline ?? "");
 
   // Role-filtered dropdown option lists
@@ -132,20 +129,6 @@ export default function ScheduleForm({
       }));
   }, [users, isbnUsers]);
 
-  const proofOptions = useMemo<DropdownOption[]>(() => {
-    return users
-      .filter((u) => {
-        const roles = parseUserRoles(u.role);
-        if (roles.includes("author") && roles.length === 1) return false;
-        return hasAnyRole(u.role, ["proofreader", "editor"]) || proofUsers.includes(u.id);
-      })
-      .map((u) => ({
-        value: u.id,
-        label: u.name,
-        description: formatRoleLabel(u.role),
-      }));
-  }, [users, proofUsers]);
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
@@ -160,7 +143,7 @@ export default function ScheduleForm({
       coverDeadline: coverDate || null,
       isbnAssignedTo: isbnUsers,
       isbnDeadline: isbnDate || null,
-      proofAssignedTo: proofUsers,
+      proofAssignedTo: null,
       proofDeadline: proofDate || null,
     };
 
@@ -326,25 +309,20 @@ export default function ScheduleForm({
           </div>
         </div>
 
-        {/* Proof */}
+        {/* Final Proof Sign-Off */}
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Final Proof Assignees
-              </label>
-              {/* <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/50 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">
-                Proofreaders
-              </span> */}
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+              Final Proof Sign-Off
+            </label>
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-background/50 px-3 py-2 text-xs text-muted-foreground">
+              <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+              <span className="font-medium text-foreground">Author &amp; Owner Sign-Off</span>
+              <span className="text-[11px] text-muted-foreground">(Direct Approval)</span>
             </div>
-            <MultiSelectDropdown
-              size="sm"
-              values={proofUsers}
-              onChange={(vals) => setProofUsers(vals)}
-              options={proofOptions}
-              placeholder="Select proof assignees…"
-              ariaLabel="Select proof assignees"
-            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Proof sign-off is completed directly by the author via the digital proof link and approved by the owner. No internal staff assignment required.
+            </p>
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
@@ -354,7 +332,7 @@ export default function ScheduleForm({
               type="date"
               value={proofDate}
               onChange={(e) => setProofDate(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
+              className="w-full rounded-xl border border-black/12 bg-surface px-3 py-1.5 text-sm dark:border-white/15"
             />
           </div>
         </div>

@@ -116,10 +116,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
         {/* Hero Welcome Header */}
         <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-3 py-0.5 text-xs font-bold text-purple-700 dark:text-purple-300">
-              <span className="h-2 w-2 rounded-full bg-purple-500" />
-              <span>Owner &amp; Publisher Executive Suite</span>
-            </div>
+          
             <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               Good day, {firstName}
             </h1>

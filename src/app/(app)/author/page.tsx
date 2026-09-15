@@ -366,7 +366,9 @@ export default async function AuthorDashboardPage({
                   {project.status === "editing" && project.proof_feedback && (
                     <div className="mt-3 rounded-xl border border-warning/30 bg-warning/5 p-3.5 text-xs animate-in fade-in">
                       <div className="flex items-center gap-2 font-bold text-warning mb-1">
-                        <span>🔄</span>
+                        <svg className="h-4 w-4 text-warning shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
                         <span>Revisions &amp; Rework in Progress</span>
                       </div>
                       <p className="text-muted-foreground">
@@ -424,7 +426,9 @@ export default async function AuthorDashboardPage({
                   {project.author_dispatch_tracking && (
                     <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 dark:border-primary/20 space-y-2">
                       <div className="flex items-center gap-2 text-xs font-bold text-primary">
-                        <span>📦</span>
+                        <svg className="h-4 w-4 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
                         <span>Author Copies Courier Handover &amp; Dispatch</span>
                       </div>
                       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">

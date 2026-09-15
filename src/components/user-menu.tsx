@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { formatRoleLabel } from "@/lib/roles";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { PlaceSelect } from "@/components/ui/place-select";
 
 export default function UserMenu({
   name: initialName,
@@ -466,33 +468,26 @@ export default function UserMenu({
                     {/* 2-Column Grid: Phone and Town/District */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="user-phone" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
-                          Phone Number (Optional)
-                        </label>
-                        <input
+                        <PhoneInput
                           id="user-phone"
-                          type="tel"
+                          name="phone"
+                          label="Phone / WhatsApp Number"
                           value={editPhone}
-                          onChange={(e) => setEditPhone(e.target.value)}
-                          placeholder="+91 98765 43210"
-                          className="w-full rounded-2xl border border-[#7e2562]/20 bg-white px-4 py-3 text-sm font-semibold text-foreground outline-none transition-all focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15"
+                          onChange={(val) => setEditPhone(val)}
+                          hint="For direct WhatsApp & editorial calls"
+                          isWhatsApp={true}
                         />
-                        <p className="mt-1 text-[11px] text-muted-foreground">For direct WhatsApp &amp; editorial calls</p>
                       </div>
 
                       <div>
-                        <label htmlFor="user-place" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
-                          Town / District / Region
-                        </label>
-                        <input
+                        <PlaceSelect
                           id="user-place"
-                          type="text"
+                          name="place"
+                          label="Town / District / Region"
                           value={editPlace}
-                          onChange={(e) => setEditPlace(e.target.value)}
-                          placeholder="e.g. Kozhikode, Thrissur, Ernakulam"
-                          className="w-full rounded-2xl border border-[#7e2562]/20 bg-white px-4 py-3 text-sm font-semibold text-foreground outline-none transition-all focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15"
+                          onChange={(val) => setEditPlace(val)}
+                          hint="Your residence / district in Kerala"
                         />
-                        <p className="mt-1 text-[11px] text-muted-foreground">Your residence / place in Kerala</p>
                       </div>
                     </div>
 

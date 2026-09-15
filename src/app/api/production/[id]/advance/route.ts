@@ -47,7 +47,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
   else if (proj.status === "editing" && isUserAssigned(proj.editing_assigned_to, proj.editing_assignees, user.id)) isAuthorized = true;
   else if (proj.status === "cover_design" && isUserAssigned(proj.cover_assigned_to, proj.cover_assignees, user.id)) isAuthorized = true;
   else if (proj.status === "isbn_registration" && isUserAssigned(proj.isbn_assigned_to, proj.isbn_assignees, user.id)) isAuthorized = true;
-  else if (proj.status === "final_proof" && isUserAssigned(proj.proof_assigned_to, proj.proof_assignees, user.id)) isAuthorized = true;
+  else if (proj.status === "final_proof") isAuthorized = user.role === "owner" || user.role === "production" || user.role === "editor";
   else if (proj.status === "printing") isAuthorized = user.role === "owner" || user.role === "production";
 
   if (!isAuthorized) {

@@ -429,8 +429,10 @@ export function OrderTracker({ data }: { data: TrackerData }) {
           {/* Resubmission Form */}
           <form onSubmit={handleRevisionSubmit} className="mt-5 pt-4 border-t border-amber-200/60 space-y-4">
             <div className="flex items-center justify-between">
-              <h5 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
-                <span>📄</span>
+              <h5 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                <svg className="h-4 w-4 text-[#7e2562]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.53-4.5h7.5m-7.5-4.5h4.5m-6.75-6h7.5c.621 0 1.125.504 1.125 1.125v17.25c0 .621-.504 1.125-1.125 1.125H5.625c-.621 0-1.125-.504-1.125-1.125V4.875c0-.621.504-1.125 1.125-1.125z" />
+                </svg>
                 <span>Submit Revised Manuscript &amp; Author Brief</span>
               </h5>
               <span className="text-[11px] text-muted-foreground font-medium">Re-evaluation Intake</span>
@@ -439,7 +441,9 @@ export function OrderTracker({ data }: { data: TrackerData }) {
             {/* Success Banner */}
             {revisionSuccess && (
               <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-xs font-semibold text-emerald-900 flex items-center gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white font-black text-[10px]">✓</span>
+                <svg className="h-4 w-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
                 <span>{revisionSuccess}</span>
               </div>
             )}
@@ -447,7 +451,9 @@ export function OrderTracker({ data }: { data: TrackerData }) {
             {/* Error Banner */}
             {revisionError && (
               <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-xs font-semibold text-rose-900 flex items-center gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-600 text-white font-black text-[10px]">!</span>
+                <svg className="h-4 w-4 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
                 <span>{revisionError}</span>
               </div>
             )}
