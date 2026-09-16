@@ -43,6 +43,11 @@ export default async function AuthorDashboardPage({
   const [submissions, contracts, projects, titles, payouts] = await Promise.all([
     prisma.submissions.findMany({
       where: { email: { equals: user.email, mode: "insensitive" } },
+      include: {
+        submission_files: {
+          orderBy: [{ version: "desc" }, { created_at: "desc" }],
+        },
+      },
       orderBy: { submitted_at: "desc" },
     }),
     prisma.contracts.findMany({
@@ -259,7 +264,7 @@ export default async function AuthorDashboardPage({
       <section id="production" className="rounded-[24px] border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10 sm:p-7">
         <div className="flex items-center justify-between border-b border-black/[0.06] pb-4 dark:border-white/[0.08]">
           <div>
-            <h2 className="text-lg font-bold text-foreground">Live Production Pipeline</h2>
+            <h2 className="text-lg font-bold text-foreground">Live Production Flow</h2>
             <p className="text-xs text-muted-foreground">
               Real-time progress for your accepted books moving through typesetting, cover design, ISBN allocation, and printing.
             </p>
@@ -541,6 +546,12 @@ export default async function AuthorDashboardPage({
                 productionStatus: matchedProject?.status,
                 courierDocket: matchedProject?.author_dispatch_tracking,
                 authorCopiesQty: matchedProject?.author_copies_qty,
+                manuscriptFilename: sub.manuscript_filename,
+                manuscriptSize: sub.manuscript_size,
+                coverFilename: sub.cover_filename,
+                coverSize: sub.cover_size,
+                coverMime: sub.cover_mime,
+                submissionFiles: sub.submission_files,
               };
 
               return <OrderTracker key={sub.id} data={trackerData} />;

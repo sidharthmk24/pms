@@ -1,4 +1,4 @@
-generator client {
+  generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
 }
@@ -266,6 +266,7 @@ model users {
   settings                                                           settings[]
   stock_movements                                                    stock_movements[]
   submissions                                                        submissions[]
+  notifications                                                      notifications[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -314,6 +315,10 @@ model submissions {
   manuscript_filename String?
   manuscript_size     Int?
   manuscript_mime     String?
+  cover_path          String?
+  cover_filename      String?
+  cover_size          Int?
+  cover_mime          String?
   status              String  @default("new")
   source              String  @default("web")
   reviewed_by         String?
@@ -323,12 +328,31 @@ model submissions {
   updated_at          String  @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
   publishing_type     String?
   assigned_at         String?
-  users               users?  @relation(fields: [reviewed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "submissions_reviewed_by_users_id_fk")
+  users               users?             @relation(fields: [reviewed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "submissions_reviewed_by_users_id_fk")
+  submission_files    submission_files[]
 
   @@index([submitted_at], map: "idx_submissions_at")
   @@index([email], map: "idx_submissions_email")
   @@index([reviewed_by], map: "idx_submissions_reviewed_by")
   @@index([status], map: "idx_submissions_status")
+}
+
+model submission_files {
+  id                  String       @id
+  submission_id       String
+  version             Int          @default(1)
+  file_type           String       @default("manuscript")
+  file_path           String
+  filename            String
+  file_size           Int?
+  file_mime           String?
+  brief               String?
+  uploaded_by         String?
+  created_at          String       @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  submissions         submissions  @relation(fields: [submission_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "submission_files_submission_id_fk")
+
+  @@index([submission_id, created_at], map: "idx_submission_files_sub")
+  @@index([submission_id, version], map: "idx_submission_files_ver")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -382,3 +406,19 @@ model production_projects {
   print_jobs                                           print_jobs? @relation(fields: [print_job_id], references: [id], onUpdate: NoAction)
   titles                                               titles      @relation(fields: [title_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
+
+model notifications {
+  id         String   @id
+  user_id    String
+  title      String
+  message    String
+  type       String   @default("INFO")
+  link       String?
+  is_read    Boolean  @default(false)
+  created_at String   @default(dbgenerated("to_char((now() AT TIME ZONE 'utc'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id, is_read], map: "idx_notifications_user_read")
+  @@index([created_at], map: "idx_notifications_created_at")
+}
+

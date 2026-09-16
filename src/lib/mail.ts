@@ -171,27 +171,50 @@ export function declineEmail(input: {
   authorName: string;
   refNo: string;
   title: string;
+  declineMessage?: string;
 }): { subject: string; text: string; html: string } {
-  const { authorName, refNo, title } = input;
+  const { authorName, refNo, title, declineMessage } = input;
   const subject = `Update on your manuscript submission — ${refNo}`;
-  const text = [
+
+  const textLines = [
     `Dear ${authorName},`,
     ``,
     `Thank you for submitting your manuscript "${title}" (Reference: ${refNo}) to Kairali Books.`,
     ``,
     `Our editors have carefully read and considered your work. Regrettably, we have decided not to proceed with publication at this time. We receive many submissions and must make difficult choices based on our current list and publishing schedule.`,
+  ];
+
+  if (declineMessage && declineMessage.trim()) {
+    textLines.push(
+      ``,
+      `Editorial Remarks:`,
+      declineMessage.trim(),
+    );
+  }
+
+  textLines.push(
     ``,
     `You retain all rights to your work, and we encourage you to seek publication elsewhere. We wish you the best of luck with your writing.`,
     ``,
     `Sincerely,`,
     `Kairali Books`,
-  ].join("\n");
+  );
+
+  const text = textLines.join("\n");
+
+  const messageHtmlBlock = declineMessage && declineMessage.trim()
+    ? `<div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 14px;margin:20px 0;border-radius:0 8px 8px 0">
+        <h4 style="margin:0 0 6px 0;color:#991b1b;font-size:14px">Editorial Notes &amp; Feedback</h4>
+        <p style="margin:0;white-space:pre-wrap;color:#374151;font-size:13px;line-height:1.5">${escapeHtml(declineMessage.trim())}</p>
+      </div>`
+    : "";
 
   const html = `
 <div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1c1a17;max-width:520px">
   <p>Dear ${escapeHtml(authorName)},</p>
   <p>Thank you for submitting your manuscript "<strong>${escapeHtml(title)}</strong>" (Reference: ${escapeHtml(refNo)}) to Kairali Books.</p>
   <p>Our editors have carefully read and considered your work. Regrettably, we have decided not to proceed with publication at this time. We receive many submissions and must make difficult choices based on our current list and publishing schedule.</p>
+  ${messageHtmlBlock}
   <p>You retain all rights to your work, and we encourage you to seek publication elsewhere. We wish you the best of luck with your writing.</p>
   <p style="color:#6b6559">Sincerely,<br>Kairali Books</p>
 </div>`.trim();
@@ -208,6 +231,55 @@ export function needsRevisionEmail(input: {
 }): { subject: string; text: string; html: string } {
   const { authorName, refNo, title, feedback, trackingUrl } = input;
   const subject = `Revision requested for your manuscript — ${refNo}`;
+
+  // Parse if JSON structured section-wise
+  let plainFeedbackText = feedback;
+  let formattedHtmlFeedback = "";
+
+  if (feedback.trim().startsWith("{") && feedback.trim().endsWith("}")) {
+    try {
+      const parsed = JSON.parse(feedback.trim());
+      if (parsed.type === "section_wise" || Array.isArray(parsed.sections)) {
+        const sections = parsed.sections || [];
+        const parts: string[] = [];
+        const htmlParts: string[] = [];
+
+        if (parsed.overallSummary && parsed.overallSummary.trim()) {
+          parts.push(`[Overall Summary]: ${parsed.overallSummary.trim()}`);
+          htmlParts.push(`
+            <div style="margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #fed7aa">
+              <strong style="color:#9a3412">Overall Summary:</strong>
+              <p style="margin:4px 0 0 0;color:#374151;font-size:13px">${escapeHtml(parsed.overallSummary.trim())}</p>
+            </div>
+          `);
+        }
+
+        if (sections.length > 0) {
+          parts.push(`[Section-by-Section Revisions]:`);
+          sections.forEach((s: any, i: number) => {
+            const sev = s.severity ? ` (${String(s.severity).toUpperCase()})` : "";
+            parts.push(`${i + 1}. ${s.section}${sev}:\n   ${s.feedback}`);
+            htmlParts.push(`
+              <div style="margin-bottom:10px;padding:8px 10px;background:#ffffff;border:1px solid #fed7aa;border-radius:6px">
+                <div style="font-weight:600;font-size:13px;color:#9a3412">${i + 1}. ${escapeHtml(s.section)} <span style="font-size:11px;color:#c2410c">(${escapeHtml(s.severity || "revision")})</span></div>
+                <div style="font-size:12px;color:#374151;margin-top:4px;white-space:pre-wrap">${escapeHtml(s.feedback)}</div>
+              </div>
+            `);
+          });
+        }
+
+        plainFeedbackText = parts.join("\n\n");
+        formattedHtmlFeedback = htmlParts.join("");
+      }
+    } catch {
+      // plain text fallback
+    }
+  }
+
+  if (!formattedHtmlFeedback) {
+    formattedHtmlFeedback = `<p style="margin:0;white-space:pre-wrap">${escapeHtml(feedback)}</p>`;
+  }
+
   const text = [
     `Dear ${authorName},`,
     ``,
@@ -216,7 +288,7 @@ export function needsRevisionEmail(input: {
     `Our editors have reviewed your work and see great potential. However, we feel some revisions are needed before we can make a final decision.`,
     ``,
     `Editor's Feedback:`,
-    feedback,
+    plainFeedbackText,
     ``,
     `You can view this feedback and upload your revised manuscript by logging into your author portal at:`,
     trackingUrl,
@@ -232,12 +304,12 @@ export function needsRevisionEmail(input: {
   <p>Dear ${escapeHtml(authorName)},</p>
   <p>Thank you for submitting your manuscript "<strong>${escapeHtml(title)}</strong>" (Reference: ${escapeHtml(refNo)}) to Kairali Books.</p>
   <p>Our editors have reviewed your work and see great potential. However, we feel some revisions are needed before we can make a final decision.</p>
-  <div style="background:#f7f6f2;border-left:4px solid #b3541e;padding:12px;margin:20px 0;border-radius:0 8px 8px 0">
-    <h4 style="margin:0 0 6px 0;color:#b3541e">Editor's Feedback</h4>
-    <p style="margin:0;white-space:pre-wrap">${escapeHtml(feedback)}</p>
+  <div style="background:#fff7ed;border-left:4px solid #ea580c;padding:14px;margin:20px 0;border-radius:0 8px 8px 0">
+    <h4 style="margin:0 0 8px 0;color:#c2410c;font-size:14px">Editorial Feedback &amp; Revision Directives</h4>
+    ${formattedHtmlFeedback}
   </div>
-  <p>You can view this feedback and upload your revised manuscript by logging into your author portal:</p>
-  <p><a href="${escapeHtml(trackingUrl)}" style="display:inline-block;background:#0f5d55;color:#ffffff;padding:10px 18px;text-decoration:none;border-radius:6px;font-weight:500">Access Author Portal</a></p>
+  <p>You can view this detailed breakdown and upload your revised manuscript by logging into your author portal:</p>
+  <p><a href="${escapeHtml(trackingUrl)}" style="display:inline-block;background:#7e2562;color:#ffffff;padding:10px 18px;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px">Access Author Portal &amp; Submit Revision</a></p>
   <p>We look forward to reading your updated work.</p>
   <p style="color:#6b6559">Sincerely,<br>Kairali Books</p>
 </div>`.trim();

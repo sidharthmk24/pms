@@ -3,7 +3,7 @@ import { fail, handler, ok } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { queueEmail, submissionReceivedEmail } from "@/lib/mail";
 import { getResponseWeeks, submissionsOpen } from "@/lib/settings";
-import { discardManuscript, storeManuscript, UploadError } from "@/lib/storage";
+import { discardManuscript, storeManuscript, storeCoverDesign, UploadError } from "@/lib/storage";
 import { getSessionUser } from "@/lib/session";
 import {
   allowSubmission,
@@ -11,6 +11,7 @@ import {
   SubmissionSchema,
   type ManuscriptMeta,
 } from "@/lib/submissions";
+import { notifyRoles, notifyAuthorByEmail } from "@/lib/notifications";
 
 /** Manuscript submission endpoint — requires authenticated author. */
 export const POST = handler(async (req: Request) => {
@@ -80,13 +81,41 @@ export const POST = handler(async (req: Request) => {
     mime: stored.mime,
   };
 
+  // Optional Cover Design Upload
+  const coverFile = form.get("cover");
+  let storedCover: Awaited<ReturnType<typeof storeCoverDesign>> | null = null;
+  if (coverFile instanceof File && coverFile.size > 0) {
+    try {
+      storedCover = await storeCoverDesign(coverFile, sessionUser.id);
+    } catch (err) {
+      console.error("[public-submissions] storeCoverDesign failed:", err);
+      await discardManuscript(stored.absolutePath);
+      if (err instanceof UploadError) {
+        throw new ZodError([{ code: "custom", path: ["cover"], message: err.message }]);
+      }
+      throw err;
+    }
+  }
+
+  const coverMeta: ManuscriptMeta = storedCover
+    ? {
+        relativePath: storedCover.relativePath,
+        filename: storedCover.filename,
+        size: storedCover.size,
+        mime: storedCover.mime,
+      }
+    : null;
+
   let created: { id: string; refNo: string };
   try {
-    created = await createSubmission(fields, manuscript);
+    created = await createSubmission(fields, manuscript, coverMeta);
   } catch (err) {
     console.error("[public-submissions] createSubmission failed:", err);
     // Never leave an orphaned file behind a failed insert.
     await discardManuscript(stored.absolutePath);
+    if (storedCover) {
+      await discardManuscript(storedCover.absolutePath);
+    }
     throw err;
   }
 
@@ -118,5 +147,22 @@ export const POST = handler(async (req: Request) => {
     detail: { ref_no: created.refNo, genre: fields.genre, title: fields.title },
   });
 
+  // In-app real-time notifications: Only the Owner is notified when a new manuscript is submitted.
+  // Once the owner assigns the manuscript to an editor, that specific editor will receive the notification.
+  await notifyRoles(["owner"], {
+    title: "New Manuscript Submitted",
+    message: `"${fields.title}" submitted by ${fields.author_name} (${created.refNo})`,
+    type: "SUBMISSION",
+    link: `/submissions/${created.id}`,
+  });
+
+  await notifyAuthorByEmail(fields.email, {
+    title: "Manuscript Received",
+    message: `Your manuscript "${fields.title}" has been successfully received (Ref: ${created.refNo}).`,
+    type: "SUBMISSION",
+    link: `/author`,
+  });
+
   return ok({ refNo: created.refNo, responseWeeks });
 });
+

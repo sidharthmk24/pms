@@ -23,6 +23,11 @@ export default async function StatusTrackingPage({ searchParams }: PageProps<"/p
         ref_no: { equals: refNo, mode: "insensitive" },
         email: { equals: authorEmail, mode: "insensitive" },
       },
+      include: {
+        submission_files: {
+          orderBy: [{ version: "desc" }, { created_at: "desc" }],
+        },
+      },
     });
 
     if (!submission) {

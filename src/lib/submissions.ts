@@ -63,6 +63,7 @@ export type ManuscriptMeta = {
 export async function createSubmission(
   input: SubmissionInput,
   manuscript: ManuscriptMeta,
+  cover?: ManuscriptMeta,
 ): Promise<{ id: string; refNo: string }> {
   return prisma.$transaction(async (tx) => {
     const refNo = await nextDocNo(tx, "submission", "SUB");
@@ -86,6 +87,10 @@ export async function createSubmission(
         manuscript_filename: manuscript?.filename ?? null,
         manuscript_size: manuscript?.size ?? null,
         manuscript_mime: manuscript?.mime ?? null,
+        cover_path: cover?.relativePath ?? null,
+        cover_filename: cover?.filename ?? null,
+        cover_size: cover?.size ?? null,
+        cover_mime: cover?.mime ?? null,
         status: "new",
         reviewed_by: null,
         assigned_at: null,
@@ -95,6 +100,42 @@ export async function createSubmission(
       },
       select: { id: true, ref_no: true },
     });
+
+    if (manuscript) {
+      await tx.submission_files.create({
+        data: {
+          id: randomUUID(),
+          submission_id: row.id,
+          version: 1,
+          file_type: "manuscript",
+          file_path: manuscript.relativePath,
+          filename: manuscript.filename,
+          file_size: manuscript.size,
+          file_mime: manuscript.mime,
+          brief: "Initial manuscript submission",
+          uploaded_by: "author",
+          created_at: now,
+        },
+      });
+    }
+
+    if (cover) {
+      await tx.submission_files.create({
+        data: {
+          id: randomUUID(),
+          submission_id: row.id,
+          version: 1,
+          file_type: "cover",
+          file_path: cover.relativePath,
+          filename: cover.filename,
+          file_size: cover.size,
+          file_mime: cover.mime,
+          brief: "Initial cover artwork submission",
+          uploaded_by: "author",
+          created_at: now,
+        },
+      });
+    }
 
     return { id: row.id, refNo: row.ref_no };
   });

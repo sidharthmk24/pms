@@ -9,6 +9,8 @@ import { parseContractNotes } from "@/lib/contracts";
 import ReviewForm from "./review-form";
 import ReassignSelect from "../reassign-select";
 import ContractActions from "./contract-actions";
+import { RevisionFeedbackView } from "@/components/revision-feedback-view";
+import { ManuscriptVersionHistory } from "@/components/manuscript-version-history";
 
 export const metadata: Metadata = { title: "Submission Review" };
 export const dynamic = "force-dynamic";
@@ -44,6 +46,9 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
     where: { id },
     include: {
       users: { select: { id: true, name: true, email: true, role: true } },
+      submission_files: {
+        orderBy: [{ version: "desc" }, { created_at: "desc" }],
+      },
     },
   });
 
@@ -231,10 +236,15 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
 
           {sub.manuscript_filename && (
             <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm text-center">
-              <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                Manuscript Attachment
-              </span>
-              <p className="text-xs font-medium text-foreground truncate mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Manuscript File
+                </span>
+                <span className="rounded-md bg-[#faedf5] px-2 py-0.5 text-[10px] font-bold text-[#7e2562]">
+                  Draft Document
+                </span>
+              </div>
+              <p className="text-xs font-medium text-foreground truncate mb-4" title={sub.manuscript_filename}>
                 {sub.manuscript_filename}
               </p>
               <a
@@ -248,10 +258,71 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
               </a>
             </div>
           )}
+
+          {sub.cover_filename && sub.cover_path ? (
+            <div className="rounded-3xl border border-emerald-500/20 bg-white p-6 shadow-plum-sm text-center">
+              <div className="flex items-center justify-between mb-2">
+                <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Cover Design Attachment
+                </span>
+                <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                  Author Cover
+                </span>
+              </div>
+
+              {/* Cover Preview Image if visual format */}
+              {(sub.cover_mime?.startsWith("image/") || /\.(png|jpg|jpeg|webp)$/i.test(sub.cover_filename)) && (
+                <div className="mb-3 flex justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/api/submissions/${sub.id}/download?file=cover`}
+                    alt="Author Cover Design"
+                    className="h-32 w-24 rounded-lg object-cover shadow-sm border border-gray-200"
+                  />
+                </div>
+              )}
+
+              <p className="text-xs font-medium text-foreground truncate mb-4" title={sub.cover_filename}>
+                {sub.cover_filename}
+              </p>
+              <a
+                href={`/api/submissions/${sub.id}/download?file=cover`}
+                className="apple-button inline-flex w-full justify-center items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white shadow-emerald-sm hover:bg-emerald-800 transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Download Cover Design ({Math.round((sub.cover_size ?? 0) / 1024 / 1024 * 100) / 100} MB)</span>
+              </a>
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50/60 p-4 text-center">
+              <span className="block text-xs font-bold text-muted-foreground">Cover Design</span>
+              <p className="text-[11px] text-muted-foreground/80 mt-0.5">None uploaded by author (standard editorial design applies)</p>
+            </div>
+          )}
         </section>
 
         {/* Right Side: Main content */}
         <section className="space-y-6 md:col-span-2">
+          {/* Version History Card */}
+          <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
+            <ManuscriptVersionHistory
+              submissionId={sub.id}
+              files={sub.submission_files}
+              fallbackManuscript={{
+                filename: sub.manuscript_filename,
+                size: sub.manuscript_size,
+                submittedAt: sub.submitted_at,
+              }}
+              fallbackCover={{
+                filename: sub.cover_filename,
+                size: sub.cover_size,
+                submittedAt: sub.submitted_at,
+              }}
+            />
+          </div>
+
           {/* Synopsis Display */}
           <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
             <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
@@ -262,15 +333,13 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
             </div>
           </div>
 
-          {/* Feedback or Contract Status details */}
-          {sub.review_notes && (
+          {/* Feedback, Revisions or Decline Status details */}
+          {(sub.review_notes || sub.status === "declined") && (
             <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
               <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
-                Review Notes &amp; Editorial Feedback
+                {sub.status === "declined" ? "Decline Evaluation & Remarks" : "Review Notes & Editorial Feedback"}
               </h2>
-              <div className="text-sm text-foreground whitespace-pre-wrap bg-[#faedf5]/40 p-4 border border-[#7e2562]/15 rounded-2xl leading-relaxed">
-                {sub.review_notes}
-              </div>
+              <RevisionFeedbackView notes={sub.review_notes} status={sub.status} />
             </div>
           )}
 

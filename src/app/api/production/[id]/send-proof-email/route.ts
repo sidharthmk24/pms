@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { stamp } from "@/lib/time";
 import { resolveManuscript } from "@/lib/storage";
 import { queueEmail, proofApprovalEmail } from "@/lib/mail";
+import { notifyAuthorByEmail } from "@/lib/notifications";
 
 export const POST = handler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireApiCapability("production_pipeline.write");
@@ -98,6 +99,13 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     refType: "production_project",
     refId: id,
     attachments,
+  });
+
+  await notifyAuthorByEmail(authorEmail, {
+    title: "Galley Proof Ready for Approval",
+    message: `Digital galley proof for "${proj.titles.name}" is ready for your sign-off!`,
+    type: "PROOF",
+    link: `/author`,
   });
 
   await prisma.production_projects.update({

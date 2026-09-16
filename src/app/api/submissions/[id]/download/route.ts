@@ -1,20 +1,66 @@
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { fail, handler } from "@/lib/api";
-import { requireApiCapability } from "@/lib/auth";
+import { requireApiUser } from "@/lib/auth";
+import { can } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
 import { resolveManuscript, buildSafeContentDisposition } from "@/lib/storage";
 
 export const GET = handler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
-  await requireApiCapability("submissions.read");
+  const user = await requireApiUser();
   const { id } = await params;
 
   const sub = await prisma.submissions.findUnique({
     where: { id },
   });
-  if (!sub || !sub.manuscript_path) return fail(404, "Manuscript file not found");
+  if (!sub) return fail(404, "Submission not found");
 
-  const safeFilename = sub.manuscript_filename || "manuscript.pdf";
+  // Allow download if user has submissions.read capability OR is the author of this submission
+  const hasStaffPerm = can(user.role, "submissions.read");
+  const isAuthorOwner = user.email.toLowerCase() === sub.email.toLowerCase();
+
+  if (!hasStaffPerm && !isAuthorOwner) {
+    return fail(403, "Insufficient permissions to download this file");
+  }
+
+  const url = new URL(req.url);
+  const fileType = url.searchParams.get("file") || url.searchParams.get("type");
+  const isCover = fileType === "cover";
+  const fileId = url.searchParams.get("fileId");
+  const versionParam = url.searchParams.get("version");
+
+  let targetPath = isCover ? sub.cover_path : sub.manuscript_path;
+  let safeFilename = (isCover ? sub.cover_filename : sub.manuscript_filename) || (isCover ? "cover-design.png" : "manuscript.pdf");
+
+  if (fileId) {
+    const specificFile = await prisma.submission_files.findFirst({
+      where: { id: fileId, submission_id: id },
+    });
+    if (specificFile) {
+      targetPath = specificFile.file_path;
+      safeFilename = specificFile.filename;
+    }
+  } else if (versionParam) {
+    const verNum = parseInt(versionParam, 10);
+    if (!isNaN(verNum)) {
+      const verFile = await prisma.submission_files.findFirst({
+        where: {
+          submission_id: id,
+          version: verNum,
+          file_type: isCover ? "cover" : "manuscript",
+        },
+      });
+      if (verFile) {
+        targetPath = verFile.file_path;
+        safeFilename = verFile.filename;
+      }
+    }
+  }
+
+  if (!targetPath) {
+    return fail(404, isCover ? "Cover design file not found" : "Manuscript file not found");
+  }
+
   const contentDisposition = buildSafeContentDisposition("attachment", safeFilename);
 
   const secureHeaders: Record<string, string> = {
@@ -27,21 +73,21 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
     "Expires": "0",
   };
 
-  if (sub.manuscript_path.startsWith("http://") || sub.manuscript_path.startsWith("https://")) {
+  if (targetPath.startsWith("http://") || targetPath.startsWith("https://")) {
     try {
-      const res = await fetch(sub.manuscript_path);
-      if (!res.ok) return fail(404, "Manuscript file not found in remote storage");
+      const res = await fetch(targetPath);
+      if (!res.ok) return fail(404, "File not found in remote storage");
       return new Response(res.body, {
         headers: secureHeaders,
       });
     } catch (err) {
       console.error("[download] remote fetch error", err);
-      return fail(500, "Failed to download manuscript file from remote storage");
+      return fail(500, "Failed to download file from remote storage");
     }
   }
 
   try {
-    const fullPath = resolveManuscript(sub.manuscript_path);
+    const fullPath = resolveManuscript(targetPath);
     const fileStats = await stat(fullPath);
 
     // Node Stream to Web Stream conversion for Next Response
@@ -65,6 +111,6 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
     });
   } catch (err) {
     console.error("[download] failed to download file", err);
-    return fail(500, "Failed to download manuscript file from storage");
+    return fail(500, "Failed to download file from storage");
   }
 });

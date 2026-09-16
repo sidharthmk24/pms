@@ -6,6 +6,15 @@ import { stamp } from "@/lib/time";
 import { getSessionUser } from "@/lib/session";
 import { queueEmail, productionStageCompletedEmail } from "@/lib/mail";
 
+import { notifyRoles, notifyUsers, notifyAuthorByEmail } from "@/lib/notifications";
+
+function getAssignees(primary: string | null, assignees: string | null): string[] {
+  const ids: string[] = [];
+  if (primary) ids.push(primary);
+  if (assignees) ids.push(...assignees.split(",").map((s) => s.trim()).filter(Boolean));
+  return Array.from(new Set(ids));
+}
+
 const ApproveProofSchema = z.object({
   token: z.string().min(1, "Approval token is required"),
   action: z.enum(["approve", "rework"]).default("approve"),
@@ -95,7 +104,35 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       detail: { project_id: id, notes: feedbackNotes },
     });
 
+    // In-app notifications: notify editors, proofreaders, and owners
+    const staffToNotify = [
+      ...getAssignees(proj.proof_assigned_to, proj.proof_assignees),
+      ...getAssignees(proj.editing_assigned_to, proj.editing_assignees),
+    ];
+    if (staffToNotify.length > 0) {
+      await notifyUsers(staffToNotify, {
+        title: "Proof Corrections Requested",
+        message: `Author submitted proof correction notes for "${proj.titles.name}": "${feedbackNotes}"`,
+        type: "PROOF",
+        link: `/production/${id}`,
+      });
+    } else {
+      await notifyRoles(["editor", "proofreader", "production", "owner"], {
+        title: "Proof Corrections Requested",
+        message: `Author submitted proof correction notes for "${proj.titles.name}": "${feedbackNotes}"`,
+        type: "PROOF",
+        link: `/production/${id}`,
+      });
+    }
+
     if (authorEmail) {
+      await notifyAuthorByEmail(authorEmail, {
+        title: "Proof Corrections Received",
+        message: `Your proof revisions for "${proj.titles.name}" were received. Our editorial team is applying the requested adjustments.`,
+        type: "PROOF",
+        link: `/author`,
+      });
+
       const mail = productionStageCompletedEmail({
         authorName,
         title: proj.titles.name,
@@ -139,7 +176,22 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     detail: { project_id: id, approved_at: now },
   });
 
+  // In-app notifications to staff
+  await notifyRoles(["production", "proofreader", "store", "accounts", "owner"], {
+    title: "Proof Approved by Author! Ready for Press",
+    message: `Author approved final proof for "${proj.titles.name}". Title is queued for offset printing.`,
+    type: "PRINT",
+    link: `/production/${id}`,
+  });
+
   if (authorEmail) {
+    await notifyAuthorByEmail(authorEmail, {
+      title: "Proof Sign-Off Confirmed! Moving to Press",
+      message: `Thank you! Your approval for "${proj.titles.name}" is confirmed. The book is proceeding to offset printing.`,
+      type: "PRINT",
+      link: `/author`,
+    });
+
     const mail = productionStageCompletedEmail({
       authorName,
       title: proj.titles.name,
@@ -162,3 +214,4 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
 
   return ok({ success: true, status: "printing", action: "approve" });
 });
+

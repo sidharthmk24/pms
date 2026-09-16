@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatIST } from "@/lib/time";
+import { RevisionFeedbackView } from "@/components/revision-feedback-view";
+import { ManuscriptVersionHistory, SubmissionFileRecord } from "@/components/manuscript-version-history";
 
 export type TrackerStage = {
   key: string;
@@ -34,6 +36,12 @@ export type TrackerData = {
   productionStatus?: string | null;
   courierDocket?: string | null;
   authorCopiesQty?: number | null;
+  manuscriptFilename?: string | null;
+  manuscriptSize?: number | null;
+  coverFilename?: string | null;
+  coverSize?: number | null;
+  coverMime?: string | null;
+  submissionFiles?: SubmissionFileRecord[];
 };
 
 export function OrderTracker({ data }: { data: TrackerData }) {
@@ -221,6 +229,36 @@ export function OrderTracker({ data }: { data: TrackerData }) {
           </h3>
           {data.titleMl && (
             <p className="text-sm font-medium text-muted-foreground font-ml">{data.titleMl}</p>
+          )}
+
+          {/* Uploaded Attachments Pill Bar */}
+          {(data.manuscriptFilename || data.coverFilename) && data.id && (
+            <div className="flex flex-wrap items-center gap-2 pt-1.5">
+              {data.manuscriptFilename && (
+                <a
+                  href={`/api/submissions/${data.id}/download`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#7e2562]/20 bg-[#faedf5]/70 px-2.5 py-1 text-[11px] font-bold text-[#7e2562] hover:bg-[#faedf5] transition-all"
+                  title="Download submitted manuscript"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Manuscript ({data.manuscriptFilename})</span>
+                </a>
+              )}
+              {data.coverFilename && (
+                <a
+                  href={`/api/submissions/${data.id}/download?file=cover`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 transition-all"
+                  title="Download submitted cover design"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Cover Design ({data.coverFilename})</span>
+                </a>
+              )}
+            </div>
           )}
         </div>
 
@@ -411,18 +449,10 @@ export function OrderTracker({ data }: { data: TrackerData }) {
             </div>
           </div>
 
-          {/* Editor's Review Note */}
+          {/* Editor's Review Directives & Feedback */}
           {data.reviewNotes && (
-            <div className="mt-4 rounded-xl border border-amber-300/70 bg-white/90 p-4">
-              <div className="flex items-center gap-2 font-bold text-amber-900 text-xs mb-1.5">
-                <svg className="h-4 w-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                <span>Editorial Feedback &amp; Requested Changes:</span>
-              </div>
-              <p className="text-foreground/90 font-medium leading-relaxed pl-6 text-xs whitespace-pre-wrap">
-                &ldquo;{data.reviewNotes}&rdquo;
-              </p>
+            <div className="mt-4">
+              <RevisionFeedbackView notes={data.reviewNotes} status={data.statusCode} />
             </div>
           )}
 
@@ -543,20 +573,30 @@ export function OrderTracker({ data }: { data: TrackerData }) {
             </div>
           </form>
         </div>
-      ) : (
-        data.reviewNotes && (
-          <div className="my-4 rounded-2xl border border-[#7e2562]/20 bg-[#faf4f8] p-4 text-xs">
-            <div className="flex items-center gap-2 font-bold text-[#7e2562] mb-1">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-              <span>Notes from Senior Editor:</span>
-            </div>
-            <p className="text-foreground/90 font-medium leading-relaxed pl-6">
-              &ldquo;{data.reviewNotes}&rdquo;
-            </p>
-          </div>
-        )
+      ) : (data.reviewNotes || data.statusCode === "declined") ? (
+        <div className="my-4">
+          <RevisionFeedbackView notes={data.reviewNotes} status={data.statusCode} />
+        </div>
+      ) : null}
+
+      {/* Manuscript & Cover Version History */}
+      {data.id && (
+        <div className="my-4 pt-3 border-t border-[#7e2562]/10">
+          <ManuscriptVersionHistory
+            submissionId={data.id}
+            files={data.submissionFiles}
+            fallbackManuscript={{
+              filename: data.manuscriptFilename,
+              size: data.manuscriptSize,
+              submittedAt: data.submittedAt,
+            }}
+            fallbackCover={{
+              filename: data.coverFilename,
+              size: data.coverSize,
+              submittedAt: data.submittedAt,
+            }}
+          />
+        </div>
       )}
 
       {/* Courier / Author Copies Tracking (if applicable) */}

@@ -7,6 +7,7 @@ import { GENRES, LANGUAGES } from "@/lib/submission-fields";
 import { SmoothDropdown } from "@/components/dropdown";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { PlaceSelect } from "@/components/ui/place-select";
+import { Sparkles } from "lucide-react";
 
 const ACCEPT = ".pdf,.doc,.docx,.odt";
 const MAX_MB = 25;
@@ -23,6 +24,180 @@ export interface SubmissionFormProps {
   onSuccessRedirect?: string;
 }
 
+const DUMMY_AUTHORS = [
+  {
+    name: "Prof. S. R. Varma",
+    nameMl: "പ്രൊഫ. എസ്. ആർ. വർമ്മ",
+    emailPrefix: "author.varma",
+    phone: "9847123456",
+    place: "Kozhikode",
+  },
+  {
+    name: "Dr. K. S. Radhakrishnan",
+    nameMl: "ഡോ. കെ. എസ്. രാധാകൃഷ്ണൻ",
+    emailPrefix: "radhakrishnan.ks",
+    phone: "9447101234",
+    place: "Thrissur",
+  },
+  {
+    name: "Arundhathi Menon",
+    nameMl: "അരുന്ധതി മേനോൻ",
+    emailPrefix: "arundhathi.menon",
+    phone: "9744234567",
+    place: "Ernakulam",
+  },
+  {
+    name: "Madhavan Nambiar",
+    nameMl: "മാധവൻ നമ്പ്യാർ",
+    emailPrefix: "madhavan.nambiar",
+    phone: "9495345678",
+    place: "Kannur",
+  },
+  {
+    name: "Dr. Fathima Beevi",
+    nameMl: "ഡോ. ഫാത്തിമ ബീവി",
+    emailPrefix: "fathima.beevi",
+    phone: "9895456789",
+    place: "Malappuram",
+  },
+  {
+    name: "Geevarghese Kurien",
+    nameMl: "ഗീവർഗീസ് കുര്യൻ",
+    emailPrefix: "geevarghese.kurien",
+    phone: "9446567890",
+    place: "Kottayam",
+  },
+  {
+    name: "Balamani Amma K.",
+    nameMl: "ബാലാമണി അമ്മ കെ.",
+    emailPrefix: "balamani.amma",
+    phone: "9633678901",
+    place: "Palakkad",
+  },
+  {
+    name: "Anand Neelakantan",
+    nameMl: "ആനന്ദ് നീലകണ്ഠൻ",
+    emailPrefix: "anand.neelakantan",
+    phone: "9447789012",
+    place: "Thiruvananthapuram",
+  },
+  {
+    name: "Jayachandran Nair",
+    nameMl: "ജയചന്ദ്രൻ നായർ",
+    emailPrefix: "jayachandran.nair",
+    phone: "9846890123",
+    place: "Kollam",
+  },
+  {
+    name: "Devika P. Pillai",
+    nameMl: "ദേവിക പി. പിള്ള",
+    emailPrefix: "devika.pillai",
+    phone: "9745901234",
+    place: "Alappuzha",
+  },
+  {
+    name: "Sudheesh Kumar",
+    nameMl: "സുധീഷ് കുമാർ",
+    emailPrefix: "sudheesh.kumar",
+    phone: "9847112233",
+    place: "Wayanad",
+  },
+  {
+    name: "Parvathy S. Warrier",
+    nameMl: "പാർവതി എസ്. വാര്യർ",
+    emailPrefix: "parvathy.warrier",
+    phone: "9447334455",
+    place: "Kasargod",
+  },
+];
+
+const DUMMY_MANUSCRIPTS = [
+  {
+    title: "Kadalinte Nizhalukal",
+    titleMl: "കടലിന്റെ നിഴലുകൾ",
+    genre: "novel",
+    language: "Malayalam",
+    synopsis: "A comprehensive family saga based along the North Malabar coastline spanning the late 20th century. Follows the lives of three seafaring generations navigating coastal trade, changing maritime economies, and personal sacrifice across 320 structured pages.",
+  },
+  {
+    title: "Puzhayude Ormakal",
+    titleMl: "പുഴയുടെ ഓർമ്മകൾ",
+    genre: "novel",
+    language: "Malayalam",
+    synopsis: "Set along the banks of the Bharathapuzha, this poignant narrative captures the gradual erosion of traditional agrarian life in central Kerala, intertwining local folklore, monsoon memories, and the dreams of a migrating generation.",
+  },
+  {
+    title: "Nizhalukalude Sangeetham",
+    titleMl: "നിഴലുകളുടെ സംഗീതം",
+    genre: "poetry",
+    language: "Malayalam",
+    synopsis: "A lyrical anthology of fifty-four reflective poems exploring urban isolation, philosophical musings on time, transient relationships, and ecological grief in modern Kerala, composed in contemporary free-verse rhythms.",
+  },
+  {
+    title: "Malayala Sahithya Charithram",
+    titleMl: "മലയാള സാഹിത്യ ചരിത്രം",
+    genre: "academic",
+    language: "Malayalam",
+    synopsis: "An in-depth critical inquiry tracing the historical evolution of modern Malayalam prose and linguistic syntax from early 19th-century missionary print culture through post-independence literary modernism.",
+  },
+  {
+    title: "Kanavu Kanda Theeram",
+    titleMl: "കനവു കണ്ട തീരം",
+    genre: "short_stories",
+    language: "Malayalam",
+    synopsis: "A collection of twelve gripping short stories depicting ordinary working-class protagonists across suburban towns, exploring themes of familial bonds, unexpected moral dilemmas, and the quiet dignity of resilience.",
+  },
+  {
+    title: "Himalayan Yathrakal",
+    titleMl: "ഹിമാലയൻ യാത്രകൾ",
+    genre: "travelogue",
+    language: "Malayalam",
+    synopsis: "An evocative travelogue documenting solitary trekking expeditions across high-altitude Himalayan passes, Tibetan monasteries, and sacred mountain villages, illustrated with cultural reflections and local lore.",
+  },
+  {
+    title: "Nalukettinte Niyogam",
+    titleMl: "നാലുകെട്ടിന്റെ നിയോഗം",
+    genre: "drama",
+    language: "Malayalam",
+    synopsis: "A three-act theatrical drama highlighting the internal conflicts, property disputes, and emotional dissolution within a crumbling feudal aristocratic household during the land reform period.",
+  },
+  {
+    title: "Kuttippattukal",
+    titleMl: "കുട്ടിപ്പാട്ടുകൾ",
+    genre: "childrens",
+    language: "Malayalam",
+    synopsis: "An enchanting compendium of rhythmic rhymes, playful animal fables, and richly illustrated bedtime adventures designed to nurture curiosity, kindness, and linguistic imagination in young readers aged 5 to 10.",
+  },
+  {
+    title: "Jeevithathinte Velicham",
+    titleMl: "ജീവിതത്തിന്റെ വെളിച്ചം",
+    genre: "biography",
+    language: "Malayalam",
+    synopsis: "An inspiring biographical tribute recounting the pioneering struggles and selfless socio-educational reforms spearheaded by a legendary grassroots social reformer across rural Travancore.",
+  },
+  {
+    title: "Athmavinte Mozhikal",
+    titleMl: "ആത്മാവിന്റെ മൊഴികൾ",
+    genre: "essays",
+    language: "Malayalam",
+    synopsis: "A thought-provoking collection of philosophical and literary essays contemplating classical aesthetics, cultural identity in the globalized era, and the transformative power of the written word.",
+  },
+  {
+    title: "Nilavinte Niram",
+    titleMl: "നിലാവിന്റെ നിറം",
+    genre: "novel",
+    language: "Malayalam",
+    synopsis: "A psychological mystery centered on an ancestral manor in the high ranges of Idukki, unravelling decades-old secrets through letters, diary fragments, and local tea-estate folklore across 280 riveting pages.",
+  },
+  {
+    title: "Vazhiye Pokunnavar",
+    titleMl: "വഴിയെ പോകുന്നവർ",
+    genre: "short_stories",
+    language: "Malayalam",
+    synopsis: "Nine contemporary tales capturing fleeting encounters at railway stations, tea shops, and bus stops across small-town Kerala, exploring human vulnerability, humor, and empathy.",
+  },
+];
+
 export default function SubmissionForm({
   initialAuthorName = "",
   initialEmail = "",
@@ -33,18 +208,56 @@ export default function SubmissionForm({
 }: SubmissionFormProps = {}) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const authorIndexRef = useRef(0);
+  const manuscriptIndexRef = useRef(0);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [synopsis, setSynopsis] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState("Malayalam");
   const [currentStep, setCurrentStep] = useState<1 | 2>(isAuthorPortal ? 2 : 1);
   const [authorNameVal, setAuthorNameVal] = useState(initialAuthorName);
   const [emailVal, setEmailVal] = useState(initialEmail);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [coverFileName, setCoverFileName] = useState<string | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const [submittedData, setSubmittedData] = useState<{
     refNo: string;
     title?: string;
   } | null>(null);
+
+  function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setCoverFileName(null);
+      if (coverPreviewUrl) {
+        URL.revokeObjectURL(coverPreviewUrl);
+        setCoverPreviewUrl(null);
+      }
+      return;
+    }
+    setCoverFileName(file.name);
+    if (file.type.startsWith("image/")) {
+      if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+      setCoverPreviewUrl(URL.createObjectURL(file));
+    } else {
+      if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+      setCoverPreviewUrl(null);
+    }
+  }
+
+  function handleRemoveCover() {
+    setCoverFileName(null);
+    if (coverPreviewUrl) {
+      URL.revokeObjectURL(coverPreviewUrl);
+      setCoverPreviewUrl(null);
+    }
+    if (coverInputRef.current) {
+      coverInputRef.current.value = "";
+    }
+  }
 
   function handleMalayalamKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -61,11 +274,82 @@ export default function SubmissionForm({
     }
   }
 
+  function handleFillDummyStep1() {
+    const authorIndex = authorIndexRef.current % DUMMY_AUTHORS.length;
+    authorIndexRef.current += 1;
+    const author = DUMMY_AUTHORS[authorIndex];
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    
+    setAuthorNameVal(author.name);
+    setEmailVal(`${author.emailPrefix}.${randomSuffix}@kairalibooks.org`);
+    
+    if (formRef.current) {
+      const mlInput = formRef.current.querySelector('input[name="author_name_ml"]') as HTMLInputElement;
+      if (mlInput) mlInput.value = author.nameMl;
+      const phoneInput = formRef.current.querySelector('input[name="phone"]') as HTMLInputElement;
+      if (phoneInput) {
+        phoneInput.value = author.phone;
+        phoneInput.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      const placeInput = formRef.current.querySelector('input[name="place"]') as HTMLInputElement;
+      if (placeInput) {
+        placeInput.value = author.place;
+        placeInput.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+  }
+
+  function handleFillDummyStep2() {
+    const manuscriptIndex = manuscriptIndexRef.current % DUMMY_MANUSCRIPTS.length;
+    manuscriptIndexRef.current += 1;
+    const item = DUMMY_MANUSCRIPTS[manuscriptIndex];
+    const randomId = Math.floor(100 + Math.random() * 900);
+
+    if (formRef.current) {
+      const titleInput = formRef.current.querySelector('input[name="title"]') as HTMLInputElement;
+      if (titleInput) titleInput.value = item.title;
+      const titleMlInput = formRef.current.querySelector('input[name="title_ml"]') as HTMLInputElement;
+      if (titleMlInput) titleMlInput.value = item.titleMl;
+      
+      setSelectedGenre(item.genre);
+      setSelectedLanguage(item.language);
+      
+      const fileInput = formRef.current.querySelector('input[name="manuscript"]') as HTMLInputElement;
+      if (fileInput) {
+        const sanitizedName = item.title.replace(/[^a-zA-Z0-9]/g, "_");
+        const dummyFile = new File(
+          [`Kairali Books - Demo manuscript content for review and testing.\nTitle: ${item.title}\nGenre: ${item.genre}\nReference: DEMO-${randomId}`],
+          `${sanitizedName}_Manuscript.pdf`,
+          { type: "application/pdf" }
+        );
+        try {
+          const dt = new DataTransfer();
+          dt.items.add(dummyFile);
+          fileInput.files = dt.files;
+          setFileName(dummyFile.name);
+        } catch {
+          setFileName(`${sanitizedName}_Manuscript.pdf`);
+        }
+      }
+    }
+    setSynopsis(item.synopsis);
+  }
+
   function resetForm() {
     setSubmittedData(null);
     setCurrentStep(isAuthorPortal ? 2 : 1);
     setSynopsis("");
+    setSelectedGenre("");
+    setSelectedLanguage("Malayalam");
     setFileName(null);
+    setCoverFileName(null);
+    if (coverPreviewUrl) {
+      URL.revokeObjectURL(coverPreviewUrl);
+      setCoverPreviewUrl(null);
+    }
+    if (coverInputRef.current) {
+      coverInputRef.current.value = "";
+    }
     setErrors({});
     setFormError(null);
     if (formRef.current) {
@@ -347,14 +631,25 @@ export default function SubmissionForm({
               currentStep === 1 ? "block animate-in fade-in" : "hidden"
             }`}
           >
-            <div className="mb-6 flex items-center gap-3.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7e2562] text-sm font-extrabold text-white shadow-plum-sm">
-                1
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#7e2562]/10">
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7e2562] text-sm font-extrabold text-white shadow-plum-sm">
+                  1
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">Author Information</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">How our editorial committee can correspond directly with you</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Author Information</h2>
-                <p className="text-xs sm:text-sm text-muted-foreground">How our editorial committee can correspond directly with you</p>
-              </div>
+              <button
+                type="button"
+                onClick={handleFillDummyStep1}
+                className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#7e2562] bg-[#faedf5] hover:bg-[#f3dcee] border border-[#7e2562]/20 rounded-sm shadow-2xs transition-all cursor-pointer"
+                title="Populate test author data for staging"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#7e2562]" />
+                <span>Fill Dummy Data</span>
+              </button>
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="sm:col-span-2">
@@ -445,14 +740,25 @@ export default function SubmissionForm({
             isAuthorPortal || currentStep === 2 ? "block animate-in fade-in" : "hidden"
           }`}
         >
-          <div className="mb-6 flex items-center gap-3.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7e2562] text-sm font-extrabold text-white shadow-plum-sm">
-              2
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#7e2562]/10">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7e2562] text-sm font-extrabold text-white shadow-plum-sm">
+                2
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Manuscript Details</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">Category, synopsis, and document upload</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Manuscript Details</h2>
-              <p className="text-xs sm:text-sm text-muted-foreground">Category, synopsis, and document upload</p>
-            </div>
+            <button
+              type="button"
+              onClick={handleFillDummyStep2}
+              className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#7e2562] bg-[#faedf5] hover:bg-[#f3dcee] border border-[#7e2562]/20 rounded-sm shadow-2xs transition-all cursor-pointer"
+              title="Populate test manuscript details for staging"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#7e2562]" />
+              <span>Fill Dummy Data</span>
+            </button>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label="Book Title" name="title" required error={errors.title} className="sm:col-span-2" placeholder="Title of your book" />
@@ -477,7 +783,11 @@ export default function SubmissionForm({
                 id="genre"
                 name="genre"
                 size="lg"
-                defaultValue=""
+                value={selectedGenre}
+                onChange={(val) => {
+                  setSelectedGenre(val);
+                  if (errors.genre) setErrors((prev) => ({ ...prev, genre: "" }));
+                }}
                 placeholder="Choose a category…"
                 options={GENRES.map((g) => ({
                   value: g.value,
@@ -494,7 +804,11 @@ export default function SubmissionForm({
                 id="language"
                 name="language"
                 size="lg"
-                defaultValue="Malayalam"
+                value={selectedLanguage}
+                onChange={(val) => {
+                  setSelectedLanguage(val);
+                  if (errors.language) setErrors((prev) => ({ ...prev, language: "" }));
+                }}
                 options={LANGUAGES.map((l) => ({
                   value: l.value,
                   label: l.en,
@@ -554,6 +868,85 @@ export default function SubmissionForm({
                 </p>
               </div>
               <ErrorText message={errors.manuscript} />
+            </div>
+
+            {/* Optional Cover Design Section */}
+            <div className="sm:col-span-2">
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="cover">
+                  Book Cover Design <span className="text-muted-foreground font-normal text-xs">(Optional)</span>
+                </Label>
+                {coverFileName && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveCover}
+                    className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
+                  >
+                    Remove Cover
+                  </button>
+                )}
+              </div>
+              <div className="group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#7e2562]/20 bg-[#faedf5]/30 p-6 transition-all hover:border-[#7e2562]/50 hover:bg-[#faedf5]/60 cursor-pointer">
+                <input
+                  ref={coverInputRef}
+                  id="cover"
+                  name="cover"
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp"
+                  onChange={handleCoverChange}
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0 z-10"
+                />
+                
+                {coverPreviewUrl ? (
+                  <div className="flex flex-col sm:flex-row items-center gap-4 pointer-events-none w-full max-w-md bg-white p-3 rounded-xl border border-[#7e2562]/20 shadow-2xs">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={coverPreviewUrl}
+                      alt="Cover Preview"
+                      className="h-20 w-16 object-cover rounded-lg shadow-xs border border-gray-200"
+                    />
+                    <div className="flex-1 min-w-0 text-left">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 mb-1">
+                        ✓ Cover Image Selected
+                      </span>
+                      <p className="text-xs font-bold text-foreground truncate">{coverFileName}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Click or drop to replace</p>
+                    </div>
+                  </div>
+                ) : coverFileName ? (
+                  <div className="flex items-center gap-3 pointer-events-none bg-white px-4 py-2.5 rounded-xl border border-[#7e2562]/20 shadow-2xs">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#7e2562]/10 text-[#7e2562]">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-bold text-foreground truncate">{coverFileName}</p>
+                      <span className="text-[10px] text-emerald-700 font-semibold">✓ Document / PDF Attached</span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#7e2562]/10 text-[#7e2562] mb-2 transition-transform duration-200 group-hover:scale-110 pointer-events-none">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-center gap-2 text-center pointer-events-none">
+                      <span className="rounded-xl border border-[#7e2562]/30 bg-white px-3.5 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs group-hover:bg-[#faedf5] transition-colors">
+                        Choose Cover File
+                      </span>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        or click / drag and drop here
+                      </span>
+                    </div>
+                    <p className="mt-2 text-[11px] text-muted-foreground pointer-events-none text-center">
+                      Attach artwork concept, illustration, or draft layout (PDF, PNG, JPG, or WEBP · Max 25 MB)
+                    </p>
+                  </>
+                )}
+              </div>
+              <ErrorText message={errors.cover} />
             </div>
           </div>
         </section>

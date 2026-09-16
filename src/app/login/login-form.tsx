@@ -233,6 +233,45 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
       onSubmit={onLoginSubmit}
       className={`space-y-4.5 ${error ? "animate-apple-shake" : ""}`}
     >
+      {/* Staging Quick-Fill Helpers */}
+      <div className="flex items-center justify-between gap-2 p-2 bg-[#faedf5] border border-[#7e2562]/20 rounded-sm">
+        <span className="text-[11px] font-bold text-[#7e2562] flex items-center gap-1">
+          <Sparkles className="w-3 h-3" /> Demo Fill:
+        </span>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("admin@kairalibooks.in");
+              setPassword("admin123");
+            }}
+            className="px-2 py-0.5 text-[10px] font-bold bg-white text-[#7e2562] border border-[#7e2562]/30 rounded-xs hover:bg-[#7e2562] hover:text-white transition-colors cursor-pointer"
+          >
+            Admin
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("editor@kairalibooks.in");
+              setPassword("editor123");
+            }}
+            className="px-2 py-0.5 text-[10px] font-bold bg-white text-[#7e2562] border border-[#7e2562]/30 rounded-xs hover:bg-[#7e2562] hover:text-white transition-colors cursor-pointer"
+          >
+            Editor
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("author@kairalibooks.in");
+              setPassword("author123");
+            }}
+            className="px-2 py-0.5 text-[10px] font-bold bg-white text-[#7e2562] border border-[#7e2562]/30 rounded-xs hover:bg-[#7e2562] hover:text-white transition-colors cursor-pointer"
+          >
+            Author
+          </button>
+        </div>
+      </div>
+
       {/* Email Field */}
       <div>
         <label

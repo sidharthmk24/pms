@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { stamp, dateOnly } from "@/lib/time";
 import { parseContractNotes } from "@/lib/contracts";
 import { queueEmail, publicationCelebrationEmail } from "@/lib/mail";
+import { notifyRoles, notifyAuthorByEmail, notifyAuthorOfTitle } from "@/lib/notifications";
 
 const PostProductionSchema = z.object({
   receivedQty: z.number().positive("Delivered quantity must be greater than 0"),
@@ -191,7 +192,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     },
   });
 
-  // Trigger celebration email to author
+  // Resolve author email & name
   let authorEmail = proj.titles.authors?.email || null;
   const authorName = proj.titles.authors?.name || "Author";
   if (!authorEmail && proj.titles.contracts?.term_notes) {
@@ -199,7 +200,22 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     if (emailMatch) authorEmail = emailMatch[0];
   }
 
+  // In-app notifications to staff
+  await notifyRoles(["store", "accounts", "production", "owner"], {
+    title: "Title Officially Released",
+    message: `"${proj.titles.name}" post-production complete. ${commercialWarehouseCopies} commercial copies added to stock; ${authorCopies} author copies allocated.`,
+    type: "STOCK",
+    link: `/production/${id}`,
+  }, user.id);
+
   if (authorEmail) {
+    await notifyAuthorByEmail(authorEmail, {
+      title: "Congratulations! Your Book is Officially Published",
+      message: `"${proj.titles.name}" is now live and published across Kairali Books distribution network!${data.authorDispatchTracking ? ` Author copies dispatched (Tracking: ${data.authorDispatchTracking}).` : ""}`,
+      type: "PRODUCTION",
+      link: `/author`,
+    });
+
     const host = req.headers.get("host") || "localhost:3000";
     const protoHeader = req.headers.get("x-forwarded-proto");
     const protocol = protoHeader || (host.includes("localhost") ? "http" : "https");
@@ -250,6 +266,13 @@ export const PATCH = handler(async (req: Request, { params }: { params: Promise<
 
   const proj = await prisma.production_projects.findUnique({
     where: { id },
+    include: {
+      titles: {
+        include: {
+          authors: true,
+        },
+      },
+    },
   });
   if (!proj) return fail(404, "Production project not found");
 
@@ -277,5 +300,14 @@ export const PATCH = handler(async (req: Request, { params }: { params: Promise<
     },
   });
 
+  // Notify author of tracking
+  await notifyAuthorOfTitle(proj.title_id, {
+    title: "Author Copies Dispatched",
+    message: `Your author complimentary copies of "${proj.titles.name}" have been shipped! Docket/Tracking: ${data.tracking}`,
+    type: "STOCK",
+    link: `/author`,
+  });
+
   return ok({ success: true, tracking: data.tracking, dispatchedAt });
 });
+

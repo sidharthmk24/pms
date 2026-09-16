@@ -304,6 +304,21 @@ export default function AuthorAuthModal() {
           {/* ── MODE 1: LOGIN FORM ── */}
           {mode === "login" && (
             <form onSubmit={handleLoginSubmit} className="space-y-4 animate-apple-in">
+              <div className="flex items-center justify-between gap-2 p-2 bg-[#FAF5F8] border border-[#7E2562]/20 rounded-sm">
+                <span className="text-[11px] font-bold text-[#7E2562] flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> Quick Demo Fill:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("author@kairalibooks.in");
+                    setPassword("author123");
+                  }}
+                  className="px-2 py-0.5 text-[10px] font-bold bg-white text-[#7E2562] border border-[#7E2562]/30 rounded-xs hover:bg-[#7E2562] hover:text-white transition-colors cursor-pointer"
+                >
+                  Demo Author
+                </button>
+              </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
                   Author Email Address

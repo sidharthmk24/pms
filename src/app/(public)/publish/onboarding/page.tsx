@@ -34,6 +34,7 @@ import {
   UserCheck,
   LogIn,
   X,
+  Image as ImageIcon,
 } from "lucide-react";
 import { GENRES, LANGUAGES, SYNOPSIS_MIN, MAX_UPLOAD_MB, ACCEPT_ATTR } from "@/lib/submission-fields";
 import { openAuthorModal } from "@/components/author-auth-modal";
@@ -54,8 +55,40 @@ const AVAILABLE_GENRES = [
   "History & Culture / ചരിത്രം",
 ];
 
+const DUMMY_ONBOARDING_MANUSCRIPTS = [
+  {
+    title: "Nilavinte Vazhikal",
+    titleMl: "നിലാവിന്റെ വഴികൾ",
+    genre: "novel",
+    language: "Malayalam",
+    synopsis: "A poignant narrative chronicling the transformative socio-cultural shifts in post-war Malabar through three generations of a traditional weaving family. Explores themes of memory, indigenous art forms, and modern disillusionment across 240 structured pages.",
+  },
+  {
+    title: "Kadalinte Nizhalukal",
+    titleMl: "കടലിന്റെ നിഴലുകൾ",
+    genre: "novel",
+    language: "Malayalam",
+    synopsis: "A comprehensive family saga based along the North Malabar coastline spanning the late 20th century. Follows the lives of three seafaring generations navigating coastal trade, changing maritime economies, and personal sacrifice across 320 structured pages.",
+  },
+  {
+    title: "Puzhayude Ormakal",
+    titleMl: "പുഴയുടെ ഓർമ്മകൾ",
+    genre: "novel",
+    language: "Malayalam",
+    synopsis: "Set along the banks of the Bharathapuzha, this poignant narrative captures the gradual erosion of traditional agrarian life in central Kerala, intertwining local folklore, monsoon memories, and the dreams of a migrating generation.",
+  },
+  {
+    title: "Nizhalukalude Sangeetham",
+    titleMl: "നിഴലുകളുടെ സംഗീതം",
+    genre: "poetry",
+    language: "Malayalam",
+    synopsis: "A lyrical anthology of fifty-four reflective poems exploring urban isolation, philosophical musings on time, transient relationships, and ecological grief in modern Kerala, composed in contemporary free-verse rhythms.",
+  },
+];
+
 export default function AuthorOnboardingPage() {
   const router = useRouter();
+  const dummyManuscriptIdxRef = useRef(0);
 
   // Step state: 1: Account, 2: Profile/Genres, 3: Pathway Choice, 4: Manuscript details, 5: Success
   const [step, setStep] = useState<number>(1);
@@ -84,6 +117,8 @@ export default function AuthorOnboardingPage() {
   const [language, setLanguage] = useState("Malayalam");
   const [synopsis, setSynopsis] = useState("");
   const [manuscriptFile, setManuscriptFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
   const [agreedTerms, setAgreedTerms] = useState(false);
 
   // Result state
@@ -101,6 +136,7 @@ export default function AuthorOnboardingPage() {
   const [modalLoginError, setModalLoginError] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
 
@@ -130,6 +166,88 @@ export default function AuthorOnboardingPage() {
     setSelectedGenres((prev) =>
       prev.includes(genreName) ? prev.filter((g) => g !== genreName) : [...prev, genreName]
     );
+  };
+
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      setErrorMsg(`Cover design file exceeds maximum size of ${MAX_UPLOAD_MB}MB.`);
+      return;
+    }
+    setCoverFile(file);
+    setErrorMsg("");
+    if (file.type.startsWith("image/")) {
+      if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+      setCoverPreviewUrl(URL.createObjectURL(file));
+    } else {
+      if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+      setCoverPreviewUrl(null);
+    }
+  };
+
+  const handleRemoveCover = () => {
+    setCoverFile(null);
+    if (coverPreviewUrl) {
+      URL.revokeObjectURL(coverPreviewUrl);
+      setCoverPreviewUrl(null);
+    }
+    if (coverInputRef.current) {
+      coverInputRef.current.value = "";
+    }
+  };
+
+  const handleMalayalamKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleMalayalamInput = (e: React.FormEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const filtered = input.value.replace(/[a-zA-Z]/g, "");
+    if (filtered !== input.value) {
+      input.value = filtered;
+    }
+  };
+
+  // Staging / Testing: Dummy data fillers
+  const handleFillDummyStep1 = () => {
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    setName("Dr. K. R. Madhavan");
+    setEmail(`author.demo.${randomSuffix}@kairalibooks.org`);
+    setPassword("Password@123");
+    setConfirmPassword("Password@123");
+    setPhone("9847123456");
+    setPlace("Kozhikode");
+  };
+
+  const handleFillDummyStep2 = () => {
+    setBio("Malayalam essayist and literary researcher exploring post-colonial themes in contemporary Kerala fiction.");
+    setSelectedGenres(["Novel / നോവൽ", "Short Stories / ചെറുകഥ", "Essays / ലേഖനം"]);
+    setPastPublications("Athmavinte Nizhalukal (2020), Samakalika Chinthakal (2023)");
+  };
+
+  const handleFillDummyStep4 = () => {
+    const item = DUMMY_ONBOARDING_MANUSCRIPTS[dummyManuscriptIdxRef.current % DUMMY_ONBOARDING_MANUSCRIPTS.length];
+    dummyManuscriptIdxRef.current += 1;
+    const randomId = Math.floor(100 + Math.random() * 900);
+
+    setBookTitle(item.title);
+    setBookTitleMl(item.titleMl);
+    setGenre(item.genre);
+    setLanguage(item.language);
+    setSynopsis(item.synopsis);
+    setAgreedTerms(true);
+
+    const sanitized = item.title.replace(/[^a-zA-Z0-9]/g, "_");
+    const dummyFile = new File(
+      [`Kairali Books - Demo manuscript content for onboarding.\nTitle: ${item.title}\nRef: ONBOARD-${randomId}`],
+      `${sanitized}_Draft.pdf`,
+      { type: "application/pdf" }
+    );
+    setManuscriptFile(dummyFile);
   };
 
   // Step 1 Validation
@@ -350,6 +468,9 @@ export default function AuthorOnboardingPage() {
       formData.append("language", language);
       formData.append("synopsis", synopsis.trim());
       formData.append("manuscript", manuscriptFile);
+      if (coverFile) {
+        formData.append("cover", coverFile);
+      }
 
       const subRes = await fetch("/api/public/submissions", {
         method: "POST",
@@ -410,7 +531,7 @@ export default function AuthorOnboardingPage() {
                 <UserCheck className="w-6 h-6" />
               </div>
               <div>
-                <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#7E2562] bg-[#FAEDF5] px-2 py-0.5 rounded-sm mb-1">
+                <div className="inline-flex items-center gap-1.5 text-[10px] font-bold  tracking-wider text-[#7E2562] bg-[#FAEDF5] px-2 py-0.5 rounded-sm mb-1">
                   <Sparkles className="w-3 h-3" />
                   Existing Account Detected
                 </div>
@@ -434,7 +555,7 @@ export default function AuthorOnboardingPage() {
             {/* Inline Login Form */}
             <form onSubmit={handleModalLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
                   Account Password
                 </label>
                 <div className="relative">
@@ -507,7 +628,7 @@ export default function AuthorOnboardingPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/publish"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#7E2562] hover:text-[#5E1A48] transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold  tracking-wider text-[#7E2562] hover:text-[#5E1A48] transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Back to Publishing Info
@@ -531,7 +652,7 @@ export default function AuthorOnboardingPage() {
           <div className="bg-white rounded-sm p-6 sm:p-8 shadow-sm border border-[#7E2562]/10 mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-sm bg-[#7E2562]/10 text-[#7E2562] text-xs font-bold tracking-wide uppercase mb-2">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-sm bg-[#7E2562]/10 text-[#7E2562] text-xs font-bold tracking-wide  mb-2">
                   <Sparkles className="w-3.5 h-3.5" />
                   Kairali Books Author Onboarding
                 </div>
@@ -592,16 +713,27 @@ export default function AuthorOnboardingPage() {
         {/* STEP 1: Account Credentials */}
         {step === 1 && (
           <form onSubmit={handleStep1Submit} className="bg-white rounded-sm p-6 sm:p-10 shadow-sm border border-[#7E2562]/10 space-y-6">
-            <div className="space-y-1">
-              <h2 className="text-2xl  !font-bold text-[#2B1B24]">Step 1: Account Information</h2>
-              <p className="text-xs sm:text-sm text-neutral-500">
-                You will use this email and password to log in to your personal author dashboard.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-neutral-100">
+              <div className="space-y-0.5">
+                <h2 className="text-2xl  !font-bold text-[#2B1B24]">Step 1: Account Information</h2>
+                <p className="text-xs sm:text-sm text-neutral-500">
+                  You will use this email and password to log in to your personal author dashboard.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleFillDummyStep1}
+                className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#7e2562] bg-[#faedf5] hover:bg-[#f3dcee] border border-[#7e2562]/20 rounded-sm shadow-2xs transition-all cursor-pointer"
+                title="Populate test data for staging"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#7e2562]" />
+                <span>Fill Dummy Data</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="sm:col-span-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
                   Full Author Name / തൂലികാനാമം <span className="text-rose-600">*</span>
                 </label>
                 <div className="relative">
@@ -618,7 +750,7 @@ export default function AuthorOnboardingPage() {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
                   Email Address <span className="text-rose-600">*</span>
                 </label>
                 <div className="relative">
@@ -666,7 +798,7 @@ export default function AuthorOnboardingPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
                   Create Password <span className="text-rose-600">*</span>
                 </label>
                 <div className="relative">
@@ -691,7 +823,7 @@ export default function AuthorOnboardingPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
                   Confirm Password <span className="text-rose-600">*</span>
                 </label>
                 <div className="relative">
@@ -767,11 +899,22 @@ export default function AuthorOnboardingPage() {
         {/* STEP 2: Profile, Bio, Genre Pills */}
         {step === 2 && (
           <form onSubmit={handleStep2Submit} className="bg-white rounded-sm p-6 sm:p-10 shadow-sm border border-[#7E2562]/10 space-y-6">
-            <div className="space-y-1">
-              <h2 className="text-xl   font-bold text-[#2B1B24]">Step 2: Profile & Literary Background</h2>
-              <p className="text-xs sm:text-sm text-neutral-500">
-                Help our editorial board understand your literary domain and style.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-neutral-100">
+              <div className="space-y-0.5">
+                <h2 className="text-xl   font-bold text-[#2B1B24]">Step 2: Profile &amp; Literary Background</h2>
+                <p className="text-xs sm:text-sm text-neutral-500">
+                  Help our editorial board understand your literary domain and style.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleFillDummyStep2}
+                className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#7e2562] bg-[#faedf5] hover:bg-[#f3dcee] border border-[#7e2562]/20 rounded-sm shadow-2xs transition-all cursor-pointer"
+                title="Populate test profile for staging"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#7e2562]" />
+                <span>Fill Dummy Data</span>
+              </button>
             </div>
 
             {/* Avatar upload */}
@@ -818,7 +961,7 @@ export default function AuthorOnboardingPage() {
 
             {/* Bio textarea */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+              <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
                 Author Bio / Literary Background
               </label>
               <textarea
@@ -832,7 +975,7 @@ export default function AuthorOnboardingPage() {
 
             {/* Genre selection pills */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1">
+              <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1">
                 Your Primary Literary Genres / Categories
               </label>
               <p className="text-xs text-neutral-500 mb-3">
@@ -862,7 +1005,7 @@ export default function AuthorOnboardingPage() {
 
             {/* Past Publications */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+              <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
                 Previous Publications or Awards <span className="text-xs font-normal text-neutral-400">(Optional)</span>
               </label>
               <input
@@ -908,7 +1051,7 @@ export default function AuthorOnboardingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
               {/* Option A: Submit Manuscript Now */}
               <div className="rounded-sm border-2 border-[#7E2562] bg-gradient-to-b from-[#FAF5F8] to-white p-6 flex flex-col justify-between shadow-sm relative group hover:border-[#681E51] transition-all">
-                <div className="absolute -top-3 right-4 bg-[#7E2562] text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-sm shadow-sm">
+                <div className="absolute -top-3 right-4 bg-[#7E2562] text-white text-[10px] font-extrabold  tracking-wider px-2.5 py-0.5 rounded-sm shadow-sm">
                   Recommended
                 </div>
 
@@ -1013,16 +1156,27 @@ export default function AuthorOnboardingPage() {
         {/* STEP 4: Manuscript Submission Form */}
         {step === 4 && (
           <form onSubmit={handleFinalSubmission} className="bg-white rounded-sm p-6 sm:p-10 shadow-sm border border-[#7E2562]/10 space-y-6">
-            <div className="space-y-1">
-              <h2 className="text-xl   font-bold text-[#2B1B24]">Step 4: Manuscript Details & Upload</h2>
-              <p className="text-xs sm:text-sm text-neutral-500">
-                Provide the details of your book. Upon submission, your account will be created and your manuscript logged with our editors.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-neutral-100">
+              <div className="space-y-0.5">
+                <h2 className="text-xl   font-bold text-[#2B1B24]">Step 4: Manuscript Details &amp; Upload</h2>
+                <p className="text-xs sm:text-sm text-neutral-500">
+                  Provide the details of your book. Upon submission, your account will be created and your manuscript logged with our editors.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleFillDummyStep4}
+                className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#7e2562] bg-[#faedf5] hover:bg-[#f3dcee] border border-[#7e2562]/20 rounded-sm shadow-2xs transition-all cursor-pointer"
+                title="Populate test manuscript details for staging"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#7e2562]" />
+                <span>Fill Dummy Data</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
                   Book Title <span className="text-rose-600">*</span>
                 </label>
                 <input
@@ -1036,20 +1190,23 @@ export default function AuthorOnboardingPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
-                  Title in Malayalam / മലയാളം ശീർഷകം <span className="text-neutral-400 font-normal">(Optional)</span>
+                <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
+                  Book Title in Malayalam <span className="text-neutral-400 font-normal">(Optional)</span>
                 </label>
                 <input
                   type="text"
                   value={bookTitleMl}
-                  onChange={(e) => setBookTitleMl(e.target.value)}
+                  onKeyDown={handleMalayalamKeyDown}
+                  onInput={handleMalayalamInput}
+                  onChange={(e) => setBookTitleMl(e.target.value.replace(/[a-zA-Z]/g, ""))}
                   placeholder="ഉദാ: നിഴലുകളുടെ താഴ്വര"
                   className="w-full px-4 py-2.5 rounded-sm border border-neutral-200 focus:border-[#7E2562] focus:ring-2 focus:ring-[#7E2562]/20 outline-none text-sm transition-all font-malayalam"
                 />
+                <p className="mt-1 text-xs text-neutral-400">മലയാളം അക്ഷരങ്ങൾ മാത്രം നൽകുക (English letters disabled)</p>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
                   Genre / Category <span className="text-rose-600">*</span>
                 </label>
                 <select
@@ -1066,7 +1223,7 @@ export default function AuthorOnboardingPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
                   Manuscript Language <span className="text-rose-600">*</span>
                 </label>
                 <select
@@ -1086,7 +1243,7 @@ export default function AuthorOnboardingPage() {
             {/* Synopsis */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700">
+                <label className="block text-xs font-bold  tracking-wider text-neutral-700">
                   Detailed Synopsis / സംഗ്രഹം <span className="text-rose-600">*</span>
                 </label>
                 <span
@@ -1109,7 +1266,7 @@ export default function AuthorOnboardingPage() {
 
             {/* File Upload Dropzone */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+              <label className="block text-xs font-bold  tracking-wider text-neutral-700 mb-1.5">
                 Upload Manuscript File <span className="text-rose-600">*</span>
               </label>
 
@@ -1159,6 +1316,83 @@ export default function AuthorOnboardingPage() {
                     </span>
                     <span className="text-xs text-neutral-500 mt-1">
                       PDF, DOC, DOCX, or ODT up to {MAX_UPLOAD_MB}MB
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Optional Book Cover Design Dropzone */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold tracking-wider text-neutral-700">
+                  Book Cover Design / കവർ ഡിസൈൻ <span className="text-neutral-400 font-normal">(Optional)</span>
+                </label>
+                {coverFile && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveCover}
+                    className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
+                  >
+                    Remove Cover
+                  </button>
+                )}
+              </div>
+
+              <div
+                onClick={() => coverInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-sm p-6 text-center cursor-pointer transition-all ${
+                  coverFile
+                    ? "border-emerald-400 bg-emerald-50/40"
+                    : "border-neutral-300 hover:border-[#7E2562] bg-[#FAF5F8]/30 hover:bg-[#FAF5F8]/60"
+                }`}
+              >
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp"
+                  onChange={handleCoverChange}
+                  className="hidden"
+                />
+
+                {coverPreviewUrl ? (
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={coverPreviewUrl}
+                      alt="Cover Preview"
+                      className="h-20 w-16 object-cover rounded shadow-xs border border-gray-200 shrink-0"
+                    />
+                    <div className="text-center sm:text-left">
+                      <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 mb-1">
+                        ✓ Image Selected
+                      </span>
+                      <p className="text-sm font-bold text-neutral-800 truncate max-w-xs">{coverFile?.name}</p>
+                      <p className="text-xs text-neutral-500 mt-0.5">
+                        {((coverFile?.size || 0) / 1024 / 1024).toFixed(2)} MB · Click to choose different cover
+                      </p>
+                    </div>
+                  </div>
+                ) : coverFile ? (
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-sm bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <span className="text-sm font-bold text-neutral-800">{coverFile.name}</span>
+                    <span className="text-xs text-neutral-500 mt-0.5">
+                      {((coverFile.size || 0) / 1024 / 1024).toFixed(2)} MB · Click to choose different file
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-sm bg-[#7E2562]/10 text-[#7E2562] flex items-center justify-center mb-3">
+                      <ImageIcon className="w-6 h-6" />
+                    </div>
+                    <span className="text-sm font-bold text-[#2B1B24]">
+                      Click to upload cover design concept or draft
+                    </span>
+                    <span className="text-xs text-neutral-500 mt-1">
+                      PDF, PNG, JPG, JPEG, or WEBP up to {MAX_UPLOAD_MB}MB
                     </span>
                   </div>
                 )}
@@ -1239,7 +1473,7 @@ export default function AuthorOnboardingPage() {
             {/* Reference Box */}
             <div className="max-w-md mx-auto p-4 rounded-sm bg-[#FAF5F8] border border-[#7E2562]/20 flex items-center justify-between">
               <div className="text-left">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-500">
+                <span className="text-[10px]  font-bold tracking-wider text-neutral-500">
                   Tracking Reference Number
                 </span>
                 <div className="text-lg font-mono font-bold text-[#7E2562]">{submittedRefNo}</div>

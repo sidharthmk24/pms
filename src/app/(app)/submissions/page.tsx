@@ -177,7 +177,7 @@ export default async function SubmissionsPage({
             <table className="w-full text-base">
               <thead>
                 <tr className="border-b border-[#7e2562]/10 bg-[#faf6f9]/60 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  <th className="px-6 py-4 whitespace-nowrap">Ref # / Title</th>
+                  <th className="px-6 py-4 whitespace-nowrap min-w-[220px]">Ref # / Title</th>
                   <th className="px-6 py-4 whitespace-nowrap">Author</th>
                   <th className="px-6 py-4 whitespace-nowrap">Genre / Lang</th>
                   <th className="px-6 py-4 whitespace-nowrap">Status</th>
@@ -223,11 +223,24 @@ export default async function SubmissionsPage({
                       key={sub.id}
                       className="transition-colors hover:bg-[#faf6f9]/50"
                     >
-                      <td className="px-6 py-4.5">
-                        <span className="numeric block text-xs font-bold text-primary">
-                          {sub.ref_no}
-                        </span>
-                        <span className="block text-base font-bold text-foreground">{sub.title}</span>
+                      <td className="px-6 py-4.5 min-w-[220px]">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <span className="font-mono text-xs font-bold text-primary tracking-tight shrink-0">
+                            {sub.ref_no}
+                          </span>
+                          {sub.cover_path && (
+                            <span
+                              className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-300/70 shadow-2xs shrink-0"
+                              title="Author submitted custom cover design"
+                            >
+                              <svg className="h-3 w-3 text-emerald-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <span>Cover</span>
+                            </span>
+                          )}
+                        </div>
+                        <span className="block text-base font-bold text-foreground mt-0.5">{sub.title}</span>
                       </td>
                       <td className="px-6 py-4.5 font-semibold text-foreground">{sub.author_name}</td>
                       <td className="px-6 py-4.5 text-sm">

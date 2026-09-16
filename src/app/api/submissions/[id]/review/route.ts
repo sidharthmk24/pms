@@ -10,14 +10,25 @@ import { stamp } from "@/lib/time";
 
 import { encodeContractNotes } from "@/lib/contracts";
 import { hasRole } from "@/lib/roles";
+import { notifyRoles, notifyAuthorByEmail } from "@/lib/notifications";
+
+const ReviewSectionSchema = z.object({
+  id: z.string().optional(),
+  section: z.string().min(1, "Section name is required"),
+  severity: z.enum(["critical", "major", "minor", "suggestion"]).default("major"),
+  feedback: z.string().min(1, "Feedback is required for section"),
+});
 
 const ReviewSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("decline"),
+    declineMessage: z.string().optional(),
   }),
   z.object({
     action: z.literal("revision"),
-    feedback: z.string().min(5, "Feedback must be at least 5 characters"),
+    feedback: z.string().optional(),
+    overallSummary: z.string().optional(),
+    sections: z.array(ReviewSectionSchema).optional(),
   }),
   z.object({
     action: z.literal("accept"),
@@ -58,16 +69,24 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
   const trackingUrl = `${protocol}://${host}/publish/status?ref=${sub.ref_no}&email=${encodeURIComponent(sub.email)}`;
 
   if (data.action === "decline") {
+    const declineNote = data.declineMessage?.trim() || null;
+
     await prisma.submissions.update({
       where: { id },
       data: {
         status: "declined",
+        review_notes: declineNote,
         decided_on: now,
         updated_at: now,
       },
     });
 
-    const mail = declineEmail({ authorName: sub.author_name, refNo: sub.ref_no, title: sub.title });
+    const mail = declineEmail({
+      authorName: sub.author_name,
+      refNo: sub.ref_no,
+      title: sub.title,
+      declineMessage: declineNote || undefined,
+    });
     await queueEmail({
       to: sub.email,
       toName: sub.author_name,
@@ -84,18 +103,52 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       action: "decline_submission",
       entity: "submission",
       entityId: id,
-      detail: { ref_no: sub.ref_no, title: sub.title },
+      detail: { ref_no: sub.ref_no, title: sub.title, decline_message: declineNote },
     });
+
+    await notifyAuthorByEmail(sub.email, {
+      title: "Manuscript Evaluation Completed",
+      message: declineNote
+        ? `The editorial evaluation for "${sub.title}" (${sub.ref_no}) has been completed with remarks from the editorial board.`
+        : `The editorial evaluation for "${sub.title}" (${sub.ref_no}) has been completed.`,
+      type: "SUBMISSION",
+      link: `/author`,
+    });
+
+    await notifyRoles(["owner"], {
+      title: "Manuscript Declined",
+      message: `"${sub.title}" (${sub.ref_no}) was declined by ${user.name}.`,
+      type: "SUBMISSION",
+      link: `/submissions/${id}`,
+    }, user.id);
 
     return ok({ success: true });
   }
 
   if (data.action === "revision") {
+    // Construct structured notes if section-wise or plain string
+    let finalReviewNotes = "";
+
+    if (data.sections && data.sections.length > 0) {
+      finalReviewNotes = JSON.stringify({
+        type: "section_wise",
+        overallSummary: data.overallSummary || "",
+        sections: data.sections,
+        createdAt: now,
+      });
+    } else {
+      finalReviewNotes = data.overallSummary || data.feedback || "";
+    }
+
+    if (!finalReviewNotes.trim()) {
+      return fail(400, "Please provide editorial feedback or specify sections to revise");
+    }
+
     await prisma.submissions.update({
       where: { id },
       data: {
         status: "needs_revision",
-        review_notes: data.feedback,
+        review_notes: finalReviewNotes,
         updated_at: now,
       },
     });
@@ -104,7 +157,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       authorName: sub.author_name,
       refNo: sub.ref_no,
       title: sub.title,
-      feedback: data.feedback,
+      feedback: finalReviewNotes,
       trackingUrl,
     });
     await queueEmail({
@@ -123,8 +176,29 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       action: "request_submission_revision",
       entity: "submission",
       entityId: id,
-      detail: { ref_no: sub.ref_no, title: sub.title, feedback_summary: data.feedback.slice(0, 100) },
+      detail: {
+        ref_no: sub.ref_no,
+        title: sub.title,
+        section_count: data.sections?.length || 0,
+        feedback_summary: finalReviewNotes.slice(0, 150),
+      },
     });
+
+    await notifyAuthorByEmail(sub.email, {
+      title: "Editorial Revisions Requested",
+      message: data.sections && data.sections.length > 0
+        ? `The editorial board requested revisions across ${data.sections.length} section(s) on "${sub.title}". Please review feedback and submit updated manuscript.`
+        : `The editorial board requested revisions on "${sub.title}". Please review feedback and submit updated manuscript.`,
+      type: "SUBMISSION",
+      link: `/author`,
+    });
+
+    await notifyRoles(["owner"], {
+      title: "Manuscript Revisions Requested",
+      message: `Revisions requested for "${sub.title}" (${sub.ref_no}) by ${user.name}.`,
+      type: "SUBMISSION",
+      link: `/submissions/${id}`,
+    }, user.id);
 
     return ok({ success: true });
   }
@@ -245,8 +319,25 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       },
     });
 
+    // Notify author of acceptance and contract
+    await notifyAuthorByEmail(sub.email, {
+      title: "Manuscript Accepted! Contract Ready",
+      message: `Congratulations! "${sub.title}" has been accepted for publishing. Your publishing agreement is ready to sign.`,
+      type: "CONTRACT",
+      link: `/publish/contract/${contractId}`,
+    });
+
+    // Notify owners and accounts
+    await notifyRoles(["owner", "accounts"], {
+      title: "Manuscript Accepted",
+      message: `"${sub.title}" by ${sub.author_name} was accepted by ${user.name}. Contract drafted.`,
+      type: "CONTRACT",
+      link: `/contracts`,
+    }, user.id);
+
     return ok({ success: true, contractId });
   }
 
   return fail(400, "Invalid action");
 });
+

@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { stamp } from "@/lib/time";
 import { queueEmail } from "@/lib/mail";
 
+import { notifyRoles, notifyAuthorByEmail } from "@/lib/notifications";
+
 const RenegotiateSchema = z.object({
   feedback: z.string().trim().min(5, "Please provide specific details on what terms you would like reviewed or modified (at least 5 characters)."),
 });
@@ -80,6 +82,23 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     },
   });
 
+  // In-app notifications
+  await notifyRoles(["owner", "accounts"], {
+    title: "Contract Revisions Requested",
+    message: `"${contract.titles.name}" — ${contract.authors.name} requested changes to publishing terms.`,
+    type: "CONTRACT",
+    link: `/contracts`,
+  });
+
+  if (contract.authors.email) {
+    await notifyAuthorByEmail(contract.authors.email, {
+      title: "Terms Review Request Received",
+      message: `Your requested revisions for the publishing agreement on "${contract.titles.name}" were received.`,
+      type: "CONTRACT",
+      link: `/author`,
+    });
+  }
+
   // Optional: Send acknowledgment notification email to author
   if (contract.authors.email) {
     await queueEmail({
@@ -109,3 +128,4 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     meta: currentMeta,
   });
 });
+

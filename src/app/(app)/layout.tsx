@@ -6,6 +6,8 @@ import { navFor } from "@/lib/nav";
 import { formatRoleLabel } from "@/lib/roles";
 import SidebarNav from "@/components/sidebar-nav";
 import UserMenu from "@/components/user-menu";
+import NotificationDropdown from "@/components/notification-dropdown";
+import RealTimeSync from "@/components/real-time-sync";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();
@@ -28,6 +30,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   return (
     <div className="relative flex min-h-dvh bg-background selection:bg-primary selection:text-white">
+      {/* Background SSE sync for real-time notifications */}
+      <RealTimeSync />
+
       {/* Apple-style Translucent Sidebar with Brand Plum Accents */}
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col justify-between border-r border-[#7e2562]/10 bg-white/95 px-4 py-5 backdrop-blur-2xl md:flex">
         <div className="flex flex-col">
@@ -82,15 +87,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* <Link
-              href="/publish"
-              target="_blank"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/20 bg-[#faedf5] px-3 py-1.5 text-xs font-bold text-[#7e2562] hover:bg-[#7e2562]/20 transition-colors"
-            >
-              <span>View Public Portal</span>
-              <span aria-hidden="true">&nearr;</span>
-            </Link> */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <NotificationDropdown userRole={user.role} />
             <UserMenu
               name={user.name}
               email={user.email}

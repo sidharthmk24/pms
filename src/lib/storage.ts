@@ -111,6 +111,66 @@ export async function storeManuscript(
 }
 
 /**
+ * Validates, scans, and stores an author's cover design upload.
+ * Allows PDF, PNG, JPG, JPEG, WEBP.
+ */
+export async function storeCoverDesign(
+  file: File,
+  userId?: string | null
+): Promise<StoredFile> {
+  let validated;
+  try {
+    validated = await inspectAndValidateFile(file, "production", userId);
+  } catch (err) {
+    if (err instanceof SecurityValidationError) {
+      throw new UploadError(err.message);
+    }
+    throw err;
+  }
+
+  const now = new Date();
+  const year = String(now.getUTCFullYear());
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const storedId = randomUUID();
+  const relativePath = `covers/${year}/${month}/${storedId}.${validated.detectedExt}`;
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(relativePath, validated.buffer, {
+      access: "public",
+      contentType: validated.detectedMime,
+      addRandomSuffix: false,
+    });
+
+    await auditUploadSuccess(userId, validated.originalFilename, storedId, validated.sizeBytes, validated.detectedExt);
+
+    return {
+      relativePath: blob.url,
+      absolutePath: blob.url,
+      filename: validated.sanitizedFilename,
+      size: validated.sizeBytes,
+      mime: validated.detectedMime,
+    };
+  }
+
+  const writableRoot = getWritableStorageRoot();
+  const absolutePath = path.join(writableRoot, ...relativePath.split("/"));
+
+  await mkdir(path.dirname(absolutePath), { recursive: true });
+  await writeFile(absolutePath, validated.buffer, { mode: 0o644 });
+  await chmod(absolutePath, 0o644).catch(() => {});
+
+  await auditUploadSuccess(userId, validated.originalFilename, storedId, validated.sizeBytes, validated.detectedExt);
+
+  return {
+    relativePath,
+    absolutePath,
+    filename: validated.sanitizedFilename,
+    size: validated.sizeBytes,
+    mime: validated.detectedMime,
+  };
+}
+
+/**
  * Validates, scans, and stores production visual artwork and layout files.
  */
 export async function storeProductionFile(

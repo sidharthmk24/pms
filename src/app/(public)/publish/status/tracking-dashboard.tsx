@@ -6,6 +6,8 @@ import { useState } from "react";
 import { DocumentPreviewModal } from "@/components/document-preview-modal";
 import { openAuthorModal } from "@/components/author-auth-modal";
 import { parseContractNotes } from "@/lib/contracts";
+import { RevisionFeedbackView } from "@/components/revision-feedback-view";
+import { ManuscriptVersionHistory, SubmissionFileRecord } from "@/components/manuscript-version-history";
 
 type Submission = {
   id: string;
@@ -16,6 +18,11 @@ type Submission = {
   status: string;
   review_notes: string | null;
   manuscript_filename: string | null;
+  manuscript_size?: number | null;
+  cover_filename?: string | null;
+  cover_size?: number | null;
+  submitted_at?: string;
+  submission_files?: SubmissionFileRecord[];
 };
 
 type Contract = {
@@ -256,6 +263,24 @@ export default function TrackingDashboard({
         </div>
       </div>
 
+      {/* Manuscript & Cover Version History */}
+      <div className="rounded-3xl border border-[#7e2562]/15 bg-white p-7 shadow-plum-sm sm:p-8">
+        <ManuscriptVersionHistory
+          submissionId={submission.id}
+          files={submission.submission_files}
+          fallbackManuscript={{
+            filename: submission.manuscript_filename,
+            size: submission.manuscript_size,
+            submittedAt: submission.submitted_at,
+          }}
+          fallbackCover={{
+            filename: submission.cover_filename,
+            size: submission.cover_size,
+            submittedAt: submission.submitted_at,
+          }}
+        />
+      </div>
+
       {/* Main portal messages based on status */}
       {(submission.status === "new" || submission.status === "pending_review") && (
         <div className="rounded-3xl border border-[#7e2562]/15 bg-white p-7 shadow-plum-sm sm:p-8">
@@ -294,25 +319,27 @@ export default function TrackingDashboard({
       )}
 
       {submission.status === "declined" && (
-        <div className="rounded-[28px] border border-danger/20 bg-danger/5 p-7 backdrop-blur-xl sm:p-8">
-          <h3 className="text-lg font-bold text-danger mb-2">Submission Update</h3>
+        <div className="rounded-[28px] border border-danger/20 bg-danger/5 p-7 backdrop-blur-xl sm:p-8 space-y-4">
+          <h3 className="text-lg font-bold text-danger mb-2">Submission Evaluation Complete</h3>
           <p className="text-base text-muted-foreground leading-relaxed">
             Thank you again for sharing your work. Unfortunately, we have decided not to proceed with 
-            publishing this manuscript. We receive a high volume of entries and must make selective choices. 
-            We wish you the best of luck in finding the right publisher for your work.
+            publishing this manuscript at this time.
           </p>
+          {submission.review_notes && (
+            <div className="mt-4">
+              <RevisionFeedbackView notes={submission.review_notes} status={submission.status} />
+            </div>
+          )}
         </div>
       )}
 
 
       {submission.status === "needs_revision" && (
         <div className="space-y-6">
-          {/* Feedback */}
+          {/* Feedback & Section-by-Section Revisions */}
           <div className="rounded-xl border border-accent/20 bg-accent/5 p-6">
             <h3 className="text-sm font-semibold text-accent mb-3">Revision Requested</h3>
-            <div className="text-sm text-foreground whitespace-pre-wrap bg-surface p-4 border border-border rounded-lg leading-relaxed" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
-              {submission.review_notes}
-            </div>
+            <RevisionFeedbackView notes={submission.review_notes} status={submission.status} />
           </div>
 
           {/* Upload Form */}
@@ -625,7 +652,7 @@ export default function TrackingDashboard({
                   <div>
                     <div className="inline-flex items-center gap-2 rounded-full border border-[#7e2562]/20 bg-[#faedf5] px-3 py-0.5 text-[11px] font-bold text-[#7e2562] mb-2">
                       <span className="h-2 w-2 rounded-full bg-[#7e2562] animate-pulse" />
-                      <span>Live Production Pipeline</span>
+                      <span>Live Production Flow</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
                       Book Production Journey

@@ -2,10 +2,12 @@ import { randomUUID } from "node:crypto";
 import { fail, handler, ok } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { queueEmail } from "@/lib/mail";
-import { storeManuscript, discardManuscript, resolveManuscript, UploadError } from "@/lib/storage";
+import { storeManuscript, storeCoverDesign, discardManuscript, resolveManuscript, UploadError } from "@/lib/storage";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { stamp, dateOnly } from "@/lib/time";
+
+import { createNotification, notifyRoles, notifyAuthorByEmail } from "@/lib/notifications";
 
 export const POST = handler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
@@ -38,46 +40,152 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       return fail(400, "Please attach a valid revised manuscript file");
     }
 
+    const coverFile = form.get("cover");
+    const hasCover = coverFile instanceof File && coverFile.size > 0;
+
     const brief = (form.get("brief") as string)?.trim() || "";
 
-    // Write new file to disk
-    let stored;
+    const sessionUser = await getSessionUser();
+    const now = stamp();
+
+    // Determine version number & backfill legacy version 1 if needed
+    const existingFiles = await prisma.submission_files.findMany({
+      where: { submission_id: id },
+      orderBy: { version: "desc" },
+    });
+
+    let nextVersion = 2;
+    if (existingFiles.length === 0) {
+      // Backfill version 1 from original submission record
+      if (sub.manuscript_path) {
+        await prisma.submission_files.create({
+          data: {
+            id: randomUUID(),
+            submission_id: id,
+            version: 1,
+            file_type: "manuscript",
+            file_path: sub.manuscript_path,
+            filename: sub.manuscript_filename || "manuscript-v1.pdf",
+            file_size: sub.manuscript_size || null,
+            file_mime: sub.manuscript_mime || null,
+            brief: "Initial manuscript submission",
+            uploaded_by: "author",
+            created_at: sub.submitted_at || now,
+          },
+        });
+      }
+      if (sub.cover_path) {
+        await prisma.submission_files.create({
+          data: {
+            id: randomUUID(),
+            submission_id: id,
+            version: 1,
+            file_type: "cover",
+            file_path: sub.cover_path,
+            filename: sub.cover_filename || "cover-v1.png",
+            file_size: sub.cover_size || null,
+            file_mime: sub.cover_mime || null,
+            brief: "Initial cover design submission",
+            uploaded_by: "author",
+            created_at: sub.submitted_at || now,
+          },
+        });
+      }
+      nextVersion = 2;
+    } else {
+      nextVersion = (existingFiles[0]?.version || 1) + 1;
+    }
+
+    // Write new manuscript to disk
+    let storedManuscript;
     try {
-      const sessionUser = await getSessionUser();
-      stored = await storeManuscript(file, sessionUser?.id || null);
+      storedManuscript = await storeManuscript(file, sessionUser?.id || null);
     } catch (err) {
       if (err instanceof UploadError) return fail(422, err.message);
       throw err;
     }
 
-    const oldPath = sub.manuscript_path;
-    const now = stamp();
+    // Write optional cover to disk
+    let storedCover = null;
+    if (hasCover) {
+      try {
+        storedCover = await storeCoverDesign(coverFile as File, sessionUser?.id || null);
+      } catch (err) {
+        await discardManuscript(storedManuscript.absolutePath);
+        if (err instanceof UploadError) return fail(422, err.message);
+        throw err;
+      }
+    }
+
     const updatedNotes = brief
-      ? `[Author Revision Brief - ${now}]:\n${brief}\n\n[Previous Editor Feedback]:\n${sub.review_notes || "None"}`
+      ? `[Author Revision Brief - v${nextVersion} - ${now}]:\n${brief}\n\n[Previous Editor Feedback]:\n${sub.review_notes || "None"}`
       : sub.review_notes;
 
     try {
-      // Update database
-      await prisma.submissions.update({
-        where: { id },
-        data: {
-          status: "under_review",
-          review_notes: updatedNotes,
-          manuscript_path: stored.relativePath,
-          manuscript_filename: stored.filename,
-          manuscript_size: stored.size,
-          manuscript_mime: stored.mime,
-          updated_at: now,
-        },
-      });
+      await prisma.$transaction(async (tx) => {
+        // Record new manuscript version
+        await tx.submission_files.create({
+          data: {
+            id: randomUUID(),
+            submission_id: id,
+            version: nextVersion,
+            file_type: "manuscript",
+            file_path: storedManuscript.relativePath,
+            filename: storedManuscript.filename,
+            file_size: storedManuscript.size,
+            file_mime: storedManuscript.mime,
+            brief: brief || `Revision ${nextVersion - 1}`,
+            uploaded_by: "author",
+            created_at: now,
+          },
+        });
 
-      // Cleanup old file best effort
-      if (oldPath) {
-        await discardManuscript(resolveManuscript(oldPath));
-      }
+        // Record new cover version if provided
+        if (storedCover) {
+          await tx.submission_files.create({
+            data: {
+              id: randomUUID(),
+              submission_id: id,
+              version: nextVersion,
+              file_type: "cover",
+              file_path: storedCover.relativePath,
+              filename: storedCover.filename,
+              file_size: storedCover.size,
+              file_mime: storedCover.mime,
+              brief: brief || `Revision ${nextVersion - 1} Cover`,
+              uploaded_by: "author",
+              created_at: now,
+            },
+          });
+        }
+
+        // Update active submission pointer
+        await tx.submissions.update({
+          where: { id },
+          data: {
+            status: "under_review",
+            review_notes: updatedNotes,
+            manuscript_path: storedManuscript.relativePath,
+            manuscript_filename: storedManuscript.filename,
+            manuscript_size: storedManuscript.size,
+            manuscript_mime: storedManuscript.mime,
+            ...(storedCover
+              ? {
+                  cover_path: storedCover.relativePath,
+                  cover_filename: storedCover.filename,
+                  cover_size: storedCover.size,
+                  cover_mime: storedCover.mime,
+                }
+              : {}),
+            updated_at: now,
+          },
+        });
+      });
     } catch (err) {
-      // If DB update fails, clean up the newly uploaded file to avoid leaving orphans
-      await discardManuscript(stored.absolutePath);
+      await discardManuscript(storedManuscript.absolutePath);
+      if (storedCover) {
+        await discardManuscript(storedCover.absolutePath);
+      }
       throw err;
     }
 
@@ -91,7 +199,29 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
           brief ? `Author's Revision Brief:\n"${brief}"\n\n` : ""
         }Please log into the PMS dashboard to review the changes.`,
       });
+
+      await createNotification(sub.reviewed_by, {
+        title: "Revised Manuscript Uploaded",
+        message: `"${sub.title}" (${sub.ref_no}) revised manuscript uploaded by ${sub.author_name}.`,
+        type: "SUBMISSION",
+        link: `/submissions/${sub.id}`,
+      });
     }
+
+    // In-app notifications to owner and author
+    await notifyRoles(["owner"], {
+      title: "Revised Manuscript Uploaded",
+      message: `"${sub.title}" revised file submitted by ${sub.author_name}.`,
+      type: "SUBMISSION",
+      link: `/submissions/${sub.id}`,
+    }, sub.reviewed_by || undefined);
+
+    await notifyAuthorByEmail(sub.email, {
+      title: "Revision Submitted",
+      message: `Your revised manuscript for "${sub.title}" has been received by the editorial board.`,
+      type: "SUBMISSION",
+      link: `/author`,
+    });
 
     await audit({
       userId: null,

@@ -7,6 +7,7 @@ import { requireApiCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseUserRoles } from "@/lib/roles";
 import { stamp } from "@/lib/time";
+import { notifyRoles } from "@/lib/notifications";
 
 const CreateUserSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
@@ -104,6 +105,14 @@ export const POST = handler(async (req: Request) => {
     detail: { email: user.email, name: user.name, role: user.role },
   });
 
+  await notifyRoles(["owner"], {
+    title: "New Team Member Added",
+    message: `${user.name} (${user.email}) added with role "${user.role}" by ${admin.name}.`,
+    type: "TEAM",
+    link: `/team`,
+  }, admin.id);
+
   return ok({ user });
 });
+
 

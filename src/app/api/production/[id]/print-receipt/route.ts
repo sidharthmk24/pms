@@ -8,6 +8,7 @@ import { stamp, dateOnly } from "@/lib/time";
 import { rupeesToPaise } from "@/lib/money";
 import { nextDocNo } from "@/lib/counters";
 import { queueEmail, productionStageCompletedEmail } from "@/lib/mail";
+import { notifyRoles, notifyAuthorByEmail } from "@/lib/notifications";
 
 const PrintJobSchema = z.object({
   qty: z.number().positive("Quantity ordered must be a positive number"),
@@ -82,7 +83,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     });
   });
 
-  await audit({
+    await audit({
     userId: user.id,
     action: "complete_production_printing",
     entity: "production_project",
@@ -104,7 +105,22 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     if (emailMatch) authorEmail = emailMatch[0];
   }
 
+  // In-app notifications to store, accounts, and production
+  await notifyRoles(["store", "accounts", "production", "owner"], {
+    title: "Print Stock Received",
+    message: `${data.qty} copies of "${proj.titles.name}" received from ${data.vendor || "printer"} into warehouse inventory.`,
+    type: "STOCK",
+    link: `/production/${id}`,
+  }, user.id);
+
   if (authorEmail) {
+    await notifyAuthorByEmail(authorEmail, {
+      title: "Books Printed & Received at Warehouse",
+      message: `${data.qty} copies of "${proj.titles.name}" printed and received at our central warehouse!`,
+      type: "STOCK",
+      link: `/author`,
+    });
+
     const host = req.headers.get("host") || "localhost:3000";
     const protoHeader = req.headers.get("x-forwarded-proto");
     const protocol = protoHeader || (host.includes("localhost") ? "http" : "https");
@@ -138,3 +154,4 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     status: "post_production",
   });
 });
+

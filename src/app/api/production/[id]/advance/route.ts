@@ -12,6 +12,14 @@ import {
   productionStageCompletedEmail,
   proofApprovalEmail,
 } from "@/lib/mail";
+import { notifyUsers, notifyRoles, notifyAuthorByEmail } from "@/lib/notifications";
+
+function getAssigneeList(primary: string | null, assignees: string | null): string[] {
+  const ids: string[] = [];
+  if (primary) ids.push(primary);
+  if (assignees) ids.push(...assignees.split(",").map((s) => s.trim()).filter(Boolean));
+  return Array.from(new Set(ids));
+}
 
 export const POST = handler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireApiCapability("production_pipeline.write");
@@ -132,6 +140,33 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       });
     }
 
+    // In-app notifications: Notify assigned editors & author
+    const editorAssignees = getAssigneeList(proj.editing_assigned_to, proj.editing_assignees);
+    if (editorAssignees.length > 0) {
+      await notifyUsers(editorAssignees, {
+        title: "Typesetting Complete — Editorial Review Active",
+        message: `Typesetting draft ready for "${proj.titles.name}". Editorial review is now active.`,
+        type: "TASK",
+        link: `/production/${id}`,
+      }, user.id);
+    } else {
+      await notifyRoles(["editor", "production"], {
+        title: "Typesetting Complete — Editorial Review Active",
+        message: `Typesetting draft ready for "${proj.titles.name}". Editorial review is now active.`,
+        type: "TASK",
+        link: `/production/${id}`,
+      }, user.id);
+    }
+
+    if (authorEmail) {
+      await notifyAuthorByEmail(authorEmail, {
+        title: "Typesetting (DTP) Completed",
+        message: `Interior page layout for "${proj.titles.name}" is completed and moved to editorial proofreading.`,
+        type: "PRODUCTION",
+        link: `/author`,
+      });
+    }
+
     return ok({ success: true });
   }
 
@@ -187,6 +222,33 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         template: "production_editing_complete",
         refType: "production_project",
         refId: id,
+      });
+    }
+
+    // In-app notifications: Notify cover designers & author
+    const coverAssignees = getAssigneeList(proj.cover_assigned_to, proj.cover_assignees);
+    if (coverAssignees.length > 0) {
+      await notifyUsers(coverAssignees, {
+        title: "Editorial Complete — Cover Design Active",
+        message: `Editorial proofreading complete for "${proj.titles.name}". Cover jacket design is now active.`,
+        type: "TASK",
+        link: `/production/${id}`,
+      }, user.id);
+    } else {
+      await notifyRoles(["designer", "production"], {
+        title: "Editorial Complete — Cover Design Active",
+        message: `Editorial proofreading complete for "${proj.titles.name}". Cover jacket design is now active.`,
+        type: "TASK",
+        link: `/production/${id}`,
+      }, user.id);
+    }
+
+    if (authorEmail) {
+      await notifyAuthorByEmail(authorEmail, {
+        title: "Editorial Proofreading Completed",
+        message: `Text corrections and editorial copyediting for "${proj.titles.name}" are finalized.`,
+        type: "PRODUCTION",
+        link: `/author`,
       });
     }
 
@@ -247,6 +309,33 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       });
     }
 
+    // In-app notifications: Notify ISBN specialists & author
+    const isbnAssignees = getAssigneeList(proj.isbn_assigned_to, proj.isbn_assignees);
+    if (isbnAssignees.length > 0) {
+      await notifyUsers(isbnAssignees, {
+        title: "Cover Art Complete — ISBN Registration Active",
+        message: `Cover design finalized for "${proj.titles.name}". Ready for ISBN application.`,
+        type: "TASK",
+        link: `/production/${id}`,
+      }, user.id);
+    } else {
+      await notifyRoles(["isbn", "production"], {
+        title: "Cover Art Complete — ISBN Registration Active",
+        message: `Cover design finalized for "${proj.titles.name}". Ready for ISBN application.`,
+        type: "TASK",
+        link: `/production/${id}`,
+      }, user.id);
+    }
+
+    if (authorEmail) {
+      await notifyAuthorByEmail(authorEmail, {
+        title: "Cover Artwork Completed",
+        message: `Book cover jacket artwork for "${proj.titles.name}" has been completed.`,
+        type: "PRODUCTION",
+        link: `/author`,
+      });
+    }
+
     return ok({ success: true });
   }
 
@@ -303,6 +392,13 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
           template: "production_isbn_requested",
           refType: "production_project",
           refId: id,
+        });
+
+        await notifyAuthorByEmail(authorEmail, {
+          title: "ISBN Application Submitted",
+          message: `ISBN application submitted for "${proj.titles.name}"${applicationRef ? ` (Ref: ${applicationRef})` : ""}.`,
+          type: "PRODUCTION",
+          link: `/author`,
         });
       }
 
@@ -397,6 +493,31 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         refId: id,
         attachments,
       });
+
+      await notifyAuthorByEmail(authorEmail, {
+        title: "Galley Proof Ready for Approval",
+        message: `ISBN ${isbn.trim()} assigned to "${proj.titles.name}". Digital galley proof is ready for your sign-off!`,
+        type: "PROOF",
+        link: `/author`,
+      });
+    }
+
+    // Notify proofreaders & production managers
+    const proofAssignees = getAssigneeList(proj.proof_assigned_to, proj.proof_assignees);
+    if (proofAssignees.length > 0) {
+      await notifyUsers(proofAssignees, {
+        title: "ISBN Registered — Galley Proof Stage",
+        message: `ISBN ${isbn.trim()} registered for "${proj.titles.name}". Final proof stage active.`,
+        type: "TASK",
+        link: `/production/${id}`,
+      }, user.id);
+    } else {
+      await notifyRoles(["proofreader", "production"], {
+        title: "ISBN Registered — Galley Proof Stage",
+        message: `ISBN ${isbn.trim()} registered for "${proj.titles.name}". Final proof stage active.`,
+        type: "TASK",
+        link: `/production/${id}`,
+      }, user.id);
     }
 
     return ok({ success: true, step: "number_allocated" });
@@ -455,7 +576,26 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
           refType: "production_project",
           refId: id,
         });
+
+        await notifyAuthorByEmail(authorEmail, {
+          title: "Proof Corrections Received",
+          message: `Correction notes for "${proj.titles.name}" recorded. Editorial board is applying revisions.`,
+          type: "PROOF",
+          link: `/author`,
+        });
       }
+
+      // Notify editors and proofreaders
+      const proofAndEditAssignees = [
+        ...getAssigneeList(proj.proof_assigned_to, proj.proof_assignees),
+        ...getAssigneeList(proj.editing_assigned_to, proj.editing_assignees),
+      ];
+      await notifyUsers(proofAndEditAssignees, {
+        title: "Proof Revision Requested",
+        message: `Corrections requested for "${proj.titles.name}": ${reworkNotes.trim()}`,
+        type: "TASK",
+        link: `/production/${id}`,
+      }, user.id);
 
       return ok({ success: true, action: "rework" });
     }
@@ -498,7 +638,22 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         refType: "production_project",
         refId: id,
       });
+
+      await notifyAuthorByEmail(authorEmail, {
+        title: "Proof Approved! Moving to Printing",
+        message: `Final proof approved for "${proj.titles.name}". Files dispatched to offset printing press.`,
+        type: "PRINT",
+        link: `/author`,
+      });
     }
+
+    // In-app notifications to production, store, accounts
+    await notifyRoles(["production", "store", "accounts", "owner"], {
+      title: "Proof Approved — Ready for Print Job",
+      message: `"${proj.titles.name}" final proof signed off. Ready for print job setup.`,
+      type: "PRINT",
+      link: `/production/${id}`,
+    }, user.id);
 
     return ok({ success: true, action: "approve" });
   }
@@ -541,10 +696,25 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         refType: "production_project",
         refId: id,
       });
+
+      await notifyAuthorByEmail(authorEmail, {
+        title: "Printing Completed — In Stock",
+        message: `Printing run completed for "${proj.titles.name}". Copies arriving at warehouse for courier dispatch.`,
+        type: "PRINT",
+        link: `/author`,
+      });
     }
+
+    await notifyRoles(["store", "accounts", "production", "owner"], {
+      title: "Printing Run Complete",
+      message: `Printing completed for "${proj.titles.name}". Moving to warehouse intake & post-production.`,
+      type: "PRINT",
+      link: `/production/${id}`,
+    }, user.id);
 
     return ok({ success: true, next: "post_production" });
   }
 
   return fail(400, "Cannot advance stage from current status");
 });
+

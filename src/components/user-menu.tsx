@@ -331,7 +331,7 @@ export default function UserMenu({
               <div className="flex items-start justify-between border-b border-[#7e2562]/10 pb-5">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    y
+                    
                     <span className="text-xs text-muted-foreground font-medium">Account Settings</span>
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-black text-foreground  tracking-tight">

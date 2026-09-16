@@ -8,6 +8,8 @@ import { encodeContractNotes, parseContractNotes } from "@/lib/contracts";
 import { prisma } from "@/lib/prisma";
 import { stamp } from "@/lib/time";
 
+import { notifyRoles, notifyAuthorByEmail } from "@/lib/notifications";
+
 const SignSchema = z.object({
   party: z.enum(["publisher", "author"]),
   signerName: z.string().trim().min(2, "Signer name required"),
@@ -135,12 +137,28 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       });
     }
 
+    // In-app notifications to staff
+    await notifyRoles(["owner", "accounts", "production"], {
+      title: "Publishing Agreement Executed",
+      message: `"${contract.titles.name}" is dual-signed! Title has entered the production pipeline.`,
+      type: "PRODUCTION",
+      link: `/production`,
+    });
+
+    // In-app notification to author
+    if (contract.authors?.email) {
+      await notifyAuthorByEmail(contract.authors.email, {
+        title: "Agreement Executed! Book in Production",
+        message: `Your publishing agreement for "${contract.titles.name}" is legally executed. Our team is initiating typesetting & design.`,
+        type: "PRODUCTION",
+        link: `/author`,
+      });
+    }
+
     // Send execution confirmation email to author
     if (data.party === "author" && contract.authors?.email) {
       const host = req.headers.get("host") || "localhost:3000";
       const protocol = req.headers.get("x-forwarded-proto") || "http";
-      const contractUrl = `${protocol}://${host}/publish/contract/${id}`;
-      const setupUrl = `${protocol}://${host}/author/setup?email=${encodeURIComponent(contract.authors.email)}&contract=${id}`;
 
       await queueEmail({
         to: contract.authors.email,
@@ -160,6 +178,14 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         refId: id,
       });
     }
+  } else if (data.party === "author") {
+    // Notify staff when author signs first
+    await notifyRoles(["owner", "accounts"], {
+      title: "Contract Signed by Author",
+      message: `"${contract.titles.name}" signed by ${data.signerName}. Awaiting publisher execution.`,
+      type: "CONTRACT",
+      link: `/contracts`,
+    });
   }
 
   return ok({
@@ -169,4 +195,5 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     status: isDualSigned ? "signed" : data.party === "publisher" ? "awaiting_author" : "awaiting_publisher",
   });
 });
+
 
