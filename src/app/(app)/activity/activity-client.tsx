@@ -279,9 +279,15 @@ export function resolveEntityDisplayName(
   if (ent === "user" || lookup.users[entityId]) {
     const u = lookup.users[entityId];
     if (u) {
+      const formattedRole = u.role
+        ? u.role
+            .split(",")
+            .map((r) => r.trim().replace(/\b\w/g, (c) => c.toUpperCase()))
+            .join(", ")
+        : "";
       return {
         name: u.name,
-        subtitle: `${u.role.toUpperCase()} · ${u.email}`,
+        subtitle: formattedRole ? `${formattedRole} · ${u.email}` : u.email,
       };
     }
   }
@@ -336,6 +342,51 @@ function formatFieldLabel(key: string): string {
   return key
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+export const STATUS_BADGE_MAP: Record<string, { label: string; className: string }> = {
+  new: { label: "Pending Review", className: "bg-amber-50 text-amber-800 border-amber-300 font-bold" },
+  pending_review: { label: "Pending Review", className: "bg-amber-50 text-amber-800 border-amber-300 font-bold" },
+  pending: { label: "Pending", className: "bg-amber-50 text-amber-800 border-amber-300 font-bold" },
+  under_review: { label: "Under Review", className: "bg-blue-50 text-blue-800 border-blue-300 font-bold" },
+  in_review: { label: "Under Review", className: "bg-blue-50 text-blue-800 border-blue-300 font-bold" },
+  needs_revision: { label: "Needs Revision", className: "bg-orange-50 text-orange-800 border-orange-300 font-bold" },
+  accepted: { label: "Accepted", className: "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-2xs" },
+  approved: { label: "Approved", className: "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-2xs" },
+  active: { label: "Active", className: "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-2xs" },
+  completed: { label: "Completed / Live", className: "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-2xs" },
+  declined: { label: "Declined", className: "bg-rose-50 text-rose-800 border-rose-300 font-bold" },
+  rejected: { label: "Declined", className: "bg-rose-50 text-rose-800 border-rose-300 font-bold" },
+  cancelled: { label: "Cancelled", className: "bg-rose-50 text-rose-800 border-rose-300 font-bold" },
+  in_progress: { label: "In Progress", className: "bg-purple-50 text-purple-700 border-purple-300 font-bold" },
+  under_contract: { label: "Under Contract", className: "bg-slate-100 text-slate-700 border-slate-300 font-bold" },
+  dtp: { label: "DTP (Typesetting)", className: "bg-sky-50 text-sky-800 border-sky-300 font-bold" },
+  editing: { label: "Editing & Proofreading", className: "bg-amber-50 text-amber-800 border-amber-300 font-bold" },
+  cover_design: { label: "Cover Design", className: "bg-pink-50 text-pink-800 border-pink-300 font-bold" },
+  isbn_registration: { label: "ISBN Registration", className: "bg-blue-50 text-blue-800 border-blue-300 font-bold" },
+  final_proof: { label: "Author Final Proof", className: "bg-orange-50 text-orange-800 border-orange-300 font-bold" },
+  printing: { label: "Printing Run", className: "bg-[#faedf5] text-[#7e2562] border-[#7e2562]/35 font-bold" },
+  post_production: { label: "Post-Production Intake", className: "bg-teal-50 text-teal-800 border-teal-300 font-bold" },
+  archived: { label: "Archived", className: "bg-gray-100 text-gray-700 border-gray-200 font-semibold" },
+  withdrawn: { label: "Withdrawn", className: "bg-gray-100 text-gray-700 border-gray-200 font-semibold" },
+  draft: { label: "Draft", className: "bg-gray-100 text-gray-700 border-gray-200 font-semibold" },
+};
+
+export function getStatusBadge(key: string, val: any): { label: string; className: string } | null {
+  if (val === null || val === undefined) return null;
+  const normKey = key.toLowerCase();
+  const strVal = String(val).toLowerCase().trim();
+
+  if (STATUS_BADGE_MAP[strVal]) {
+    return STATUS_BADGE_MAP[strVal];
+  }
+  if (normKey === "status" || normKey.endsWith("_status") || normKey === "state") {
+    return {
+      label: strVal.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      className: "bg-slate-100 text-slate-700 border border-slate-300 font-bold",
+    };
+  }
+  return null;
 }
 
 /** Helper to resolve human-readable values in payload detail fields */
@@ -1278,32 +1329,37 @@ export default function ActivityClient({
                 </div>
 
                 {/* Actor Card */}
-                <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Actor Information
-                  </span>
-                  <div className="rounded-xl border border-black/8 bg-white px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-bold text-foreground">
-                        {inspectItem.users?.name ?? "System Automated"}
-                      </p>
-                      {inspectItem.users && (
-                        <span className="inline-flex items-center rounded-md bg-[#7e2562]/10 px-1.5 py-0.5 text-[10px] font-bold capitalize text-[#7e2562]">
-                          {inspectItem.users.role}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground truncate">
+                <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2 flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Actor Information
+                    </span>
+                    {inspectItem.users?.role && (
+                      <span className="inline-flex items-center rounded-md bg-[#7e2562]/10 px-1.5 py-0.5 text-[10px] font-bold capitalize text-[#7e2562]">
+                        {inspectItem.users.role.split(",")[0].trim()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="rounded-xl border border-black/8 bg-white px-3 py-2 space-y-0.5">
+                    <p className="text-xs font-bold text-foreground">
+                      {inspectItem.users?.name ?? "System Automated"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground truncate" title={inspectItem.users ? inspectItem.users.email : "Automated background job"}>
                       {inspectItem.users ? inspectItem.users.email : "Automated background job"}
                     </p>
                   </div>
                 </div>
 
                 {/* Target Entity with Resolved Human-Readable Name */}
-                <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Target Entity
-                  </span>
+                <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2 flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Target Entity
+                    </span>
+                    <span className="inline-flex items-center rounded-md border border-black/10 bg-white px-2 py-0.5 text-[10px] font-bold uppercase text-foreground shadow-2xs">
+                      {inspectItem.entity.replace(/_/g, " ")}
+                    </span>
+                  </div>
                   {(() => {
                     const resolved = resolveEntityDisplayName(
                       inspectItem.entity,
@@ -1311,32 +1367,27 @@ export default function ActivityClient({
                       entityLookup
                     );
                     return (
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center rounded-md border border-black/10 bg-white px-2 py-0.5 text-[11px] font-bold uppercase text-foreground">
-                            {inspectItem.entity}
-                          </span>
+                      <div className="rounded-xl border border-black/8 bg-white px-3 py-2 space-y-1.5">
+                        <div className="space-y-0.5">
+                          <p className="text-xs font-bold text-foreground">
+                            {resolved ? resolved.name : `${inspectItem.entity.replace(/_/g, " ")} Record`}
+                          </p>
                           {resolved?.subtitle && (
-                            <span className="text-xs font-medium text-muted-foreground">
+                            <p className="text-[11px] text-muted-foreground truncate" title={resolved.subtitle}>
                               {resolved.subtitle}
-                            </span>
+                            </p>
                           )}
                         </div>
 
-                        {resolved && (
-                          <div className="rounded-xl border border-black/8 bg-white px-3 py-2">
-                            <p className="text-xs font-bold text-foreground">{resolved.name}</p>
-                          </div>
-                        )}
-
                         {inspectItem.entity_id && (
-                          <div className="flex items-center justify-between gap-2 rounded-xl border border-black/8 bg-white px-3 py-1.5">
-                            <span className="font-mono text-[11px] text-muted-foreground break-all select-all">
+                          <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-black/5 mt-1">
+                            <span className="font-mono text-[10px] text-muted-foreground truncate select-all">
                               ID: {inspectItem.entity_id}
                             </span>
                             <button
+                              type="button"
                               onClick={() => handleCopy(inspectItem.entity_id!, "modal-ent-id")}
-                              className="shrink-0 p-1 text-muted-foreground hover:text-foreground rounded hover:bg-black/5 transition-colors"
+                              className="shrink-0 p-0.5 text-muted-foreground hover:text-foreground rounded hover:bg-black/5 transition-colors cursor-pointer"
                               title="Copy Entity ID"
                             >
                               {copiedId === "modal-ent-id" ? (
@@ -1371,8 +1422,7 @@ export default function ActivityClient({
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
-                          <Sparkles className="h-3 w-3 text-[#7e2562]" />
-                          <span>Readable View</span>
+                          <span></span>
                         </button>
                        
                       </div>
@@ -1388,24 +1438,34 @@ export default function ActivityClient({
                       {parsedDetailEntries.map(([key, val]) => {
                         const { display, rawId } = resolveFieldValue(key, val, entityLookup);
                         const label = formatFieldLabel(key);
+                        const statusBadge = getStatusBadge(key, val);
 
                         return (
                           <div
                             key={key}
-                            className="rounded-2xl border border-black/8 bg-slate-50/90 p-3.5 space-y-1"
+                            className="rounded-2xl border border-black/8 bg-slate-50/90 p-3.5 space-y-1.5"
                           >
                             <span className="text-[11px] font-bold text-muted-foreground">
                               {label}
                             </span>
-                            <p className="text-xs font-bold text-foreground break-words">{display}</p>
+                            {statusBadge ? (
+                              <div>
+                                <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-bold ${statusBadge.className}`}>
+                                  {statusBadge.label}
+                                </span>
+                              </div>
+                            ) : (
+                              <p className="text-xs font-bold text-foreground break-words">{display}</p>
+                            )}
                             {rawId && (
                               <div className="mt-1 flex items-center justify-between gap-1 border-t border-black/5 pt-1">
                                 <span className="font-mono text-[10px] text-muted-foreground/80 truncate">
                                   ID: {rawId}
                                 </span>
                                 <button
+                                  type="button"
                                   onClick={() => handleCopy(rawId, `field-${key}`)}
-                                  className="p-0.5 text-muted-foreground hover:text-foreground"
+                                  className="p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
                                   title="Copy ID"
                                 >
                                   {copiedId === `field-${key}` ? (

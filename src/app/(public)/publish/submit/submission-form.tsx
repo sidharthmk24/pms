@@ -839,114 +839,116 @@ export default function SubmissionForm({
               </div>
             </div>
 
-            <div className="sm:col-span-2">
-              <Label htmlFor="manuscript" required>Manuscript Document File</Label>
-              <div className="group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#7e2562]/25 bg-[#faf6f9]/60 p-7 transition-all hover:border-[#7e2562]/60 hover:bg-[#faf6f9] cursor-pointer">
-                <input
-                  id="manuscript"
-                  name="manuscript"
-                  type="file"
-                  accept={ACCEPT}
-                  onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
-                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0 z-10"
-                />
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#7e2562]/10 text-[#7e2562] mb-3 transition-transform duration-200 group-hover:scale-110 pointer-events-none">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                  </svg>
+            {/* Side-by-Side Square Upload Cards */}
+            <div className="sm:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
+              {/* Manuscript Document File */}
+              <div className="flex flex-col h-full">
+                <div className="mb-2">
+                  <Label htmlFor="manuscript" required>Manuscript Document File</Label>
                 </div>
-                <div className="flex flex-col sm:flex-row items-center gap-2 text-center pointer-events-none">
-                  <span className="rounded-xl bg-[#7e2562] px-4 py-2 text-xs font-bold text-white shadow-plum-sm group-hover:bg-[#681b50] transition-colors">
-                    {fileName ? "Change File" : "Choose File"}
-                  </span>
-                  <span className="text-sm font-semibold text-foreground">
-                    {fileName ? fileName : "or click / drag and drop here"}
-                  </span>
+                <div className="group relative flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#7e2562]/25 bg-[#faf6f9]/60 p-6 min-h-[220px] transition-all hover:border-[#7e2562]/60 hover:bg-[#faf6f9] cursor-pointer text-center">
+                  <input
+                    id="manuscript"
+                    name="manuscript"
+                    type="file"
+                    accept={ACCEPT}
+                    onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 z-10"
+                  />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#7e2562]/10 text-[#7e2562] mb-3 transition-transform duration-200 group-hover:scale-110 pointer-events-none">
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col items-center gap-1.5 pointer-events-none">
+                    <span className="rounded-xl bg-[#7e2562] px-4 py-2 text-xs font-bold text-white shadow-plum-sm group-hover:bg-[#681b50] transition-colors">
+                      {fileName ? "Change File" : "Choose File"}
+                    </span>
+                    <span className="text-xs font-semibold text-foreground max-w-[200px] truncate">
+                      {fileName ? fileName : "or click / drag and drop here"}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[11px] font-semibold text-[#7e2562] pointer-events-none">
+                    {fileName ? `✓ Ready to upload` : `PDF, DOC, DOCX or ODT · Max ${MAX_MB} MB`}
+                  </p>
                 </div>
-                <p className="mt-3 text-xs font-semibold text-[#7e2562] pointer-events-none text-center">
-                  {fileName ? `✓ Selected: ${fileName}` : `Supported: PDF, DOC, DOCX or ODT · Max ${MAX_MB} MB`}
-                </p>
+                <ErrorText message={errors.manuscript} />
               </div>
-              <ErrorText message={errors.manuscript} />
-            </div>
 
-            {/* Optional Cover Design Section */}
-            <div className="sm:col-span-2">
-              <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="cover">
-                  Book Cover Design <span className="text-muted-foreground font-normal text-xs">(Optional)</span>
-                </Label>
-                {coverFileName && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveCover}
-                    className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
-                  >
-                    Remove Cover
-                  </button>
-                )}
-              </div>
-              <div className="group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#7e2562]/20 bg-[#faedf5]/30 p-6 transition-all hover:border-[#7e2562]/50 hover:bg-[#faedf5]/60 cursor-pointer">
-                <input
-                  ref={coverInputRef}
-                  id="cover"
-                  name="cover"
-                  type="file"
-                  accept=".pdf,.png,.jpg,.jpeg,.webp"
-                  onChange={handleCoverChange}
-                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0 z-10"
-                />
-                
-                {coverPreviewUrl ? (
-                  <div className="flex flex-col sm:flex-row items-center gap-4 pointer-events-none w-full max-w-md bg-white p-3 rounded-xl border border-[#7e2562]/20 shadow-2xs">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={coverPreviewUrl}
-                      alt="Cover Preview"
-                      className="h-20 w-16 object-cover rounded-lg shadow-xs border border-gray-200"
-                    />
-                    <div className="flex-1 min-w-0 text-left">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 mb-1">
-                        ✓ Cover Image Selected
+              {/* Optional Cover Design Section */}
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="cover">
+                    Book Cover Design <span className="text-muted-foreground font-normal text-xs">(Optional)</span>
+                  </Label>
+                  {coverFileName && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveCover}
+                      className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
+                    >
+                      Remove Cover
+                    </button>
+                  )}
+                </div>
+                <div className="group relative flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#7e2562]/20 bg-[#faedf5]/30 p-6 min-h-[220px] transition-all hover:border-[#7e2562]/50 hover:bg-[#faedf5]/60 cursor-pointer text-center">
+                  <input
+                    ref={coverInputRef}
+                    id="cover"
+                    name="cover"
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp"
+                    onChange={handleCoverChange}
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 z-10"
+                  />
+                  
+                  {coverPreviewUrl ? (
+                    <div className="flex flex-col items-center gap-2 pointer-events-none w-full max-w-[220px]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={coverPreviewUrl}
+                        alt="Cover Preview"
+                        className="h-20 w-16 object-cover rounded-lg shadow-xs border border-gray-200"
+                      />
+                      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 truncate max-w-full">
+                        ✓ {coverFileName}
                       </span>
-                      <p className="text-xs font-bold text-foreground truncate">{coverFileName}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">Click or drop to replace</p>
+                      <p className="text-[10px] text-muted-foreground">Click or drop to replace</p>
                     </div>
-                  </div>
-                ) : coverFileName ? (
-                  <div className="flex items-center gap-3 pointer-events-none bg-white px-4 py-2.5 rounded-xl border border-[#7e2562]/20 shadow-2xs">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#7e2562]/10 text-[#7e2562]">
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs font-bold text-foreground truncate">{coverFileName}</p>
+                  ) : coverFileName ? (
+                    <div className="flex flex-col items-center gap-2 pointer-events-none">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#7e2562]/10 text-[#7e2562]">
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-xs font-bold text-foreground truncate max-w-[180px]">{coverFileName}</p>
                       <span className="text-[10px] text-emerald-700 font-semibold">✓ Document / PDF Attached</span>
+                      <p className="text-[10px] text-muted-foreground">Click or drop to replace</p>
                     </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#7e2562]/10 text-[#7e2562] mb-2 transition-transform duration-200 group-hover:scale-110 pointer-events-none">
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-center gap-2 text-center pointer-events-none">
-                      <span className="rounded-xl border border-[#7e2562]/30 bg-white px-3.5 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs group-hover:bg-[#faedf5] transition-colors">
-                        Choose Cover File
-                      </span>
-                      <span className="text-xs font-medium text-muted-foreground">
-                        or click / drag and drop here
-                      </span>
-                    </div>
-                    <p className="mt-2 text-[11px] text-muted-foreground pointer-events-none text-center">
-                      Attach artwork concept, illustration, or draft layout (PDF, PNG, JPG, or WEBP · Max 25 MB)
-                    </p>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#7e2562]/10 text-[#7e2562] mb-3 transition-transform duration-200 group-hover:scale-110 pointer-events-none">
+                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex flex-col items-center gap-1.5 pointer-events-none">
+                        <span className="rounded-xl border border-[#7e2562]/30 bg-white px-3.5 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs group-hover:bg-[#faedf5] transition-colors">
+                          Choose Cover File
+                        </span>
+                        <span className="text-xs font-medium text-muted-foreground">
+                          or click / drag and drop here
+                        </span>
+                      </div>
+                      <p className="mt-2 text-[11px] text-muted-foreground pointer-events-none">
+                        PDF, PNG, JPG, or WEBP · Max 25 MB
+                      </p>
+                    </>
+                  )}
+                </div>
+                <ErrorText message={errors.cover} />
               </div>
-              <ErrorText message={errors.cover} />
             </div>
           </div>
         </section>

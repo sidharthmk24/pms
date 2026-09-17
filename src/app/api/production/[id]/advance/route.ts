@@ -85,6 +85,196 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     jsonData = await req.json().catch(() => null);
   }
 
+  const isEditMode =
+    formData?.get("is_edit") === "true" ||
+    formData?.get("is_edit") === "1" ||
+    Boolean(jsonData?.is_edit);
+
+  const targetStage =
+    (formData?.get("target_stage") as string) ||
+    jsonData?.target_stage ||
+    proj.status;
+
+  // --- EDIT MODE HANDLERS (Update files & metadata without altering pipeline progress) ---
+  if (isEditMode) {
+    if (targetStage === "dtp" || targetStage === "editing") {
+      let final_layout_path = proj.final_layout_path;
+      if (formData) {
+        const file = formData.get("layout_file") as File | null;
+        if (file && file.size > 0) {
+          final_layout_path = await storeProductionFile(
+            file,
+            [
+              "application/pdf",
+              "application/msword",
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ],
+            ["pdf", "doc", "docx"],
+            user.id
+          );
+        }
+      }
+
+      await prisma.production_projects.update({
+        where: { id },
+        data: {
+          final_layout_path,
+          updated_at: now,
+        },
+      });
+
+      await audit({
+        userId: user.id,
+        action: `update_production_${targetStage}_data`,
+        entity: "production_project",
+        entityId: id,
+        detail: { project_id: id, final_layout_path, edited_stage: targetStage },
+      });
+
+      return ok({ success: true, is_edit: true, stage: targetStage });
+    }
+
+    if (targetStage === "cover_design") {
+      let final_cover_path = proj.final_cover_path;
+      if (formData) {
+        const file = formData.get("cover_file") as File | null;
+        if (file && file.size > 0) {
+          final_cover_path = await storeProductionFile(
+            file,
+            ["image/png", "image/jpeg", "image/webp", "application/pdf"],
+            ["png", "jpg", "jpeg", "webp", "pdf"],
+            user.id
+          );
+        }
+      }
+
+      await prisma.production_projects.update({
+        where: { id },
+        data: {
+          final_cover_path,
+          updated_at: now,
+        },
+      });
+
+      await audit({
+        userId: user.id,
+        action: "update_production_cover_data",
+        entity: "production_project",
+        entityId: id,
+        detail: { project_id: id, final_cover_path, edited_stage: "cover_design" },
+      });
+
+      return ok({ success: true, is_edit: true, stage: "cover_design" });
+    }
+
+    if (targetStage === "isbn_registration") {
+      let isbn = "";
+      let applicationRef = "";
+
+      if (formData) {
+        isbn = (formData.get("isbn") as string) || "";
+        applicationRef = (formData.get("application_ref") as string) || "";
+      } else if (jsonData) {
+        isbn = jsonData.isbn || "";
+        applicationRef = jsonData.application_ref || "";
+      }
+
+      const trimmedIsbn = isbn.trim();
+      const trimmedRef = applicationRef.trim();
+
+      if (trimmedIsbn) {
+        // Validate ISBN uniqueness against other titles
+        const existingTitleWithIsbn = await prisma.titles.findFirst({
+          where: {
+            isbn: trimmedIsbn,
+            id: { not: proj.title_id },
+          },
+          select: { id: true, name: true },
+        });
+
+        if (existingTitleWithIsbn) {
+          return fail(
+            409,
+            `This ISBN (${trimmedIsbn}) already exists and is assigned to "${existingTitleWithIsbn.name}". Please check and enter a unique ISBN.`
+          );
+        }
+
+        try {
+          await prisma.$transaction(async (tx) => {
+            await tx.production_projects.update({
+              where: { id },
+              data: {
+                isbn_registered: trimmedIsbn,
+                ...(trimmedRef ? { isbn_request_ref: trimmedRef } : {}),
+                updated_at: now,
+              },
+            });
+
+            await tx.titles.update({
+              where: { id: proj.title_id },
+              data: { isbn: trimmedIsbn },
+            });
+          });
+        } catch (err: any) {
+          if (err?.code === "P2002" || String(err?.message || "").includes("Unique constraint")) {
+            return fail(
+              409,
+              `This ISBN (${trimmedIsbn}) already exists in the catalog. Please enter a unique ISBN.`
+            );
+          }
+          throw err;
+        }
+      } else if (trimmedRef) {
+        await prisma.production_projects.update({
+          where: { id },
+          data: {
+            isbn_request_ref: trimmedRef,
+            updated_at: now,
+          },
+        });
+      }
+
+      await audit({
+        userId: user.id,
+        action: "update_production_isbn_data",
+        entity: "production_project",
+        entityId: id,
+        detail: { project_id: id, isbn: trimmedIsbn, application_ref: trimmedRef },
+      });
+
+      return ok({ success: true, is_edit: true, stage: "isbn_registration" });
+    }
+
+    if (targetStage === "final_proof") {
+      let feedback = "";
+      if (formData) {
+        feedback = (formData.get("proof_feedback") as string) || (formData.get("rework_notes") as string) || "";
+      } else if (jsonData) {
+        feedback = jsonData.proof_feedback || jsonData.rework_notes || "";
+      }
+
+      await prisma.production_projects.update({
+        where: { id },
+        data: {
+          proof_feedback: feedback.trim() || proj.proof_feedback,
+          updated_at: now,
+        },
+      });
+
+      await audit({
+        userId: user.id,
+        action: "update_production_proof_data",
+        entity: "production_project",
+        entityId: id,
+        detail: { project_id: id, proof_feedback: feedback },
+      });
+
+      return ok({ success: true, is_edit: true, stage: "final_proof" });
+    }
+
+    return fail(400, "Unsupported stage for editing");
+  }
+
   // --- STAGE 1: DTP (Typesetting & Layout) ---
   if (proj.status === "dtp") {
     let final_layout_path = proj.final_layout_path;
@@ -410,28 +600,56 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       return fail(400, "ISBN number must be at least 5 characters");
     }
 
+    const trimmedIsbn = isbn.trim();
+
+    // Check if this ISBN is already assigned to another title
+    const existingTitleWithIsbn = await prisma.titles.findFirst({
+      where: {
+        isbn: trimmedIsbn,
+        id: { not: proj.title_id },
+      },
+      select: { id: true, name: true },
+    });
+
+    if (existingTitleWithIsbn) {
+      return fail(
+        409,
+        `This ISBN (${trimmedIsbn}) already exists and is assigned to "${existingTitleWithIsbn.name}". Please check and enter a unique ISBN.`
+      );
+    }
+
     const proofToken = proj.proof_token || randomUUID();
 
-    await prisma.$transaction(async (tx) => {
-      // 1. Update production project stage
-      await tx.production_projects.update({
-        where: { id },
-        data: {
-          status: "final_proof",
-          isbn_completed_at: now,
-          isbn_registered: isbn.trim(),
-          proof_token: proofToken,
-          proof_email_sent_at: now,
-          updated_at: now,
-        },
-      });
+    try {
+      await prisma.$transaction(async (tx) => {
+        // 1. Update production project stage
+        await tx.production_projects.update({
+          where: { id },
+          data: {
+            status: "final_proof",
+            isbn_completed_at: now,
+            isbn_registered: trimmedIsbn,
+            proof_token: proofToken,
+            proof_email_sent_at: now,
+            updated_at: now,
+          },
+        });
 
-      // 2. Set the ISBN on the linked title record
-      await tx.titles.update({
-        where: { id: proj.title_id },
-        data: { isbn: isbn.trim() },
+        // 2. Set the ISBN on the linked title record
+        await tx.titles.update({
+          where: { id: proj.title_id },
+          data: { isbn: trimmedIsbn },
+        });
       });
-    });
+    } catch (err: any) {
+      if (err?.code === "P2002" || String(err?.message || "").includes("Unique constraint")) {
+        return fail(
+          409,
+          `This ISBN (${trimmedIsbn}) already exists in the catalog. Please enter a unique ISBN.`
+        );
+      }
+      throw err;
+    }
 
     await audit({
       userId: user.id,
@@ -495,8 +713,8 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       });
 
       await notifyAuthorByEmail(authorEmail, {
-        title: "Galley Proof Ready for Approval",
-        message: `ISBN ${isbn.trim()} assigned to "${proj.titles.name}". Digital galley proof is ready for your sign-off!`,
+        title: "Book Proof Ready for Approval",
+        message: `ISBN ${isbn.trim()} assigned to "${proj.titles.name}". Digital proof layout is ready for your sign-off!`,
         type: "PROOF",
         link: `/author`,
       });
@@ -506,14 +724,14 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     const proofAssignees = getAssigneeList(proj.proof_assigned_to, proj.proof_assignees);
     if (proofAssignees.length > 0) {
       await notifyUsers(proofAssignees, {
-        title: "ISBN Registered — Galley Proof Stage",
+        title: "ISBN Registered — Final Proof Stage",
         message: `ISBN ${isbn.trim()} registered for "${proj.titles.name}". Final proof stage active.`,
         type: "TASK",
         link: `/production/${id}`,
       }, user.id);
     } else {
       await notifyRoles(["proofreader", "production"], {
-        title: "ISBN Registered — Galley Proof Stage",
+        title: "ISBN Registered — Final Proof Stage",
         message: `ISBN ${isbn.trim()} registered for "${proj.titles.name}". Final proof stage active.`,
         type: "TASK",
         link: `/production/${id}`,

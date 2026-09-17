@@ -425,15 +425,15 @@ export default function TeamClient({
                       </td>
 
                       {/* Status indicator */}
-                      <td className="px-6 py-4.5">
+                      <td className="px-6 py-4.5 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
+                          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${
                             user.active
                               ? "bg-success/10 text-success"
                               : "bg-danger/10 text-danger"
                           }`}
                         >
-                          <span className={`h-1.5 w-1.5 rounded-full ${user.active ? "bg-success" : "bg-danger"}`} />
+                          <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${user.active ? "bg-success" : "bg-danger"}`} />
                           {user.active ? "Active" : "Deactivated"}
                         </span>
                       </td>
@@ -469,7 +469,7 @@ export default function TeamClient({
                                   : "border-success/20 bg-success/5 text-success hover:bg-success/10"
                               }`}
                             >
-                              {user.active ? "Deactivate" : "Activate"}
+                              {user.active ? "Deactivate" : "Reactivate"}
                             </button>
                           )}
                         </div>

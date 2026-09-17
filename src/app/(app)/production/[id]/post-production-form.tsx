@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import StageConfirmModal from "@/components/stage-confirm-modal";
 
 export default function PostProductionForm({
   projectId,
@@ -37,12 +38,13 @@ export default function PostProductionForm({
 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Calculated usable copies & commercial intake
   const usableCopies = Math.max(0, receivedQty - damagedQty);
   const netWarehouseCopies = Math.max(0, usableCopies - authorCopiesQty);
 
-  async function onSubmit(e: React.FormEvent) {
+  function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!qcPassed) {
       setError("Quality Control (QC) inspection must be verified and approved to complete post-production.");
@@ -56,7 +58,10 @@ export default function PostProductionForm({
       setError(`Author copies (${authorCopiesQty}) cannot exceed usable copies (${usableCopies}).`);
       return;
     }
+    setShowConfirmModal(true);
+  }
 
+  async function executeSubmit() {
     setPending(true);
     setError(null);
 
@@ -80,18 +85,21 @@ export default function PostProductionForm({
       const body = await res.json();
       if (!res.ok || !body.ok) {
         setError(body?.error ?? "Failed to complete post-production and warehouse handover");
+        setShowConfirmModal(false);
       } else {
+        setShowConfirmModal(false);
         router.refresh();
       }
     } catch {
       setError("Failed to connect to server");
+      setShowConfirmModal(false);
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-3xl border border-[#7e2562]/15 bg-surface p-6 shadow-sm dark:border-white/10 space-y-7 font-sans">
+    <form onSubmit={handleFormSubmit} className="rounded-3xl border border-[#7e2562]/15 bg-surface p-6 shadow-sm dark:border-white/10 space-y-7 font-sans">
       {/* Header Banner */}
       <div className="border-b border-black/10 pb-4 dark:border-white/10">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -287,6 +295,28 @@ export default function PostProductionForm({
           {pending ? "Completing Post-Production..." : "Complete Post-Production & Mark Book Live →"}
         </button>
       </div>
+
+      {/* Confirmation Modal */}
+      <StageConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={() => executeSubmit()}
+        pending={pending}
+        title="Complete Post-Production & Publish?"
+        subtitle="This final milestone concludes the production lifecycle and marks the title live in the catalog."
+        currentStage="Post-Production Intake"
+        nextStage="Completed & Live"
+        description="Warehouse inventory will be credited, author copies recorded, and a publication celebration dispatch will be logged."
+        metadata={[
+          { label: "Delivered Print Copies", value: `${receivedQty.toLocaleString()} copies`, isMono: true },
+          { label: "Transit Damages", value: `-${damagedQty}`, isMono: true, isNegative: damagedQty > 0 },
+          { label: "Author Advance Copies", value: `-${authorCopiesQty}`, isMono: true },
+          { label: "Net Inventory Intake", value: `+${netWarehouseCopies.toLocaleString()} copies`, isMono: true, isPositive: true },
+        ]}
+        confirmText="Yes, Complete & Publish →"
+        confirmVariant="primary"
+        iconType="publish"
+      />
     </form>
   );
 }

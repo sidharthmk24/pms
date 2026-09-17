@@ -393,24 +393,24 @@ export default function SigningClient({
 
         {/* Commercial Terms Summary Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-black/[0.06] border-b border-black/[0.06] bg-surface-muted/30 dark:divide-white/[0.08] dark:border-white/[0.08]">
-          <div className="p-3 text-center sm:text-left">
+          <div className="p-4 text-center flex flex-col items-center justify-center">
             <span className="text-[11px] font-bold text-muted-foreground">Royalty Rate</span>
             <p className="mt-0.5 text-lg font-black text-foreground">{contract.royalty_pct}%</p>
             <span className="text-[10px] text-muted-foreground uppercase">{contract.basis} basis</span>
           </div>
-          <div className="p-3 text-center sm:text-left">
+          <div className="p-4 text-center flex flex-col items-center justify-center">
             <span className="text-[11px] font-bold text-muted-foreground">Advance on Signing</span>
             <p className="mt-0.5 text-lg font-black text-foreground">
               {contract.advance_paise > 0 ? formatPaise(contract.advance_paise) : "None"}
             </p>
             <span className="text-[10px] text-muted-foreground">Non-refundable</span>
           </div>
-          <div className="p-3 text-center sm:text-left">
+          <div className="p-4 text-center flex flex-col items-center justify-center">
             <span className="text-[11px] font-bold text-muted-foreground">Author Free Copies</span>
             <p className="mt-0.5 text-lg font-black text-foreground">{meta.free_copies}</p>
             <span className="text-[10px] text-muted-foreground">Complimentary</span>
           </div>
-          <div className="p-3 text-center sm:text-left">
+          <div className="p-4 text-center flex flex-col items-center justify-center">
             <span className="text-[11px] font-bold text-muted-foreground">Contract Term</span>
             <p className="mt-0.5 text-lg font-black text-foreground">{meta.term_years} Years</p>
             <span className="text-[10px] text-muted-foreground">Exclusive Print</span>
@@ -997,7 +997,7 @@ export default function SigningClient({
               <div className="rounded-xl border border-black/8 bg-black/[0.02] p-3 text-xs">
                 <span className="font-bold text-foreground block mb-1">Current Proposed Terms:</span>
                 <div className="grid grid-cols-3 gap-2 text-[11px] text-muted-foreground">
-                  <div>Royalty: <strong className="text-foreground">{contract.royalty_pct}%</strong> ({contract.basis.toUpperCase()})</div>
+                  <div>Royalty: <strong className="text-foreground">{contract.royalty_pct}%</strong></div>
                   <div>Advance: <strong className="text-foreground">{contract.advance_paise > 0 ? formatPaise(contract.advance_paise) : "None"}</strong></div>
                   <div>Free Copies: <strong className="text-foreground">{meta.free_copies}</strong></div>
                 </div>

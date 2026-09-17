@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { SmoothDropdown, type DropdownOption } from "@/components/dropdown";
+import StageConfirmModal from "@/components/stage-confirm-modal";
 
 const DEFAULT_PAPER_SPECS = [
   "80gsm Natural Shade Cream (Standard Book)",
@@ -65,6 +66,7 @@ export default function PrintReceiptForm({
 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Load custom specs from localStorage on mount
   useEffect(() => {
@@ -120,13 +122,16 @@ export default function PrintReceiptForm({
     ];
   }, [customPaperSpecs]);
 
-  async function onSubmit(e: React.FormEvent) {
+  function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (qty <= 0) {
       setError("Ordered print quantity must be greater than zero.");
       return;
     }
+    setShowConfirmModal(true);
+  }
 
+  async function executeSubmit() {
     setPending(true);
     setError(null);
 
@@ -148,18 +153,21 @@ export default function PrintReceiptForm({
       const body = await res.json();
       if (!res.ok || !body.ok) {
         setError(body?.error ?? "Failed to log printing run execution");
+        setShowConfirmModal(false);
       } else {
+        setShowConfirmModal(false);
         router.refresh();
       }
     } catch {
       setError("Failed to connect to server");
+      setShowConfirmModal(false);
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-3xl border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10 space-y-6 font-sans">
+    <form onSubmit={handleFormSubmit} className="rounded-3xl border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10 space-y-6 font-sans">
       {/* Header Banner */}
       <div className="border-b border-black/10 pb-4 dark:border-white/10">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -373,6 +381,30 @@ export default function PrintReceiptForm({
           {pending ? "Recording Press Order..." : "Confirm Print Run & Advance to Post-Production →"}
         </button>
       </div>
+
+      {/* Confirmation Modal */}
+      <StageConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={() => executeSubmit()}
+        pending={pending}
+        title="Are you sure you want to move to Post-Production?"
+        subtitle="Please verify the printing press specifications before advancing the project."
+        currentStage="Offset Printing Press Run"
+        nextStage="Post-Production Intake"
+        description="Recording this press run will generate the production PRT batch order and unlock warehouse intake, physical damage verification, and author dispatch tracking."
+        metadata={[
+          { label: "Print Quantity", value: `${qty.toLocaleString()} copies`, isMono: true, isHighlight: true },
+          { label: "Press / Vendor", value: vendor },
+          { label: "Total Print Cost", value: `₹${costRupees.toLocaleString()}`, isMono: true, isPositive: true },
+          { label: "Paper Stock", value: paper },
+          { label: "Binding Spec", value: binding },
+          ...(notes ? [{ label: "Production Notes", value: notes }] : []),
+        ]}
+        confirmText="Yes, Confirm & Advance →"
+        confirmVariant="primary"
+        iconType="print"
+      />
     </form>
   );
 }

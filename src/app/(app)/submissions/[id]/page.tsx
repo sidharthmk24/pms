@@ -114,9 +114,9 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
     : isSigned
     ? "bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold shadow-2xs"
     : {
-        new: "bg-[#faedf5] text-[#7e2562] border border-[#7e2562]/25 font-bold",
-        pending_review: "bg-[#faedf5] text-[#7e2562] border border-[#7e2562]/25 font-bold",
-        under_review: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
+        new: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
+        pending_review: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
+        under_review: "bg-blue-50 text-blue-800 border border-blue-300 font-bold",
         needs_revision: "bg-orange-50 text-orange-800 border border-orange-300 font-bold",
         accepted: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold shadow-2xs",
         declined: "bg-rose-50 text-rose-800 border border-rose-300 font-bold",
@@ -357,7 +357,7 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
                 </div>
                 <div className="grid grid-cols-2 border-b border-emerald-500/10 pb-2">
                   <span className="text-muted-foreground">Royalty Rate</span>
-                  <span className="font-semibold">{contract.royalty_pct}% ({contract.basis} basis)</span>
+                  <span className="font-semibold">{contract.royalty_pct}%</span>
                 </div>
                 <div className="grid grid-cols-2 border-b border-emerald-500/10 pb-2">
                   <span className="text-muted-foreground">Advance Pay</span>

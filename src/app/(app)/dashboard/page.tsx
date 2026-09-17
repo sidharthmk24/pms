@@ -804,9 +804,9 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
             tone={activeDtpCount > 0 ? "warning" : "success"}
           />
           <StatTile
-            label="Galleys Uploaded"
+            label="Layout PDFs Uploaded"
             value={String(readyLayoutCount)}
-            hint="Print PDF galleys ready"
+            hint="Print PDF layouts ready"
             tone="success"
           />
         </section>

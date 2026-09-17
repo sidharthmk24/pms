@@ -6,6 +6,7 @@ import { ALLOWED_LABEL, MAX_UPLOAD_BYTES } from "@/lib/storage";
 import { getSessionUser } from "@/lib/session";
 import { AuthorModalTrigger } from "@/components/author-auth-modal";
 import PublishFaq from "./publish-faq";
+import PublishProcessSteps from "./publish-process-steps";
 import AnimatedSection from "@/components/animated-section";
 
 export const metadata: Metadata = {
@@ -323,17 +324,17 @@ export default async function PublishGuidelinesPage() {
               </svg>
             </div>
             <h3 className="text-xl font-bold text-foreground">01 — Full Manuscript</h3>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground max-w-sm">
-              One complete, self-contained document ({ALLOWED_LABEL}) up to {maxMb} MB. Please submit finished manuscripts rather than preliminary excerpts or fragments.
-            </p>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-3 mb-3 flex flex-col items-center justify-center gap-1.5">
               <span className="text-[11px] font-bold text-primary uppercase tracking-wider bg-[#7e2562]/8 px-2.5 py-1 rounded-sm">
                 Max {maxMb}MB · Single File
               </span>
               <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-sm border border-emerald-200">
-                PDF / Word
+                {ALLOWED_LABEL}
               </span>
             </div>
+            <p className="text-sm leading-relaxed text-muted-foreground max-w-sm">
+              Please submit a finalized, complete work with all chapters and sections intact. Our editorial committee evaluates complete manuscripts to assess full narrative pacing, language craft, and literary merit.
+            </p>
           </div>
 
           {/* Item 2 */}
@@ -358,17 +359,17 @@ export default async function PublishGuidelinesPage() {
               </svg>
             </div>
             <h3 className="text-xl font-bold text-foreground">02 — Synopsis &amp; Themes</h3>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground max-w-sm">
-              A concise summary (minimum 100 characters) presenting the central thesis, plot summary, character dynamics, target readership, and any previous literary publications.
-            </p>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-3 mb-3 flex flex-col items-center justify-center gap-1.5">
               <span className="text-[11px] font-bold text-primary uppercase tracking-wider bg-[#7e2562]/8 px-2.5 py-1 rounded-sm">
                 Min. 100 Characters
               </span>
-              <span className="text-[11px] font-semibold text-primary bg-[#7e2562]/8 px-2.5 py-1 rounded-sm">
-                Editorial Review
+              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-sm border border-emerald-200">
+                Overview &amp; Context
               </span>
             </div>
+            <p className="text-sm leading-relaxed text-muted-foreground max-w-sm">
+              Highlight the central storyline, thematic core, target readership, and any previous literary works. This gives our reviewers key contextual clarity before diving into the manuscript.
+            </p>
           </div>
 
           {/* Item 3 */}
@@ -393,17 +394,17 @@ export default async function PublishGuidelinesPage() {
               </svg>
             </div>
             <h3 className="text-xl font-bold text-foreground">03 — Author Profile</h3>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground max-w-sm">
-              Your full legal and pen names, active email address, WhatsApp-enabled phone number, and location (town/district) so our editors can correspond directly.
-            </p>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-3 mb-3 flex flex-col items-center justify-center gap-1.5">
               <span className="text-[11px] font-bold text-primary uppercase tracking-wider bg-[#7e2562]/8 px-2.5 py-1 rounded-sm">
                 Instant Confirmation
               </span>
               <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-sm border border-emerald-200">
-                Email + Ref Code
+                Email + Tracking Ref
               </span>
             </div>
+            <p className="text-sm leading-relaxed text-muted-foreground max-w-sm">
+              Your full legal name, pen name, active email, WhatsApp-enabled mobile, and home district so our editors can correspond directly, send evaluation decisions, and prepare contract paperwork.
+            </p>
           </div>
         </div>
       </AnimatedSection>
@@ -412,9 +413,6 @@ export default async function PublishGuidelinesPage() {
       <AnimatedSection id="process" animation="fade-up" delayMs={50} className="mb-16 scroll-mt-24">
         <div className="rounded-sm border border-[#7e2562]/15 bg-gradient-to-b from-[#faf6f9] via-white to-white p-7 shadow-plum-sm sm:p-10">
           <div className="mb-8">
-            <div className="inline-flex items-center gap-2 rounded-sm bg-[#7e2562]/8 px-3.5 py-1 text-xs font-bold text-primary mb-2">
-              <span>Transparent Author Roadmap</span>
-            </div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               The Kairali Publishing Journey
             </h2>
@@ -423,8 +421,8 @@ export default async function PublishGuidelinesPage() {
             </p>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
+          <PublishProcessSteps
+            steps={[
               {
                 step: "01",
                 title: "Digital Submission",
@@ -441,7 +439,7 @@ export default async function PublishGuidelinesPage() {
                 step: "03",
                 title: "Agreement & Royalty",
                 subtitle: "Digital Signing & Rights",
-                desc: "Upon acceptance, review your transparent contract digitally. Agree on royalties (MRP or net receipts), print run, and author copies.",
+                desc: "Upon acceptance, review your transparent contract digitally. Agree on royalties, print run, and author copies.",
               },
               {
                 step: "04",
@@ -449,28 +447,8 @@ export default async function PublishGuidelinesPage() {
                 subtitle: "Statewide Bookstores",
                 desc: "Our production studio handles Malayalam typesetting, bespoke jacket design, ISBN allotment, physical printing, and Kerala distribution.",
               },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className="relative flex flex-col justify-between rounded-sm border border-[#7e2562]/15 bg-white p-5 shadow-xs"
-              >
-                <div>
-                  <span className="numeric flex h-10 w-10 items-center justify-center rounded-sm bg-[#7e2562] text-sm font-black text-white shadow-plum-sm">
-                    {item.step}
-                  </span>
-                  <h3 className="mt-4 text-lg font-bold text-foreground leading-snug">
-                    {item.title}
-                  </h3>
-                  <span className="text-xs font-semibold text-primary block mt-0.5">
-                    {item.subtitle}
-                  </span>
-                  <p className="mt-2.5 text-xs text-muted-foreground leading-relaxed">
-                    {item.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+            ]}
+          />
         </div>
       </AnimatedSection>
 

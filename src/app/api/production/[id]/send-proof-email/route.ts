@@ -83,7 +83,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
   const mail = proofApprovalEmail({
     authorName,
     title: proj.titles.name,
-    isbn: proj.titles.isbn || proj.isbn_registered,
+    isbn: proj.titles.isbn || proj.isbn_registered || "Pending",
     approvalUrl,
     hasAttachment,
     trackingUrl: authorTrackingUrl,
@@ -102,8 +102,8 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
   });
 
   await notifyAuthorByEmail(authorEmail, {
-    title: "Galley Proof Ready for Approval",
-    message: `Digital galley proof for "${proj.titles.name}" is ready for your sign-off!`,
+    title: "Book Proof Ready for Approval",
+    message: `Digital proof layout for "${proj.titles.name}" is ready for your sign-off!`,
     type: "PROOF",
     link: `/author`,
   });

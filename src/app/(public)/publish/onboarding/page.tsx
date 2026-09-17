@@ -652,10 +652,7 @@ export default function AuthorOnboardingPage() {
           <div className="bg-white rounded-sm p-6 sm:p-8 shadow-sm border border-[#7E2562]/10 mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-sm bg-[#7E2562]/10 text-[#7E2562] text-xs font-bold tracking-wide  mb-2">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Kairali Books Author Onboarding
-                </div>
+              
                 <h1 className="text-2xl sm:text-3xl  font-black text-[#2B1B24]">
                   {step === 1 && "Create Your Author Account"}
                   {step === 2 && "Author Profile & Literary Focus"}

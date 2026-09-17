@@ -22,7 +22,7 @@ export function AuthorProofAction({
     return (
       <div className="flex items-center gap-2 rounded-xl border border-success/20 bg-success/10 px-4 py-2 text-xs font-bold text-success">
         <span>✓</span>
-        <span>Galley Proof Approved &amp; Signed Off ({proofApprovedAt.split(" ")[0]}) · Scheduled for Printing Run</span>
+        <span>Book Proof Approved &amp; Signed Off ({proofApprovedAt.split(" ")[0]}) · Scheduled for Printing Run</span>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export function AuthorProofAction({
     <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h4 className="text-xs font-bold text-foreground">Author Galley Sign-Off Required</h4>
+          <h4 className="text-xs font-bold text-foreground">Author Final Proof Sign-Off Required</h4>
           <p className="text-[11px] text-muted-foreground">
             Please inspect the typeset layout and cover design above. Once satisfied, authorize the press run.
           </p>

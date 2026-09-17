@@ -79,12 +79,12 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
 
           {/* Right Action CTAs (Hidden on Print) */}
           <div className="no-print flex items-center gap-3">
-            <Link
+            {/* <Link
               href="/publish/status"
               className="apple-button hidden sm:inline-flex rounded-sm border border-[#7e2562]/20 bg-white px-4 py-2.5 text-xs font-bold text-primary shadow-xs hover:bg-[#faedf5] transition-all"
             >
               Track Status
-            </Link>
+            </Link> */}
 
             <AuthorModalTrigger
               mode="login"
@@ -147,16 +147,16 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
                     Submit a Manuscript
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <AuthorModalTrigger mode="login" className="text-muted-foreground hover:text-primary transition-colors cursor-pointer text-left">
                     Author Sign In
                   </AuthorModalTrigger>
-                </li>
-                <li>
+                </li> */}
+                {/* <li>
                   <Link href="/publish/status" className="text-muted-foreground hover:text-primary transition-colors">
                     Track Live Status
                   </Link>
-                </li>
+                </li> */}
                 {/* <li>
                   <Link href="/publish#genres" className="text-muted-foreground hover:text-primary transition-colors">
                     Accepted Categories
@@ -194,11 +194,7 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
           <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-[#7e2562]/10 pt-8 sm:flex-row text-xs text-muted-foreground">
             <p>© {new Date().getFullYear()} Kairali Books. All intellectual rights reserved.</p>
             <div className="flex items-center gap-6">
-              <span className="font-ml text-primary/80 font-medium">കൈരളി ബുക്സ് — അക്ഷരങ്ങളുടെ ലോകം</span>
-              <span className="hidden sm:inline text-muted-foreground/40">|</span>
-              <Link href="/login" className="hover:text-primary transition-colors">
-                Internal Portal
-              </Link>
+         
             </div>
           </div>
         </div>

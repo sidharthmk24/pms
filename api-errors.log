@@ -157,3 +157,41 @@ Invalid `prisma.sessions.findUnique()` invocation:
     at readAllBytes (node:internal/deps/undici/undici:5807:13)
     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
 
+[2026-09-17T05:53:08.159Z] PrismaClientKnownRequestError: 
+Invalid `tx.titles.update()` invocation in
+D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__0lcl739._.js:784:29
+
+  781     }
+  782 });
+  783 // 2. Set the ISBN on the linked title record
+→ 784 await tx.titles.update(
+Unique constraint failed on the fields: (`isbn`)
+    at Jr.handleRequestError (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:8286)
+    at Jr.handleAndLogRequestError (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:7581)
+    at Jr.request (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:65:7288)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async a (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:99:6862)
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__0lcl739._.js:784:13
+    at async Proxy._transactionWithCallback (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\@prisma\client\runtime\client.js:99:4800)
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__0lcl739._.js:768:9
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\[root-of-the-server]__0eutqqm._.js:741:20
+    at async AppRouteRouteModule.do (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:42793)
+    at async AppRouteRouteModule.handle (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:50547)
+    at async responseGenerator (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_1m8rn8d._.js:5328:30)
+    at async AppRouteRouteModule.handleResponse (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:250160)
+    at async handleResponse (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_1m8rn8d._.js:5400:32)
+    at async Module.handler (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\.next\dev\server\chunks\node_modules_next_1m8rn8d._.js:5520:9)
+    at async DevServer.renderToResponseWithComponentsImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1537:9)
+    at async DevServer.renderPageComponent (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1589:24)
+    at async DevServer.renderToResponseImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1639:32)
+    at async DevServer.pipeImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:1088:25)
+    at async NextNodeServer.handleCatchallRenderRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\base-server.js:979:17)
+    at async D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\dev\next-dev-server.js:426:20
+    at async Span.traceAsyncFn (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\dev\next-dev-server.js:422:24)
+    at async invokeRender (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:306:21)
+    at async handleRequest (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:508:24)
+    at async requestHandlerImpl (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\router-server.js:565:13)
+    at async Server.requestListener (D:\MEARN STACK\MEGAMIND\KAIRALI-BOOKS\Kairali-PMS\node_modules\next\dist\server\lib\start-server.js:225:13)
+

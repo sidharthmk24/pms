@@ -87,7 +87,7 @@ export function DocumentPreviewModal({
       if (e.key === "PrintScreen" || e.code === "PrintScreen") {
         e.preventDefault();
         e.stopPropagation();
-        triggerSecurityWarning("⚠️ Screenshots are prohibited on confidential galley proof drafts.");
+        triggerSecurityWarning("⚠️ Screenshots are prohibited on confidential manuscript layout drafts.");
         return;
       }
 

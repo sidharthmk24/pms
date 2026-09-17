@@ -22,9 +22,9 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_BADGE_STYLES: Record<string, string> = {
-  new: "bg-[#7e2562]/10 text-[#7e2562] border border-[#7e2562]/25 font-bold",
-  pending_review: "bg-[#7e2562]/10 text-[#7e2562] border border-[#7e2562]/25 font-bold",
-  under_review: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
+  new: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
+  pending_review: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
+  under_review: "bg-blue-50 text-blue-800 border border-blue-300 font-bold",
   needs_revision: "bg-orange-50 text-orange-800 border border-orange-300 font-bold",
   accepted: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold shadow-2xs",
   declined: "bg-rose-50 text-rose-800 border border-rose-300 font-bold",

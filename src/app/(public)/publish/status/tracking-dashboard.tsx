@@ -103,14 +103,14 @@ export default function TrackingDashboard({
     : isRenegotiation
     ? "bg-amber-100 text-amber-900 border border-amber-300 font-bold"
     : {
-        new: "bg-[#7e2562] text-white shadow-plum-sm",
-        pending_review: "bg-[#7e2562]/10 text-[#7e2562] border border-[#7e2562]/20 font-bold",
-        under_review: "bg-amber-50 text-amber-800 border border-amber-200 font-bold",
-        needs_revision: "bg-amber-100 text-amber-900 border border-amber-300 font-bold",
-        accepted: "bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold",
-        declined: "bg-rose-50 text-rose-800 border border-rose-200 font-bold",
-        archived: "bg-gray-100 text-gray-600",
-        withdrawn: "bg-gray-100 text-gray-600",
+        new: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
+        pending_review: "bg-amber-50 text-amber-800 border border-amber-300 font-bold",
+        under_review: "bg-blue-50 text-blue-800 border border-blue-300 font-bold",
+        needs_revision: "bg-orange-50 text-orange-800 border border-orange-300 font-bold",
+        accepted: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold shadow-2xs",
+        declined: "bg-rose-50 text-rose-800 border border-rose-300 font-bold",
+        archived: "bg-gray-100 text-gray-600 font-semibold",
+        withdrawn: "bg-gray-100 text-gray-600 font-semibold",
       }[submission.status] ?? "bg-surface-muted text-foreground";
 
   async function onUpload(e: React.FormEvent) {
@@ -468,7 +468,7 @@ export default function TrackingDashboard({
               <div className="bg-surface rounded-lg border border-border p-4 space-y-3 text-sm">
                 <div className="flex justify-between border-b border-border/40 pb-2">
                   <span className="text-muted-foreground">Royalty Rate</span>
-                  <span className="font-semibold">{contract.royalty_pct}% ({contract.basis} basis)</span>
+                  <span className="font-semibold">{contract.royalty_pct}%</span>
                 </div>
                 <div className="flex justify-between border-b border-border/40 pb-2">
                   <span className="text-muted-foreground">Advance Pay</span>
@@ -593,7 +593,7 @@ export default function TrackingDashboard({
                 key: "final_proof",
                 num: 6,
                 label: "Author Proof",
-                title: "Author Galley Proof Review",
+                title: "Author Final Proof Review",
                 shortDesc: "Author inspection and final digital sign-off",
                 icon: (
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -856,7 +856,7 @@ export default function TrackingDashboard({
                     {production.status === "final_proof" && (
                       <div className="space-y-4 pt-2">
                         <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-xs text-amber-950 space-y-1">
-                          <span className="font-bold block">Author Galley Proof Action Required:</span>
+                          <span className="font-bold block">Author Proof Action Required:</span>
                           <p className="leading-relaxed">
                             Please review the final typeset layout PDF and cover design files below. If all pages and artwork look accurate, click <strong>"Approve &amp; Sign Off"</strong>. If adjustments are needed, enter your rework notes and click <strong>"Request Rework"</strong>.
                           </p>
@@ -865,7 +865,7 @@ export default function TrackingDashboard({
                         {/* File Previews */}
                         <div className="rounded-2xl border border-[#7e2562]/15 bg-white p-4 space-y-3">
                           <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
-                            Galley Proof Documents
+                            Manuscript Layout &amp; Cover Proofs
                           </span>
                           <div className="flex flex-wrap gap-3">
                             {production.final_layout_path ? (

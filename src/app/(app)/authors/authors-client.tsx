@@ -7,6 +7,7 @@ import Link from "next/link";
 import { SmoothDropdown } from "@/components/dropdown";
 import { formatPaise } from "@/lib/money";
 import { formatIST } from "@/lib/time";
+import { parseContractNotes, PUBLISHER_DETAILS } from "@/lib/contracts";
 
 export type AuthorDetailItem = {
   id: string;
@@ -135,6 +136,12 @@ export default function AuthorsClient({
   // Selected author for detailed slide-over drawer
   const [selectedAuthor, setSelectedAuthor] = useState<AuthorDetailItem | null>(null);
   const [drawerTab, setDrawerTab] = useState<"overview" | "books" | "contracts" | "submissions">("overview");
+
+  // Contract viewer modal state
+  const [viewingContract, setViewingContract] = useState<{
+    contract: AuthorDetailItem["contracts"][0];
+    author: AuthorDetailItem;
+  } | null>(null);
 
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -579,12 +586,12 @@ export default function AuthorsClient({
                       </td>
 
                       {/* Contract Agreement */}
-                      <td className="px-6 py-4.5">
+                      <td className="px-6 py-4.5 whitespace-nowrap">
                         {activeContract ? (
                           <div>
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+                            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
                               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                              {activeContract.royalty_pct}% Royalty ({activeContract.basis.toUpperCase()})
+                              {activeContract.royalty_pct}% Royalty
                             </span>
                             {activeContract.advance_paise > 0 && (
                               <p className="mt-1 text-[11px] font-medium text-muted-foreground">
@@ -593,21 +600,21 @@ export default function AuthorsClient({
                             )}
                           </div>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-black/5 px-2.5 py-1 text-xs font-medium text-muted-foreground dark:border-white/10 dark:bg-white/5">
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-black/5 px-2.5 py-1 text-xs font-medium text-muted-foreground dark:border-white/10 dark:bg-white/5">
                             No Active Contract
                           </span>
                         )}
                       </td>
 
                       {/* Portal Status */}
-                      <td className="px-6 py-4.5">
+                      <td className="px-6 py-4.5 whitespace-nowrap">
                         {hasPortal ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
-                            <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-success" />
                             Portal Active
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-muted-foreground dark:bg-white/5">
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-muted-foreground dark:bg-white/5">
                             Profile Only
                           </span>
                         )}
@@ -687,11 +694,11 @@ export default function AuthorsClient({
                         {currentSelectedAuthor.name}
                       </h2>
                       {currentSelectedAuthor.userAccount?.active ? (
-                        <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
+                        <span className="whitespace-nowrap rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
                           Portal Active
                         </span>
                       ) : (
-                        <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-medium text-muted-foreground dark:bg-white/10">
+                        <span className="whitespace-nowrap rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-medium text-muted-foreground dark:bg-white/10">
                           Profile
                         </span>
                       )}
@@ -985,12 +992,48 @@ export default function AuthorsClient({
                           </div>
                         </div>
 
-                        {contract.term_notes && (
-                          <div className="pt-2 border-t border-border/40 text-[11px] text-muted-foreground">
-                            <span className="font-semibold text-foreground">Terms: </span>
-                            {contract.term_notes}
+                        {/* Action buttons & Status */}
+                        <div className="pt-2.5 border-t border-border/50 flex flex-wrap items-center justify-between gap-2">
+                          <div className="text-[11px]">
+                            {contract.signed_on ? (
+                              <span className="inline-flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                Signed &amp; Active
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                Pending Signature
+                              </span>
+                            )}
                           </div>
-                        )}
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setViewingContract({ contract, author: currentSelectedAuthor })}
+                              className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/25 bg-white px-3 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition-all cursor-pointer dark:bg-white/5 dark:text-pink-300 dark:hover:bg-white/10"
+                            >
+                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              <span>View Agreement</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => window.open(`/contracts/${contract.id}/print`, "_blank")}
+                              title="Open Official Printable Agreement"
+                              className="apple-button inline-flex items-center gap-1 rounded-xl border border-black/10 bg-black/[0.02] px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-black/5 transition-all cursor-pointer dark:border-white/10 dark:hover:bg-white/10"
+                            >
+                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                              </svg>
+                              <span>PDF</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ))
                   )}
@@ -1386,6 +1429,182 @@ export default function AuthorsClient({
         </div>,
         document.body
       )}
+
+      {/* MODAL: Full Legal Agreement Viewer */}
+      {viewingContract && mounted && createPortal(
+        <div className="printable-contract-container fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-black/10 bg-surface shadow-2xl dark:border-white/15 animate-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="no-print flex items-center justify-between border-b border-black/[0.06] px-6 py-4 dark:border-white/[0.08]">
+              <div>
+                <span className="text-xs font-mono font-bold text-muted-foreground">
+                  {parseContractNotes(viewingContract.contract.term_notes).contract_ref || "CON-2026-0001"}
+                </span>
+                <h3 className="text-lg font-bold tracking-tight text-foreground">
+                  Publishing Agreement · {viewingContract.contract.titles?.name || "Book Agreement"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingContract(null)}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-muted-foreground transition-colors hover:bg-black/10 hover:text-foreground dark:bg-white/10 dark:hover:bg-white/20 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Agreement Content (Printable Legal Document) */}
+            <div className="printable-contract flex-1 overflow-y-auto p-8 space-y-6 text-sm text-foreground/90 leading-relaxed">
+              {/* Document Letterhead */}
+              <div className="text-center pb-5 border-b border-black/15 dark:border-white/15">
+                <span className="text-[11px] font-mono font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                  Contract Ref: {parseContractNotes(viewingContract.contract.term_notes).contract_ref || "CON-2026-0001"}
+                </span>
+                <h2 className="text-xl font-bold uppercase tracking-wider font-sans text-foreground">
+                  Book Publishing &amp; Royalty Agreement
+                </h2>
+                <p className="text-xs text-muted-foreground font-sans mt-1">
+                  <strong>KAIRALI BOOKS</strong> · Near Stadium, Rajaji Road, Kozhikode, Kerala - 673004
+                </p>
+                <p className="text-[11px] text-muted-foreground font-sans">
+                  GSTIN: {PUBLISHER_DETAILS.gstin} · PAN: {PUBLISHER_DETAILS.pan}
+                </p>
+              </div>
+
+              {/* Preamble */}
+              <p>
+                This Agreement is made and entered into on <strong>{viewingContract.contract.created_at.slice(0, 10)}</strong> by and between:
+              </p>
+              <div className="parties-box rounded-2xl border border-black/10 bg-black/[0.02] p-4 text-xs font-sans space-y-2 dark:border-white/10 dark:bg-white/[0.02]">
+                <p>
+                  <strong>1. PUBLISHER:</strong> <strong>{PUBLISHER_DETAILS.name}</strong>, having its principal office at {PUBLISHER_DETAILS.address} (GSTIN: {PUBLISHER_DETAILS.gstin}, PAN: {PUBLISHER_DETAILS.pan}), represented by {PUBLISHER_DETAILS.signatory} (hereinafter called the <em>&quot;Publisher&quot;</em>).
+                </p>
+                <p>
+                  <strong>2. AUTHOR:</strong> <strong>{viewingContract.author.name}</strong>, residing at {viewingContract.author.address || "Kerala, India"} (Email: {viewingContract.author.email || "—"}, PAN: {parseContractNotes(viewingContract.contract.term_notes).author_pan || viewingContract.author.pan || "On Record"}) (hereinafter called the <em>&quot;Author&quot;</em>).
+                </p>
+              </div>
+
+              {/* Articles */}
+              <div className="space-y-4">
+                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 1 — Grant of Rights</h4>
+                <p>
+                  The Author hereby grants and assigns to the Publisher the exclusive license and right to print, publish, sell, and distribute the literary work provisionally titled <strong>&quot;{viewingContract.contract.titles?.name}&quot;</strong> in the Malayalam language throughout the world.
+                </p>
+
+                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 2 — Commercial &amp; Royalty Terms</h4>
+                <ul className="list-disc pl-5 space-y-1.5 font-sans text-xs">
+                  <li>
+                    <strong>Publishing Model Track:</strong> {parseContractNotes(viewingContract.contract.term_notes).publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali Books Publishing"}.
+                  </li>
+                  <li>
+                    <strong>Royalty Rate:</strong> <strong>{viewingContract.contract.royalty_pct}%</strong> calculated on the <strong>{viewingContract.contract.basis.toUpperCase()}</strong> of all printed copies sold.
+                  </li>
+                  <li>
+                    <strong>Advance on Signing:</strong> <strong>{formatPaise(viewingContract.contract.advance_paise)}</strong> (non-refundable, deductible against future royalties).
+                  </li>
+                  <li>
+                    <strong>Author Free Copies:</strong> The Author shall receive <strong>{parseContractNotes(viewingContract.contract.term_notes).free_copies ?? 10} complimentary copies</strong> upon publication.
+                  </li>
+                  <li>
+                    <strong>Author Discount:</strong> The Author is entitled to purchase additional copies at a <strong>{parseContractNotes(viewingContract.contract.term_notes).author_discount_pct ?? 40}% discount</strong> off the printed MRP.
+                  </li>
+                </ul>
+
+                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 3 — Term &amp; Exclusivity</h4>
+                <p>
+                  This Agreement shall remain in force for an initial period of <strong>{parseContractNotes(viewingContract.contract.term_notes).term_years ?? 3} years</strong> from the date of signing, and shall automatically renew for successive one-year terms unless either party gives 60 days prior written notice.
+                </p>
+
+                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 4 — Proofreading &amp; Editorial Review</h4>
+                <p>
+                  The Publisher shall undertake DTP typesetting, page layout, and cover design. Galley proofs shall be submitted to the Author, who will have a 14-day window to approve or submit editorial corrections prior to mass printing.
+                </p>
+
+                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 5 — Copyright &amp; Reversion</h4>
+                <p>
+                  Copyright in the literary content of the Work remains solely with the Author © {new Date().getFullYear()} {viewingContract.author.name}. If the Work remains out of print for a continuous period of 12 months after written demand by the Author, all publishing rights shall revert to the Author.
+                </p>
+
+                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 6 — Tax &amp; Jurisdiction</h4>
+                <p>
+                  Royalties are subject to Indian Income Tax TDS under Section 194J. Any legal disputes arising out of this Agreement shall be subject to the exclusive jurisdiction of the Courts in <strong>Kozhikode (Calicut), Kerala</strong>.
+                </p>
+              </div>
+
+              {/* Signature Blocks */}
+              <div className="pt-6 border-t border-black/10 grid grid-cols-2 gap-6 font-sans dark:border-white/10">
+                <div className="signature-box rounded-2xl border border-black/10 p-4 bg-black/[0.015] dark:border-white/10 dark:bg-white/[0.015]">
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Signed on Behalf of Publisher</span>
+                  <p className="mt-2 text-sm font-bold text-foreground">{parseContractNotes(viewingContract.contract.term_notes).publisher_signatory || "Radhika Menon"}</p>
+                  <p className="text-xs text-muted-foreground">Kairali Books, Kozhikode</p>
+                  {parseContractNotes(viewingContract.contract.term_notes).publisher_signed_at ? (
+                    <div className="mt-3 text-[11px] text-success font-semibold border-t border-black/5 pt-2">
+                      ✓ Digitally Certified: {parseContractNotes(viewingContract.contract.term_notes).publisher_signed_at?.slice(0, 16)}
+                    </div>
+                  ) : (
+                    <div className="mt-3 text-[11px] text-warning font-semibold border-t border-black/5 pt-2">
+                      Pending Publisher Signature
+                    </div>
+                  )}
+                </div>
+
+                <div className="signature-box rounded-2xl border border-black/10 p-4 bg-black/[0.015] dark:border-white/10 dark:bg-white/[0.015]">
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Signed by Author</span>
+                  {parseContractNotes(viewingContract.contract.term_notes).author_signature?.startsWith("data:image/") ? (
+                    <div className="my-2 p-1.5 bg-white border border-black/10 rounded-xl inline-block shadow-2xs">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={parseContractNotes(viewingContract.contract.term_notes).author_signature!}
+                        alt="Author Signature"
+                        className="h-10 max-w-[180px] object-contain"
+                      />
+                    </div>
+                  ) : parseContractNotes(viewingContract.contract.term_notes).author_signature ? (
+                    <p className="font-serif italic text-sm text-foreground my-1">
+                      {parseContractNotes(viewingContract.contract.term_notes).author_signature}
+                    </p>
+                  ) : null}
+
+                  <p className="mt-1 text-sm font-bold text-foreground">{viewingContract.author.name}</p>
+                  <p className="text-xs text-muted-foreground">PAN: {parseContractNotes(viewingContract.contract.term_notes).author_pan || viewingContract.author.pan || "On Record"}</p>
+                  {parseContractNotes(viewingContract.contract.term_notes).author_signed_at ? (
+                    <div className="mt-3 text-[11px] text-success font-semibold border-t border-black/5 pt-2">
+                      ✓ Digitally Certified: {parseContractNotes(viewingContract.contract.term_notes).author_signed_at?.slice(0, 16)}
+                      <span className="block text-[10px] text-muted-foreground font-mono">
+                        IP: {parseContractNotes(viewingContract.contract.term_notes).author_signer_ip || "Verified"}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="mt-3 text-[11px] text-warning font-semibold border-t border-black/5 pt-2">
+                      Pending Author Signature
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="no-print border-t border-black/[0.06] bg-surface p-4 flex items-center justify-between dark:border-white/[0.08]">
+              <button
+                type="button"
+                onClick={() => setViewingContract(null)}
+                className="apple-button rounded-xl border border-black/10 bg-white px-4 py-2 text-xs font-bold text-foreground hover:bg-black/5 dark:border-white/15 dark:bg-white/5 cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => window.open(`/contracts/${viewingContract.contract.id}/print`, "_blank")}
+                className="apple-button rounded-xl bg-foreground px-4 py-2 text-xs font-bold text-background shadow-xs hover:opacity-90 cursor-pointer"
+              >
+                Print / Save Official PDF
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
+

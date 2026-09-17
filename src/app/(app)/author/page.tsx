@@ -16,15 +16,15 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const STATUS_LABELS: Record<string, { label: string; class: string }> = {
-  new: { label: "Pending Review", class: "bg-primary/10 text-primary border-primary/20" },
-  pending_review: { label: "Pending Review", class: "bg-primary/10 text-primary border-primary/20" },
-  under_review: { label: "Under Review", class: "bg-warning/10 text-warning border-warning/20" },
-  needs_revision: { label: "Needs Revision", class: "bg-accent/10 text-accent border-accent/20" },
+  new: { label: "Pending Review", class: "bg-amber-50 text-amber-800 border-amber-300 font-bold" },
+  pending_review: { label: "Pending Review", class: "bg-amber-50 text-amber-800 border-amber-300 font-bold" },
+  under_review: { label: "Under Review", class: "bg-blue-50 text-blue-800 border-blue-300 font-bold" },
+  needs_revision: { label: "Needs Revision", class: "bg-orange-50 text-orange-800 border-orange-300 font-bold" },
   accepted: { label: "Approved & Accepted", class: "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-2xs" },
   declined: { label: "Declined", class: "bg-rose-50 text-rose-700 border-rose-300 font-bold" },
   rejected: { label: "Declined", class: "bg-rose-50 text-rose-700 border-rose-300 font-bold" },
-  archived: { label: "Archived", class: "bg-muted text-muted-foreground border-border" },
-  withdrawn: { label: "Withdrawn", class: "bg-muted text-muted-foreground border-border" },
+  archived: { label: "Archived", class: "bg-muted text-muted-foreground border-border font-semibold" },
+  withdrawn: { label: "Withdrawn", class: "bg-muted text-muted-foreground border-border font-semibold" },
 };
 
 export default async function AuthorDashboardPage({
@@ -391,7 +391,7 @@ export default async function AuthorDashboardPage({
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
                           <h4 className="text-xs font-bold text-foreground">
-                            Galley Proof Files &amp; Final Layout Draft
+                            Manuscript Layout &amp; Cover Proofs
                           </h4>
                           <p className="text-[11px] text-muted-foreground">
                             Download and inspect the typeset interior layout and final cover design before print execution.
@@ -628,7 +628,7 @@ export default async function AuthorDashboardPage({
                     <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl border border-black/5 bg-surface p-3 text-xs dark:border-white/5">
                       <div>
                         <span className="text-[10px] text-muted-foreground uppercase">Royalty Rate</span>
-                        <p className="font-extrabold text-foreground">{c.royalty_pct}% ({c.basis.toUpperCase()})</p>
+                        <p className="font-extrabold text-foreground">{c.royalty_pct}%</p>
                       </div>
                       <div>
                         <span className="text-[10px] text-muted-foreground uppercase">Advance</span>
