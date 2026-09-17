@@ -583,6 +583,7 @@ export default function AuthorsClient({
                             {author.titles.length > 1 && ` +${author.titles.length - 1} more`}
                           </p>
                         )}
+                        
                       </td>
 
                       {/* Contract Agreement */}
