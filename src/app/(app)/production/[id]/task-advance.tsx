@@ -280,14 +280,14 @@ export default function TaskAdvance({
                   <span>⏳</span>
                   <span>Author Digital Sign-Off Pending</span>
                 </div>
-                <button
+                {/* <button
                   type="button"
                   disabled={sendingEmail}
                   onClick={onResendProofEmail}
                   className="rounded-lg bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-500/30 transition cursor-pointer border border-amber-500/30"
                 >
                   {sendingEmail ? "Sending..." : "📧 Resend Proof Email with PDF Attachment"}
-                </button>
+                </button> */}
               </div>
               {proofEmailSentAt && (
                 <p className="text-[10px] text-muted-foreground">
