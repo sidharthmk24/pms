@@ -18,7 +18,7 @@ export default function PrintTrigger({ contractId }: { contractId: string }) {
         href={`/publish/contract/${contractId}`}
         className="text-xs font-bold text-gray-600 hover:text-gray-900 transition-colors inline-flex items-center gap-1.5"
       >
-        <span>← Back to Contract Portal</span>
+        <span>  Back to Contract Portal</span>
       </Link>
       <div className="flex items-center gap-2">
         <span className="text-xs text-gray-500 font-sans hidden sm:inline">

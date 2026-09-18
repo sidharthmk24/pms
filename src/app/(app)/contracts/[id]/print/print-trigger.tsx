@@ -18,7 +18,7 @@ export default function PrintTrigger() {
         href="/contracts"
         className="text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors"
       >
-        ← Back to Contracts Dashboard
+          Back to Contracts Dashboard
       </Link>
       <button
         onClick={() => window.print()}

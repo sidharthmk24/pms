@@ -34,8 +34,6 @@ const PIPELINE_ORDER = [
   "cover_design",
   "isbn_registration",
   "final_proof",
-  "printing",
-  "post_production",
 ];
 
 const STAGE_META: Record<
@@ -73,21 +71,15 @@ const STAGE_META: Record<
   },
   final_proof: {
     label: "Author Final Proof",
-    description: "Author inspection and digital proof sign-off",
+    description: "Author inspection, digital sign-off & completion",
     icon: CheckCircle2,
-    activeDescription: "Author digital sign-off and approval before press run",
+    activeDescription: "Author digital sign-off and approval to finish & publish",
   },
-  printing: {
-    label: "Offset Printing Run",
-    description: "Printing run in progress at the press (Offset / Digital)",
-    icon: Printer,
-    activeDescription: "Offset printing and binding in progress at the press",
-  },
-  post_production: {
-    label: "Post-Production Intake",
-    description: "Quality check, warehouse storage & author copies fulfillment",
-    icon: PackageCheck,
-    activeDescription: "Stock receipt intake and multi-channel fulfillment",
+  completed: {
+    label: "Completed & Published",
+    description: "Book publication complete and active in catalog",
+    icon: CheckCircle2,
+    activeDescription: "Book is published and live in catalog",
   },
 };
 
@@ -126,11 +118,13 @@ export default function ProductionFlowClient({
   const liveStageKey = PIPELINE_ORDER.includes(proj.status)
     ? proj.status
     : isProjectCompleted
-    ? "post_production"
+    ? "completed"
     : "dtp";
 
-  // Selected stage for inspection / navigation (default to post_production or dtp)
-  const [selectedStage, setSelectedStage] = useState<string>(liveStageKey);
+  // Selected stage for inspection / navigation (default to "completed" if finished, else live stage)
+  const [selectedStage, setSelectedStage] = useState<string>(
+    isProjectCompleted ? "completed" : liveStageKey
+  );
   const [editingStage, setEditingStage] = useState<string | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
 
@@ -193,23 +187,9 @@ export default function ProductionFlowClient({
     {
       key: "final_proof",
       label: "Author Final Proof",
-      completedAt: proj.proof_approved_at,
+      completedAt: proj.proof_approved_at || (isProjectCompleted ? proj.updated_at : null),
       deadline: proj.proof_deadline,
-      staff: "Author & Owner Sign-Off",
-    },
-    {
-      key: "printing",
-      label: "Offset Printing Run",
-      completedAt: proj.print_completed_at,
-      deadline: null,
-      staff: null,
-    },
-    {
-      key: "post_production",
-      label: "Post-Production Intake",
-      completedAt: proj.post_production_completed_at || proj.handover_completed_at || (isProjectCompleted ? proj.updated_at : null),
-      deadline: null,
-      staff: null,
+      staff: "Author & Editorial Sign-Off",
     },
   ];
 
@@ -291,7 +271,7 @@ export default function ProductionFlowClient({
             {/* Header & Progress Indicator */}
             <div>
               <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <h2 className="text-xs font-bold tracking-wider text-muted-foreground">
                   Pipeline Status
                 </h2>
                 <span className="rounded-full bg-[#faedf5] px-2.5 py-0.5 text-[10px] font-bold text-[#7e2562] dark:bg-[#7e2562]/20 dark:text-pink-300">
@@ -308,6 +288,40 @@ export default function ProductionFlowClient({
 
             {/* Interactive Steps List */}
             <div className="space-y-2 pt-3">
+              {isProjectCompleted && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedStage("completed");
+                    setEditingStage(null);
+                  }}
+                  className={`w-full text-left relative rounded-2xl transition-all cursor-pointer block p-3 mb-2 ${
+                    selectedStage === "completed"
+                      ? "border border-emerald-500/40 bg-emerald-50/80 shadow-xs dark:bg-emerald-950/30 ring-2 ring-emerald-500/20"
+                      : "border border-emerald-500/20 bg-emerald-50/30 hover:bg-emerald-50/60 dark:bg-emerald-950/10"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white font-black text-xs shadow-2xs">
+                      ✓
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                          Published Overview
+                        </span>
+                        <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-black text-emerald-800 dark:text-emerald-300">
+                          LIVE
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        Catalog metrics &amp; live status
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              )}
+
               {trackerSteps.map((step, idx) => {
                 const stepIdx = PIPELINE_ORDER.indexOf(step.key);
                 const isCompleted = currentLiveIdx !== -1 && stepIdx < currentLiveIdx;
@@ -318,7 +332,10 @@ export default function ProductionFlowClient({
                   <button
                     key={step.key}
                     type="button"
-                    onClick={() => setSelectedStage(step.key)}
+                    onClick={() => {
+                      setSelectedStage(step.key);
+                      setEditingStage(null);
+                    }}
                     className={`w-full text-left relative rounded-2xl transition-all cursor-pointer block ${
                       isViewing
                         ? "border border-[#7e2562]/30 bg-gradient-to-br from-[#faedf5]/70 to-[#faedf5]/30 p-3 shadow-xs dark:from-[#7e2562]/20 dark:to-transparent dark:border-pink-500/40 ring-2 ring-[#7e2562]/20"
@@ -428,7 +445,7 @@ export default function ProductionFlowClient({
           {/* Financial Tracking */}
           {isOwner && (
             <div className="rounded-xl border border-border bg-surface p-5">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
+              <h2 className="text-xs font-bold  tracking-wider text-muted-foreground mb-4">
                 Cost &amp; Royalty Tracking
               </h2>
               <div className="space-y-3 text-sm text-foreground">
@@ -527,7 +544,18 @@ export default function ProductionFlowClient({
           </div>
           */}
 
-          {/* Active Stage Action Forms */}
+          {/* 1. If viewing the Published Overview (when completed) */}
+          {selectedStage === "completed" && (
+            <PostProductionDashboard
+              projectId={proj.id}
+              project={proj}
+              title={proj.titles}
+              printJob={proj.print_jobs}
+              publishingType={publishingType}
+            />
+          )}
+
+          {/* 2. Active Stage Action Forms (when project is in-progress) */}
           {isLiveStageSelected && (
             <>
               {canAdvance &&
@@ -544,46 +572,16 @@ export default function ProductionFlowClient({
                     hasLayout={Boolean(proj.final_layout_path)}
                   />
                 )}
-
-              {proj.status === "printing" && (
-                <PrintReceiptForm
-                  projectId={proj.id}
-                  publishingType={publishingType}
-                  authorName={proj.titles.authors?.name || "Author"}
-                  titleName={proj.titles.name}
-                />
-              )}
-
-              {proj.status === "post_production" && (
-                <PostProductionForm
-                  projectId={proj.id}
-                  publishingType={publishingType}
-                  contractFreeCopies={contractFreeCopies}
-                  authorName={proj.titles.authors?.name || "Author"}
-                  titleName={proj.titles.name}
-                  orderedQty={proj.print_jobs?.qty ?? 1000}
-                />
-              )}
-
-              {proj.status === "completed" && (
-                <PostProductionDashboard
-                  projectId={proj.id}
-                  project={proj}
-                  title={proj.titles}
-                  printJob={proj.print_jobs}
-                  publishingType={publishingType}
-                />
-              )}
             </>
           )}
 
-          {/* If viewing a Completed Stage */}
-          {!isLiveStageSelected && isSelectedCompleted && (
+          {/* 3. If viewing a Completed Stage */}
+          {selectedStage !== "completed" && !isLiveStageSelected && isSelectedCompleted && (
             <>
-              {editingStage === selectedStage ? (
+              {!isProjectCompleted && editingStage === selectedStage ? (
                 <div className="space-y-3 animate-apple-in">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    <span className="text-xs font-bold text-muted-foreground tracking-wider">
                       Modifying Deliverables &amp; Metadata
                     </span>
                     <button
@@ -591,7 +589,7 @@ export default function ProductionFlowClient({
                       onClick={() => setEditingStage(null)}
                       className="text-xs font-semibold text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
                     >
-                      &larr; Exit Edit Mode
+                        Exit Edit Mode
                     </button>
                   </div>
                   <TaskAdvance
@@ -622,6 +620,16 @@ export default function ProductionFlowClient({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2.5">
+                      {isProjectCompleted && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedStage("completed")}
+                          className="apple-button inline-flex items-center gap-1 rounded-xl border border-emerald-500/30 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 shadow-2xs hover:bg-emerald-50 transition cursor-pointer dark:bg-surface-elevated dark:text-emerald-300"
+                        >
+                          <span> Published Overview</span>
+                        </button>
+                      )}
+
                       {selectedStepData?.completedAt && (
                         <span className="rounded-xl border border-emerald-500/20 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 shadow-2xs dark:bg-surface-elevated dark:text-emerald-300">
                           Completed: {formatIST(selectedStepData.completedAt)}
@@ -656,15 +664,19 @@ export default function ProductionFlowClient({
                   )}
 
                   {/* Deliverables specific to the completed step */}
-                  {selectedStage === "dtp" && proj.final_layout_path && (
+                  {selectedStage === "dtp" && (
                     <div className="pt-2">
                       <p className="text-xs font-bold text-foreground mb-2">Typeset Layout Deliverable:</p>
-                      <ProofPreviewButtons
-                        projectId={proj.id}
-                        title={proj.titles.name}
-                        hasLayout={Boolean(proj.final_layout_path)}
-                        hasCover={false}
-                      />
+                      {proj.final_layout_path ? (
+                        <ProofPreviewButtons
+                          projectId={proj.id}
+                          title={proj.titles.name}
+                          hasLayout={Boolean(proj.final_layout_path)}
+                          hasCover={false}
+                        />
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">No separate layout PDF file recorded.</p>
+                      )}
                     </div>
                   )}
 
@@ -672,7 +684,7 @@ export default function ProductionFlowClient({
                     <div className="pt-2 space-y-2">
                       <p className="text-xs font-bold text-foreground">Editorial Proofreading Status:</p>
                       <p className="text-xs text-muted-foreground">
-                        Proofreading checks and typo corrections were concluded and verified.
+                        Proofreading checks and typography corrections were concluded and verified.
                       </p>
                       {proj.final_layout_path && (
                         <ProofPreviewButtons
@@ -685,25 +697,29 @@ export default function ProductionFlowClient({
                     </div>
                   )}
 
-                  {selectedStage === "cover_design" && proj.final_cover_path && (
+                  {selectedStage === "cover_design" && (
                     <div className="pt-2">
                       <p className="text-xs font-bold text-foreground mb-2">Final Cover Artwork Deliverable:</p>
-                      <ProofPreviewButtons
-                        projectId={proj.id}
-                        title={proj.titles.name}
-                        hasLayout={false}
-                        hasCover={Boolean(proj.final_cover_path)}
-                      />
+                      {proj.final_cover_path ? (
+                        <ProofPreviewButtons
+                          projectId={proj.id}
+                          title={proj.titles.name}
+                          hasLayout={false}
+                          hasCover={Boolean(proj.final_cover_path)}
+                        />
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">No separate cover artwork file recorded.</p>
+                      )}
                     </div>
                   )}
 
-                  {selectedStage === "isbn_registration" && proj.isbn_registered && (
+                  {selectedStage === "isbn_registration" && (
                     <div className="rounded-xl border border-black/8 bg-white p-3.5 space-y-1 dark:bg-surface-elevated">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <span className="text-[11px] font-bold tracking-wider text-muted-foreground">
                         Allocated ISBN Number
                       </span>
                       <p className="font-mono text-base font-extrabold text-foreground">
-                        {proj.isbn_registered}
+                        {proj.isbn_registered || proj.titles?.isbn || "Allocated"}
                       </p>
                       {proj.isbn_request_ref && (
                         <p className="text-xs text-muted-foreground">Agency Reference: {proj.isbn_request_ref}</p>
@@ -711,45 +727,27 @@ export default function ProductionFlowClient({
                     </div>
                   )}
 
-                  {selectedStage === "final_proof" && proj.proof_approved_at && (
-                    <div className="rounded-xl border border-black/8 bg-white p-3.5 space-y-1 dark:bg-surface-elevated">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Author Digital Approval
+                  {selectedStage === "final_proof" && (
+                    <div className="rounded-xl border border-black/8 bg-white p-3.5 space-y-2 dark:bg-surface-elevated">
+                      <span className="text-[11px] font-bold tracking-wider text-muted-foreground">
+                        Author Digital Approval &amp; Completion Sign-Off
                       </span>
                       <p className="text-xs font-bold text-foreground">
-                        Approved by Author on {formatIST(proj.proof_approved_at)}
+                        Approved by Author on {formatIST(proj.proof_approved_at || proj.updated_at)}
                       </p>
                       {proj.proof_feedback && (
                         <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">
                           Notes: {proj.proof_feedback}
                         </p>
                       )}
-                    </div>
-                  )}
-
-                  {selectedStage === "printing" && proj.print_jobs && (
-                    <div className="rounded-xl border border-black/8 bg-white p-3.5 space-y-1 dark:bg-surface-elevated">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Offset Printing Summary
-                      </span>
-                      <p className="text-xs font-bold text-foreground">
-                        {proj.print_jobs.qty ?? 1000} Copies Printed · Cost: {formatPaise(proj.print_jobs.cost_paise ?? 0)}
-                      </p>
-                      {proj.print_jobs.printer_name && (
-                        <p className="text-xs text-muted-foreground">Press: {proj.print_jobs.printer_name}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {selectedStage === "post_production" && (
-                    <div className="pt-2">
-                      <PostProductionDashboard
-                        projectId={proj.id}
-                        project={proj}
-                        title={proj.titles}
-                        printJob={proj.print_jobs}
-                        publishingType={publishingType}
-                      />
+                      <div className="pt-2">
+                        <ProofPreviewButtons
+                          projectId={proj.id}
+                          title={proj.titles.name}
+                          hasLayout={Boolean(proj.final_layout_path)}
+                          hasCover={Boolean(proj.final_cover_path)}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -757,8 +755,8 @@ export default function ProductionFlowClient({
             </>
           )}
 
-          {/* If viewing an Upcoming Stage */}
-          {!isLiveStageSelected && isSelectedUpcoming && (
+          {/* 4. If viewing an Upcoming Stage */}
+          {selectedStage !== "completed" && !isLiveStageSelected && isSelectedUpcoming && (
             <div className="rounded-2xl border border-black/10 bg-slate-50/70 p-5 space-y-3 dark:border-white/10 dark:bg-white/[0.02] animate-apple-in">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="h-5 w-5" />

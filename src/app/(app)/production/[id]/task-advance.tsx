@@ -37,8 +37,8 @@ const STAGE_TRANSITIONS: Record<string, { current: string; next: string; descrip
   },
   final_proof: {
     current: "Author Final Proof",
-    next: "Offset Printing Press Run",
-    description: "Formal author & editorial sign-off is confirmed. Print specifications and press order will now be prepared.",
+    next: "Completed & Published",
+    description: "Formal author & editorial sign-off is confirmed. The book will be finalized and published to the catalog.",
   },
 };
 
@@ -379,7 +379,7 @@ export default function TaskAdvance({
               ? "Submit application reference after applying to Raja Rammohun Roy National Agency."
               : "Enter the allocated 13-digit ISBN number to advance project to Author Final Proof."
             : status === "final_proof"
-            ? "Verify author review consent before scheduling offset press run."
+            ? "Verify author review sign-off to finish production and publish the book to the catalog."
             : `Upload required deliverables and complete this milestone to advance production.`}
         </p>
       </div>
@@ -545,7 +545,7 @@ export default function TaskAdvance({
               <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
               <div>
                 <p className="font-bold">Author Digital Sign-Off Confirmed ({proofApprovedAt.split(" ")[0]})</p>
-                <p className="text-[11px] opacity-80">The author has reviewed and approved the proof deliverables.</p>
+                <p className="text-[11px] opacity-80">The author has reviewed and approved the proof deliverables. Ready to finish and publish the book.</p>
               </div>
             </div>
           ) : (
@@ -575,7 +575,7 @@ export default function TaskAdvance({
                   className="mt-0.5 h-4 w-4 rounded border-black/20 text-[#7e2562] accent-[#7e2562] focus:ring-[#7e2562] cursor-pointer"
                 />
                 <span className="text-xs text-foreground font-medium leading-tight">
-                  I confirm that the author has reviewed the proof deliverables and provided formal sign-off (written/verbal) to proceed with offset printing.
+                  I confirm that the author has reviewed the proof deliverables and provided formal sign-off (written/verbal) to finish and publish the book.
                 </span>
               </label>
             </div>
@@ -648,7 +648,7 @@ export default function TaskAdvance({
                 ? "Mark ISBN Request Sent to Agency →"
                 : "Confirm Allocation & Dispatch Proof Email to Author →"
               : status === "final_proof"
-              ? "✓ Approve Final Proof & Send to Printing Press →"
+              ? (proofApprovedAt ? "✓ Finish & Publish Book →" : "✓ Complete & Publish Book →")
               : `Complete ${verb}`}
           </button>
 
@@ -673,11 +673,15 @@ export default function TaskAdvance({
         title={
           pendingCustomAction === "rework"
             ? "Send for Revisions & Rework?"
+            : status === "final_proof"
+            ? "Finish Production & Publish Book?"
             : "Are you sure you want to move to the next step?"
         }
         subtitle={
           pendingCustomAction === "rework"
             ? "The manuscript layout will be returned to typesetting with revision feedback."
+            : status === "final_proof"
+            ? "This will finalize all production stages and make the book active in the Published Books Catalog."
             : "Please verify the milestone deliverables before advancing the production pipeline."
         }
         currentStage={
@@ -712,6 +716,8 @@ export default function TaskAdvance({
         confirmText={
           pendingCustomAction === "rework"
             ? "Yes, Send for Rework"
+            : status === "final_proof"
+            ? "Yes, Finish & Publish Book"
             : "Yes, Move to Next Step →"
         }
         confirmVariant={pendingCustomAction === "rework" ? "warning" : "primary"}

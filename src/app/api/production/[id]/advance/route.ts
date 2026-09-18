@@ -11,6 +11,7 @@ import {
   queueEmail,
   productionStageCompletedEmail,
   proofApprovalEmail,
+  publicationCelebrationEmail,
 } from "@/lib/mail";
 import { notifyUsers, notifyRoles, notifyAuthorByEmail } from "@/lib/notifications";
 
@@ -37,6 +38,9 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     },
   });
   if (!proj) return fail(404, "Production project not found");
+  if (proj.status === "completed") {
+    return fail(400, "This book production is completed and published. Step modifications are locked.");
+  }
 
   const now = stamp();
 
@@ -818,32 +822,43 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       return ok({ success: true, action: "rework" });
     }
 
-    // Approve proof and advance to printing press run
-    await prisma.production_projects.update({
-      where: { id },
-      data: {
-        status: "printing",
-        proof_approved_at: now,
-        proof_completed_at: now,
-        updated_at: now,
-      },
+    // Approve proof and complete the production project & publish the title
+    await prisma.$transaction(async (tx) => {
+      await tx.production_projects.update({
+        where: { id },
+        data: {
+          status: "completed",
+          proof_approved_at: proj.proof_approved_at || now,
+          proof_completed_at: now,
+          post_production_completed_at: now,
+          handover_completed_at: now,
+          updated_at: now,
+        },
+      });
+
+      await tx.titles.update({
+        where: { id: proj.title_id },
+        data: {
+          status: "active",
+        },
+      });
     });
 
     await audit({
       userId: user.id,
-      action: "approve_production_proof",
+      action: "complete_production_and_publish",
       entity: "production_project",
       entityId: id,
-      detail: { project_id: id },
+      detail: { project_id: id, title_id: proj.title_id },
     });
 
     if (authorEmail) {
-      const mail = productionStageCompletedEmail({
+      const mail = publicationCelebrationEmail({
         authorName,
         title: proj.titles.name,
-        completedStageName: "Author & Editorial Final Proof Sign-Off",
-        nextStageName: "Offset Printing Press Run",
-        stageNote: "Final proof sign-off confirmed. Manuscript and jacket files dispatched to offset printing press.",
+        isbn: proj.titles.isbn || proj.isbn_registered || undefined,
+        authorCopiesQty: proj.author_copies_qty || 0,
+        channels: ["Retail Bookstore", "Wholesale Dealers", "Book Fairs & Expos", "Online Store & Web"],
         trackingUrl: authorTrackingUrl,
       });
       await queueEmail({
@@ -852,28 +867,28 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         subject: mail.subject,
         text: mail.text,
         html: mail.html,
-        template: "production_proof_approved",
+        template: "publication_completed",
         refType: "production_project",
         refId: id,
       });
 
       await notifyAuthorByEmail(authorEmail, {
-        title: "Proof Approved! Moving to Printing",
-        message: `Final proof approved for "${proj.titles.name}". Files dispatched to offset printing press.`,
-        type: "PRINT",
+        title: "Congratulations! Your Book is Officially Published",
+        message: `"${proj.titles.name}" production is complete and is now active in the Kairali Books Catalog!`,
+        type: "PRODUCTION",
         link: `/author`,
       });
     }
 
-    // In-app notifications to production, store, accounts
+    // In-app notifications to staff
     await notifyRoles(["production", "store", "accounts", "owner"], {
-      title: "Proof Approved — Ready for Print Job",
-      message: `"${proj.titles.name}" final proof signed off. Ready for print job setup.`,
-      type: "PRINT",
+      title: "Book Published & Production Complete",
+      message: `"${proj.titles.name}" production complete. Book is now live in the catalog!`,
+      type: "STOCK",
       link: `/production/${id}`,
     }, user.id);
 
-    return ok({ success: true, action: "approve" });
+    return ok({ success: true, action: "complete", next: "completed" });
   }
 
   // --- STAGE 6: PRINTING (Offset Printing Run) -> Advances to POST_PRODUCTION ---

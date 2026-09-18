@@ -2,6 +2,16 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
+import {
+  FileText,
+  Image as ImageIcon,
+  ShieldCheck,
+  Lock,
+  X,
+  Maximize2,
+  Minimize2,
+  AlertCircle,
+} from "lucide-react";
 
 export type DocumentPreviewModalProps = {
   isOpen: boolean;
@@ -28,9 +38,10 @@ export function DocumentPreviewModal({
 }: DocumentPreviewModalProps) {
   const [activeType, setActiveType] = useState<"layout" | "cover">(initialType);
   const [mounted, setMounted] = useState(false);
-  const [isWindowBlurred, setIsWindowBlurred] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [securityAlert, setSecurityAlert] = useState<string | null>(null);
   const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const modalContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -53,94 +64,48 @@ export function DocumentPreviewModal({
 
   const triggerSecurityWarning = useCallback((msg: string) => {
     setSecurityAlert(msg);
-    // Clear clipboard to intercept screenshot captures
-    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText("").catch(() => {});
-    }
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
     alertTimeoutRef.current = setTimeout(() => {
       setSecurityAlert(null);
     }, 2500);
   }, []);
 
-  // Anti-Screenshot & Keyboard Protection Listeners
+  // Keyboard shortcut listeners
   useEffect(() => {
     if (!isOpen) return;
 
-    // Window focus loss shield (e.g. Snipping tool, screenshot shortcut, screen capture)
-    function handleBlur() {
-      setIsWindowBlurred(true);
-    }
-    function handleFocus() {
-      setIsWindowBlurred(false);
-    }
-
-    // Keyboard screenshot interception
     function handleKeyDown(e: KeyboardEvent) {
-      // Escape key to close modal
       if (e.key === "Escape") {
-        onClose();
+        if (isFullscreen) {
+          setIsFullscreen(false);
+        } else {
+          onClose();
+        }
         return;
       }
 
-      // PrintScreen key
-      if (e.key === "PrintScreen" || e.code === "PrintScreen") {
-        e.preventDefault();
-        e.stopPropagation();
-        triggerSecurityWarning("⚠️ Screenshots are prohibited on confidential manuscript layout drafts.");
-        return;
-      }
-
-      // Windows Snipping Tool (Win + Shift + S) or Mac Screenshot (Cmd + Shift + 3 / 4 / 5)
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && ["s", "S", "3", "4", "5"].includes(e.key)) {
-        e.preventDefault();
-        e.stopPropagation();
-        triggerSecurityWarning("⚠️ Screen capture is disabled for copyright protection.");
-        return;
-      }
-
-      // Print shortcut (Ctrl + P or Cmd + P)
+      // Print shortcut interception
       if ((e.ctrlKey || e.metaKey) && (e.key === "p" || e.key === "P")) {
         e.preventDefault();
         e.stopPropagation();
-        triggerSecurityWarning("⚠️ Printing is disabled for proof review files.");
+        triggerSecurityWarning("Printing is restricted on proof review documents.");
         return;
       }
 
-      // Save shortcut (Ctrl + S or Cmd + S)
+      // Save shortcut interception
       if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
         e.preventDefault();
         e.stopPropagation();
-        triggerSecurityWarning("⚠️ Direct file download/saving is disabled.");
+        triggerSecurityWarning("Direct document saving is restricted.");
         return;
       }
-
-      // DevTools inspection shortcut (F12 or Ctrl+Shift+I / J / C)
-      if (e.key === "F12" || ((e.ctrlKey || e.metaKey) && e.shiftKey && ["i", "I", "j", "J", "c", "C"].includes(e.key))) {
-        e.preventDefault();
-        e.stopPropagation();
-        triggerSecurityWarning("⚠️ Developer tools inspection is restricted.");
-      }
     }
 
-    function handleKeyUp(e: KeyboardEvent) {
-      if (e.key === "PrintScreen" || e.code === "PrintScreen") {
-        triggerSecurityWarning("⚠️ Screen captures are restricted on proof materials.");
-      }
-    }
-
-    window.addEventListener("blur", handleBlur);
-    window.addEventListener("focus", handleFocus);
     window.addEventListener("keydown", handleKeyDown, true);
-    window.addEventListener("keyup", handleKeyUp, true);
-
     return () => {
-      window.removeEventListener("blur", handleBlur);
-      window.removeEventListener("focus", handleFocus);
       window.removeEventListener("keydown", handleKeyDown, true);
-      window.removeEventListener("keyup", handleKeyUp, true);
     };
-  }, [isOpen, onClose, triggerSecurityWarning]);
+  }, [isOpen, onClose, isFullscreen, triggerSecurityWarning]);
 
   if (!mounted || !isOpen) return null;
 
@@ -150,18 +115,17 @@ export function DocumentPreviewModal({
   if (refNo) authParams.set("ref", refNo);
   if (email) authParams.set("email", email);
 
-  // #toolbar=0&navpanes=0 hides PDF viewer download & print buttons in Chrome, Edge, Safari, Firefox
   const pdfUrl = `/api/public/production/${projectId}/download?${authParams.toString()}#toolbar=0&navpanes=0&scrollbar=1`;
   const imageUrl = `/api/public/production/${projectId}/download?${authParams.toString()}`;
 
-  const watermarkText = `CONFIDENTIAL PROOF · KAIRALI BOOKS · ${email || refNo || "REVIEW ONLY"} · DO NOT CAPTURE OR DISTRIBUTE`;
+  const watermarkText = `CONFIDENTIAL PROOF · KAIRALI BOOKS · ${email || refNo || "REVIEW ONLY"} · ALL RIGHTS RESERVED`;
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center p-2 sm:p-4 md:p-6 select-none"
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-2 sm:p-4 md:p-6 select-none animate-apple-in"
       onContextMenu={(e) => {
         e.preventDefault();
-        triggerSecurityWarning("⚠️ Right-click context menu is disabled to protect artwork.");
+        triggerSecurityWarning("Right-click context menu is restricted on proof assets.");
         return false;
       }}
       onDragStart={(e) => {
@@ -169,7 +133,7 @@ export function DocumentPreviewModal({
         return false;
       }}
     >
-      {/* Print media blocker style */}
+      {/* Print media blocker */}
       <style>{`
         @media print {
           body { display: none !important; }
@@ -178,160 +142,241 @@ export function DocumentPreviewModal({
 
       {/* Dark backdrop blur */}
       <div
-        className="fixed inset-0 bg-black/90 backdrop-blur-md transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-neutral-950/85 backdrop-blur-md transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal Container */}
-      <div className="relative z-10 flex flex-col h-full max-h-[96vh] w-full max-w-6xl rounded-3xl border border-white/15 bg-neutral-950 text-white shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-        
+      <div
+        ref={modalContainerRef}
+        className={`relative z-10 flex flex-col w-full transition-all duration-300 rounded-2xl border border-white/10 bg-neutral-950 text-white shadow-2xl overflow-hidden ${
+          isFullscreen
+            ? "fixed inset-2 sm:inset-4 h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] max-w-none rounded-2xl"
+            : "h-[92vh] max-w-6xl"
+        }`}
+      >
         {/* Header Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-neutral-900/95 px-5 py-3 backdrop-blur-md">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-lg">
-              {activeType === "layout" ? "📄" : "🎨"}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-neutral-900/90 px-5 py-3 backdrop-blur-md">
+          {/* Left: Info */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white shadow-xs">
+              {activeType === "layout" ? (
+                <FileText className="h-5 w-5 text-white/90" />
+              ) : (
+                <ImageIcon className="h-5 w-5 text-white/90" />
+              )}
             </div>
-            <div className="truncate">
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="truncate text-sm font-extrabold tracking-tight text-white">
+                <h3 className="truncate text-sm font-extrabold text-white">
                   {title}
                 </h3>
-                <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20">
-                  <span>🔒</span>
-                  <span>Protected View</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20 shrink-0">
+                  <ShieldCheck className="h-3 w-3 text-emerald-400" />
+                  <span>Protected Proof View</span>
                 </span>
               </div>
-              <p className="text-[11px] text-white/60">
-                In-Browser Proof Preview · {activeType === "layout" ? "Typeset Interior PDF" : "Cover Artwork"} · Downloads & Screenshots Disabled
+              <p className="text-[11px] text-white/60 truncate">
+                {activeType === "layout" ? "Typeset Interior Layout PDF" : "Full Cover Jacket Artwork"} · Read-Only Preview
               </p>
             </div>
           </div>
 
-          {/* Tab Selector & Controls */}
-          <div className="flex items-center gap-2">
+          {/* Right: Controls & Tabs */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* View Switcher Tabs */}
             {hasLayout && hasCover && (
               <div className="flex items-center rounded-xl bg-white/10 p-1 border border-white/10">
                 <button
                   type="button"
                   onClick={() => setActiveType("layout")}
-                  className={`rounded-lg px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                     activeType === "layout"
-                      ? "bg-primary text-white shadow-sm"
+                      ? "bg-white text-neutral-950 shadow-xs"
                       : "text-white/70 hover:text-white"
                   }`}
                 >
-                  📄 Typeset Layout
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>Typeset Layout</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveType("cover")}
-                  className={`rounded-lg px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                     activeType === "cover"
-                      ? "bg-primary text-white shadow-sm"
+                      ? "bg-white text-neutral-950 shadow-xs"
                       : "text-white/70 hover:text-white"
                   }`}
                 >
-                  🎨 Cover Artwork
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  <span>Cover Artwork</span>
                 </button>
               </div>
             )}
+
+            {/* Fullscreen Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition cursor-pointer"
+            >
+              {isFullscreen ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </button>
 
             {/* Close Button */}
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition font-bold cursor-pointer"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-white/80 hover:bg-red-500/80 hover:text-white transition font-bold cursor-pointer ml-1"
               aria-label="Close preview"
             >
-              ✕
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
 
         {/* Floating Security Alert Toast */}
         {securityAlert && (
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 rounded-xl border border-red-500/30 bg-red-950/90 px-4 py-2 text-xs font-bold text-red-200 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-2">
-            {securityAlert}
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-xl border border-amber-500/30 bg-neutral-900/95 px-4 py-2.5 text-xs font-semibold text-amber-300 shadow-2xl backdrop-blur-md animate-apple-in">
+            <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />
+            <span>{securityAlert}</span>
           </div>
         )}
 
         {/* Content Body Area */}
-        <div className="relative flex-1 bg-neutral-900 overflow-hidden flex items-center justify-center">
-          
-          {/* Focus-Loss / Screenshot-Tool Blackout Shield */}
-          {isWindowBlurred ? (
-            <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-neutral-950 p-6 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 text-3xl mb-3 border border-white/10 shadow-inner">
-                🛡️
-              </div>
-              <h4 className="text-base font-bold text-white mb-1">
-                Content Shield Active
-              </h4>
-              <p className="max-w-md text-xs text-white/60 mb-4">
-                This document is protected against unauthorized capture. Viewing is automatically paused while the browser window is inactive or a capture tool is opened.
-              </p>
-              <button
-                type="button"
-                onClick={() => setIsWindowBlurred(false)}
-                className="rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-white/20 transition cursor-pointer"
-              >
-                Click to Resume Viewing
-              </button>
-            </div>
-          ) : null}
-
-          {/* Dynamic Confidential Watermark Overlay Grid */}
-          <div
-            className="pointer-events-none absolute inset-0 z-30 overflow-hidden opacity-[0.08] select-none flex flex-wrap content-around justify-around p-4"
-            aria-hidden="true"
-          >
-            {Array.from({ length: 16 }).map((_, i) => (
-              <div
-                key={i}
-                className="m-8 -rotate-25 whitespace-nowrap text-[13px] font-black tracking-widest text-white"
-              >
-                {watermarkText}
-              </div>
-            ))}
-          </div>
-
+        <div className="relative flex-1 bg-neutral-950 overflow-hidden flex items-center justify-center">
           {/* Active View Renderer */}
           {activeType === "layout" ? (
-            <div className="h-full w-full bg-neutral-800 relative">
+            <div className="h-full w-full bg-neutral-900 relative flex flex-col">
               <iframe
                 src={pdfUrl}
                 title="Typeset Interior Layout PDF"
-                className="h-full w-full border-0 bg-white"
+                className="h-full w-full border-0 bg-neutral-900"
               />
-              <div className="pointer-events-none absolute bottom-3 right-4 rounded-lg bg-black/75 px-3 py-1 text-[11px] text-white/80 backdrop-blur-md border border-white/10">
-                🔒 Protected Reader · Page Flipping Enabled · Downloads & Prints Disabled
+
+              {/* Watermark Overlay floating directly on top of the PDF reader */}
+              <div
+                className="pointer-events-none absolute inset-0 bottom-9 z-30 overflow-hidden select-none"
+                aria-hidden="true"
+              >
+                <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern
+                      id="pdf-watermark"
+                      width="450"
+                      height="240"
+                      patternUnits="userSpaceOnUse"
+                      patternTransform="rotate(-26)"
+                    >
+                      <text
+                        x="20"
+                        y="60"
+                        fill="#000000"
+                        fillOpacity="0.13"
+                        fontSize="12"
+                        fontWeight="800"
+                        letterSpacing="2.5"
+                        fontFamily="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont"
+                      >
+                        {watermarkText}
+                      </text>
+                      <text
+                        x="240"
+                        y="180"
+                        fill="#000000"
+                        fillOpacity="0.13"
+                        fontSize="12"
+                        fontWeight="800"
+                        letterSpacing="2.5"
+                        fontFamily="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont"
+                      >
+                        {watermarkText}
+                      </text>
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#pdf-watermark)" />
+                </svg>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-white/10 bg-neutral-900 px-4 py-2 text-[11px] text-white/60 shrink-0 z-40 relative">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Protected In-Browser Reader · Direct Downloads Disabled</span>
+                </div>
+                <span className="text-white/60">Kairali Books Production</span>
               </div>
             </div>
           ) : (
-            <div className="relative flex h-full w-full items-center justify-center p-4 sm:p-8 bg-neutral-950/90 overflow-auto">
-              {/* Invisible transparent DRM shield overlay preventing right-click or drag of the cover image */}
+            <div className="relative flex h-full w-full items-center justify-center p-4 sm:p-8 bg-neutral-950 overflow-auto">
+              {/* Watermark directly on top of the Cover Artwork */}
+              <div
+                className="pointer-events-none absolute inset-0 z-30 overflow-hidden select-none"
+                aria-hidden="true"
+              >
+                <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern
+                      id="cover-watermark"
+                      width="450"
+                      height="240"
+                      patternUnits="userSpaceOnUse"
+                      patternTransform="rotate(-26)"
+                    >
+                      <text
+                        x="20"
+                        y="60"
+                        fill="#ffffff"
+                        fillOpacity="0.14"
+                        fontSize="12"
+                        fontWeight="800"
+                        letterSpacing="2.5"
+                        fontFamily="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont"
+                      >
+                        {watermarkText}
+                      </text>
+                      <text
+                        x="240"
+                        y="180"
+                        fill="#ffffff"
+                        fillOpacity="0.14"
+                        fontSize="12"
+                        fontWeight="800"
+                        letterSpacing="2.5"
+                        fontFamily="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont"
+                      >
+                        {watermarkText}
+                      </text>
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#cover-watermark)" />
+                </svg>
+              </div>
+
               <div
                 className="absolute inset-0 z-20 cursor-default"
                 onContextMenu={(e) => {
                   e.preventDefault();
-                  triggerSecurityWarning("⚠️ Cover artwork saving is disabled.");
-                  return false;
-                }}
-                onDragStart={(e) => {
-                  e.preventDefault();
+                  triggerSecurityWarning("Cover artwork saving is restricted.");
                   return false;
                 }}
               />
-              
+
               {/* Cover Image */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={imageUrl}
-                alt={`${title} Cover Artwork`}
-                draggable={false}
-                className="relative z-10 max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl border border-white/10 ring-1 ring-white/5 pointer-events-none"
-              />
+              <div className="relative z-10 flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl}
+                  alt={`${title} Cover Artwork`}
+                  draggable={false}
+                  className="max-h-[75vh] max-w-full rounded-2xl object-contain shadow-2xl border border-white/10 ring-1 ring-white/5 pointer-events-none"
+                />
+              </div>
             </div>
           )}
         </div>

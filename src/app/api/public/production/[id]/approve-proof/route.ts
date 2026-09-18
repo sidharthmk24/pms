@@ -156,11 +156,11 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     return ok({ success: true, status: "editing", action: "rework" });
   }
 
-  // Author digitally approved proof -> Advance to offset printing press run
+  // Author digitally approved proof -> Record approval in final_proof stage
   await prisma.production_projects.update({
     where: { id },
     data: {
-      status: "printing",
+      status: "final_proof",
       proof_approved_at: now,
       proof_completed_at: now,
       proof_feedback: null,
@@ -178,17 +178,17 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
 
   // In-app notifications to staff
   await notifyRoles(["production", "proofreader", "store", "accounts", "owner"], {
-    title: "Proof Approved by Author! Ready for Press",
-    message: `Author approved final proof for "${proj.titles.name}". Title is queued for offset printing.`,
-    type: "PRINT",
+    title: "Author Proof Sign-Off Received",
+    message: `Author approved final proof for "${proj.titles.name}". Ready for staff to finish and publish.`,
+    type: "PROOF",
     link: `/production/${id}`,
   });
 
   if (authorEmail) {
     await notifyAuthorByEmail(authorEmail, {
-      title: "Proof Sign-Off Confirmed! Moving to Press",
-      message: `Thank you! Your approval for "${proj.titles.name}" is confirmed. The book is proceeding to offset printing.`,
-      type: "PRINT",
+      title: "Proof Sign-Off Confirmed!",
+      message: `Thank you! Your approval for "${proj.titles.name}" is recorded. The editorial team will finalize publication.`,
+      type: "PROOF",
       link: `/author`,
     });
 
@@ -196,8 +196,8 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       authorName,
       title: proj.titles.name,
       completedStageName: "Author Digital Sign-Off Confirmed",
-      nextStageName: "Offset Printing Press Run",
-      stageNote: "Thank you for confirming your sign-off! Your manuscript and jacket files have been released to our offset printing press.",
+      nextStageName: "Final Publication & Catalog Listing",
+      stageNote: "Thank you for confirming your sign-off! Your manuscript and jacket files have been verified for publication.",
       trackingUrl: authorTrackingUrl,
     });
     await queueEmail({
@@ -212,6 +212,6 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     });
   }
 
-  return ok({ success: true, status: "printing", action: "approve" });
+  return ok({ success: true, status: "final_proof", action: "approve" });
 });
 

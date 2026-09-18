@@ -17,9 +17,7 @@ const STATUS_LABELS: Record<string, string> = {
   cover_design: "Cover Design",
   isbn_registration: "ISBN Registration",
   final_proof: "Author Final Proof",
-  printing: "Printing Run",
-  post_production: "Post-Production Intake",
-  completed: "Completed / Live",
+  completed: "Completed / Published",
   cancelled: "Cancelled",
 };
 
@@ -30,8 +28,6 @@ const STATUS_BADGE_STYLES: Record<string, string> = {
   cover_design: "bg-indigo-50 text-indigo-800 border border-indigo-300 font-bold",
   isbn_registration: "bg-blue-50 text-blue-800 border border-blue-300 font-bold",
   final_proof: "bg-orange-50 text-orange-800 border border-orange-300 font-bold",
-  printing: "bg-[#faedf5] text-[#7e2562] border border-[#7e2562]/35 font-bold",
-  post_production: "bg-teal-50 text-teal-800 border border-teal-300 font-bold",
   completed: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold shadow-2xs",
   cancelled: "bg-rose-50 text-rose-800 border border-rose-300 font-bold",
 };
@@ -43,8 +39,6 @@ const STATUS_DOT_STYLES: Record<string, string> = {
   cover_design: "bg-indigo-600",
   isbn_registration: "bg-blue-600",
   final_proof: "bg-orange-600",
-  printing: "bg-[#7e2562]",
-  post_production: "bg-teal-600",
   completed: "bg-emerald-600",
   cancelled: "bg-rose-600",
 };

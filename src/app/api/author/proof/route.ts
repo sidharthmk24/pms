@@ -78,13 +78,14 @@ export const POST = handler(async (req: Request) => {
     return ok({ success: true, status: "editing" });
   }
 
-  // Approve proof and advance to printing
+  // Approve proof and record author sign-off
   await prisma.production_projects.update({
     where: { id: data.projectId },
     data: {
-      status: "printing",
+      status: "final_proof",
       proof_approved_at: now,
       proof_completed_at: now,
+      proof_feedback: data.comment || null,
       updated_at: now,
     },
   });
@@ -97,5 +98,5 @@ export const POST = handler(async (req: Request) => {
     detail: { project_id: data.projectId },
   });
 
-  return ok({ success: true, status: "printing" });
+  return ok({ success: true, status: "final_proof" });
 });

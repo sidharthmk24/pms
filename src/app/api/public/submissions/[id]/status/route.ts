@@ -361,7 +361,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         await prisma.production_projects.update({
           where: { id: proj.id },
           data: {
-            status: "printing",
+            status: "final_proof",
             proof_approved_at: now,
             updated_at: now,
           },
@@ -373,7 +373,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
             to: manager.email,
             toName: manager.name,
             subject: `Author Sign-off received — ${sub.ref_no}`,
-            text: `Dear ${manager.name},\n\nThe author of "${sub.title}" (${sub.ref_no}) has signed off on the final proof copy.\n\nThe project is now in the printing queue. Please link the print run deliverables once complete.`,
+            text: `Dear ${manager.name},\n\nThe author of "${sub.title}" (${sub.ref_no}) has signed off on the final proof copy.\n\nYou can now review and click "Finish & Publish Book" in the Production pipeline to complete the project and add it to the published catalog.`,
           });
         }
 

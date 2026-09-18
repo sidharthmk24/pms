@@ -16,9 +16,7 @@ const STATUS_LABELS: Record<string, string> = {
   cover_design: "Cover Design",
   isbn_registration: "ISBN Registration",
   final_proof: "Author Final Proof",
-  printing: "Offset Printing Run",
-  post_production: "Post-Production Intake",
-  completed: "Completed / Live",
+  completed: "Completed / Published",
   cancelled: "Cancelled",
 };
 

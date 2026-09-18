@@ -289,11 +289,9 @@ export default async function AuthorDashboardPage({
                 "cover_design",
                 "isbn_registration",
                 "final_proof",
-                "printing",
-                "post_production",
                 "completed",
               ];
-              const currentStageIdx = PIPELINE_ORDER.indexOf(project.status);
+              const currentStageIdx = project.status === "completed" ? PIPELINE_ORDER.length : PIPELINE_ORDER.indexOf(project.status);
 
               const stages = [
                 { key: "under_contract", name: "Contract Signed" },
@@ -302,11 +300,9 @@ export default async function AuthorDashboardPage({
                 { key: "cover_design", name: "Cover Design" },
                 { key: "isbn_registration", name: "ISBN Assigned", extra: project.isbn_registered },
                 { key: "final_proof", name: "Final Proof" },
-                { key: "printing", name: "Printing Run" },
-                { key: "post_production", name: "Intake & Courier" },
               ].map((st) => {
                 const stepIdx = PIPELINE_ORDER.indexOf(st.key);
-                const done = stepIdx < currentStageIdx;
+                const done = project.status === "completed" || (currentStageIdx !== -1 && stepIdx < currentStageIdx);
                 const current = st.key === project.status;
                 return { ...st, done, current };
               });
@@ -331,13 +327,13 @@ export default async function AuthorDashboardPage({
                     <div>
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-xs font-bold text-foreground border border-black/10 shadow-xs dark:border-white/10">
                         <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                        Status: {project.status === "editing" && project.proof_feedback ? "UNDER REWORK" : project.status.replace(/_/g, " ").toUpperCase()}
+                        Status: {project.status === "editing" && project.proof_feedback ? "UNDER REWORK" : project.status === "completed" ? "PUBLISHED" : project.status.replace(/_/g, " ").toUpperCase()}
                       </span>
                     </div>
                   </div>
 
                   {/* Visual Stepper */}
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-8 pt-3">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6 pt-3">
                     {stages.map((st, idx) => (
                       <div
                         key={st.name}

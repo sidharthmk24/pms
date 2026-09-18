@@ -796,7 +796,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
                   }}
                   className="text-xs font-bold text-[#7e2562] hover:underline cursor-pointer"
                 >
-                  &larr; Remember password? Sign in
+                    Remember password? Sign in
                 </button>
 
                 <button

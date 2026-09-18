@@ -92,10 +92,10 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
     "Content-Type": mime,
     "Content-Disposition": contentDisposition,
     "X-Content-Type-Options": "nosniff",
-    "Content-Security-Policy": "default-src 'none'; sandbox",
-    "Cache-Control": "private, no-cache, no-store, must-revalidate",
-    "Pragma": "no-cache",
-    "Expires": "0",
+    "X-Frame-Options": "SAMEORIGIN",
+    "Content-Security-Policy": "frame-ancestors 'self'",
+    "Accept-Ranges": "bytes",
+    "Cache-Control": "private, max-age=3600",
   };
 
   try {
