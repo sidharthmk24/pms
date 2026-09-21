@@ -117,7 +117,7 @@ export default function AuthorSetupClient({
             <div>
               <label
                 htmlFor="name"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                className="mb-1.5 block text-xs font-semibold   tracking-wider text-muted-foreground"
               >
                 Author Name
               </label>
@@ -135,7 +135,7 @@ export default function AuthorSetupClient({
             <div>
               <label
                 htmlFor="email"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                className="mb-1.5 block text-xs font-semibold   tracking-wider text-muted-foreground"
               >
                 Email Address
               </label>
@@ -155,7 +155,7 @@ export default function AuthorSetupClient({
               <div className="flex items-center justify-between mb-1.5">
                 <label
                   htmlFor="password"
-                  className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                  className="block text-xs font-semibold   tracking-wider text-muted-foreground"
                 >
                   Password <span className="text-[11px] font-normal lowercase">(min 8 chars)</span>
                 </label>
@@ -183,7 +183,7 @@ export default function AuthorSetupClient({
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                className="mb-1.5 block text-xs font-semibold   tracking-wider text-muted-foreground"
               >
                 Confirm Password
               </label>

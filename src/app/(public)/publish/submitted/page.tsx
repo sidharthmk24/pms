@@ -43,7 +43,7 @@ export default async function SubmittedPage({ searchParams }: PageProps<"/publis
       <div className="my-8 rounded-sm border border-[#7e2562]/15 bg-white p-6 sm:p-8 text-left shadow-plum-sm">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#7e2562]/10 pb-5">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#7e2562]">
+            <span className="text-xs font-bold   tracking-wider text-[#7e2562]">
               Unique Submission Reference
             </span>
             <p className="text-xs text-muted-foreground mt-0.5">Keep this reference identifier for your records</p>

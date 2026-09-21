@@ -10,8 +10,9 @@ import {
   createSubmission,
   SubmissionSchema,
   type ManuscriptMeta,
+  type AssignedEditorInfo,
 } from "@/lib/submissions";
-import { notifyRoles, notifyAuthorByEmail } from "@/lib/notifications";
+import { createNotification, notifyRoles, notifyAuthorByEmail } from "@/lib/notifications";
 
 /** Manuscript submission endpoint — requires authenticated author. */
 export const POST = handler(async (req: Request) => {
@@ -106,7 +107,7 @@ export const POST = handler(async (req: Request) => {
       }
     : null;
 
-  let created: { id: string; refNo: string };
+  let created: { id: string; refNo: string; assignedEditor: AssignedEditorInfo };
   try {
     created = await createSubmission(fields, manuscript, coverMeta);
   } catch (err) {
@@ -144,17 +145,34 @@ export const POST = handler(async (req: Request) => {
     action: "submission_received",
     entity: "submission",
     entityId: created.id,
-    detail: { ref_no: created.refNo, genre: fields.genre, title: fields.title },
+    detail: {
+      ref_no: created.refNo,
+      genre: fields.genre,
+      title: fields.title,
+      assigned_editor_id: created.assignedEditor?.id ?? null,
+      assigned_editor_name: created.assignedEditor?.name ?? null,
+    },
   });
 
-  // In-app real-time notifications: Only the Owner is notified when a new manuscript is submitted.
-  // Once the owner assigns the manuscript to an editor, that specific editor will receive the notification.
+  // Notify the Owner
   await notifyRoles(["owner"], {
     title: "New Manuscript Submitted",
-    message: `"${fields.title}" submitted by ${fields.author_name} (${created.refNo})`,
+    message: created.assignedEditor
+      ? `"${fields.title}" submitted by ${fields.author_name} (${created.refNo}) — Auto-assigned to ${created.assignedEditor.name}`
+      : `"${fields.title}" submitted by ${fields.author_name} (${created.refNo})`,
     type: "SUBMISSION",
     link: `/submissions/${created.id}`,
   });
+
+  // In-app real-time notification to the automatically assigned editor
+  if (created.assignedEditor) {
+    await createNotification(created.assignedEditor.id, {
+      title: "Manuscript Assigned",
+      message: `You have been automatically assigned to review "${fields.title}" (${created.refNo}).`,
+      type: "TASK",
+      link: `/submissions/${created.id}`,
+    });
+  }
 
   await notifyAuthorByEmail(fields.email, {
     title: "Manuscript Received",

@@ -87,7 +87,7 @@ export default function ProofApprovalClient({
       <div className="rounded-2xl border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/[0.06] pb-3 dark:border-white/[0.08]">
           <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">
+            <h3 className="text-sm font-bold   tracking-wider text-foreground">
               Production Deliverables for Review
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -204,7 +204,7 @@ export default function ProofApprovalClient({
         /* Active Approval Form */
         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 shadow-sm space-y-5">
           <div>
-            <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-primary">
+            <span className="inline-block text-[11px] font-bold   tracking-wider text-primary">
               Author Verification &amp; Acceptance
             </span>
             <h3 className="text-lg font-bold text-foreground   mt-1">
@@ -248,7 +248,7 @@ export default function ProofApprovalClient({
           ) : (
             /* Expandable Rework Form */
             <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 space-y-3 animate-in fade-in">
-              <label htmlFor="proof_rework_notes" className="block text-xs font-bold uppercase tracking-wider text-warning">
+              <label htmlFor="proof_rework_notes" className="block text-xs font-bold   tracking-wider text-warning">
                 Describe Corrections or Revisions Needed:
               </label>
               <textarea

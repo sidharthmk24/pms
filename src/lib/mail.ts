@@ -401,7 +401,7 @@ export function productionStageCompletedEmail(input: {
   
   <div style="background:#f4f9f7;border:1px solid #c9e4dc;border-radius:10px;padding:16px;margin:20px 0">
     <div style="display:flex;align-items:center;margin-bottom:8px">
-      <span style="background:#0f5d55;color:#ffffff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px">Completed Milestone</span>
+      <span style="background:#0f5d55;color:#ffffff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform: ;letter-spacing:0.5px">Completed Milestone</span>
       <span style="font-weight:700;color:#0f5d55;margin-left:10px;font-size:15px">✓ ${escapeHtml(completedStageName)}</span>
     </div>
     <div style="font-size:13px;color:#4a453e;margin-top:10px;border-top:1px dashed #c9e4dc;padding-top:10px">
@@ -636,8 +636,12 @@ export function renderPasswordResetEmail({
   </div>
 
   <div style="background:#faedf5;border:1px solid #7e256225;padding:14px 16px;border-radius:10px;margin:24px 0">
-    <p style="font-size:12px;color:#7e2562;margin:0;font-weight:600">
-      ⏱️ This link is valid for <strong>1 hour</strong> and will automatically expire once used.
+    <p style="font-size:12px;color:#7e2562;margin:0;font-weight:600;display:flex;align-items:center;line-height:1.4">
+      <svg style="width:15px;height:15px;margin-right:8px;vertical-align:-2px;display:inline-block;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="#7e2562" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      <span>This link is valid for <strong>1 hour</strong> and will automatically expire once used.</span>
     </p>
   </div>
 

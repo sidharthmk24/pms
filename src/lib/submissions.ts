@@ -3,6 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { nextDocNo } from "@/lib/counters";
 import { addHours, stamp } from "@/lib/time";
+import { parseUserRoles, hasRole } from "@/lib/roles";
 import type { SubmissionInput } from "@/lib/submission-fields";
 
 export * from "@/lib/submission-fields";
@@ -56,18 +57,88 @@ export type ManuscriptMeta = {
   mime: string;
 } | null;
 
+export type AssignedEditorInfo = {
+  id: string;
+  name: string;
+  email: string;
+} | null;
+
+/**
+ * Determines the next editor to assign using a fair round-robin rotation.
+ */
+export async function getNextRoundRobinEditor(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+): Promise<AssignedEditorInfo> {
+  const activeStaff = await tx.users.findMany({
+    where: {
+      active: true,
+      role: { not: "author" },
+    },
+    select: { id: true, name: true, email: true, role: true },
+    orderBy: { created_at: "asc" },
+  });
+
+  // Prioritize active users with explicit 'editor' role
+  let eligibleEditors = activeStaff.filter((u) => parseUserRoles(u.role).includes("editor"));
+
+  // Fallback if no dedicated editor accounts exist: include any staff with editor capability
+  if (eligibleEditors.length === 0) {
+    eligibleEditors = activeStaff.filter((u) => hasRole(u.role, "editor"));
+  }
+
+  if (eligibleEditors.length === 0) {
+    return null;
+  }
+
+  // Retrieve custom editor ordering if configured
+  const orderSetting = await tx.settings.findUnique({
+    where: { key: "editors.round_robin_order" },
+  });
+
+  if (orderSetting?.value) {
+    try {
+      const orderIds: string[] = JSON.parse(orderSetting.value);
+      if (Array.isArray(orderIds) && orderIds.length > 0) {
+        eligibleEditors.sort((a, b) => {
+          const idxA = orderIds.indexOf(a.id);
+          const idxB = orderIds.indexOf(b.id);
+          const sortA = idxA !== -1 ? idxA : 9999;
+          const sortB = idxB !== -1 ? idxB : 9999;
+          return sortA - sortB;
+        });
+      }
+    } catch {
+      // Fallback to default ordering
+    }
+  }
+
+  // Atomically claim the next round-robin index
+  const counter = await tx.counters.upsert({
+    where: { name: "submission_editor_rr" },
+    create: { name: "submission_editor_rr", value: 0 },
+    update: { value: { increment: 1 } },
+  });
+
+  const nextIndex = Math.abs(counter.value) % eligibleEditors.length;
+  const editor = eligibleEditors[nextIndex];
+  return { id: editor.id, name: editor.name, email: editor.email };
+}
+
 /**
  * Creates the submission and claims its reference number in one transaction,
- * so a failure cannot leave a gap in the counter.
+ * and automatically assigns an active editor via round-robin.
  */
 export async function createSubmission(
   input: SubmissionInput,
   manuscript: ManuscriptMeta,
   cover?: ManuscriptMeta,
-): Promise<{ id: string; refNo: string }> {
+): Promise<{ id: string; refNo: string; assignedEditor: AssignedEditorInfo }> {
   return prisma.$transaction(async (tx) => {
     const refNo = await nextDocNo(tx, "submission", "SUB");
     const now = stamp();
+    const assignedEditor = await getNextRoundRobinEditor(tx);
+    const initialStatus = assignedEditor ? "under_review" : "new";
+    const assignedAt = assignedEditor ? now : null;
 
     const row = await tx.submissions.create({
       data: {
@@ -91,9 +162,9 @@ export async function createSubmission(
         cover_filename: cover?.filename ?? null,
         cover_size: cover?.size ?? null,
         cover_mime: cover?.mime ?? null,
-        status: "new",
-        reviewed_by: null,
-        assigned_at: null,
+        status: initialStatus,
+        reviewed_by: assignedEditor?.id ?? null,
+        assigned_at: assignedAt,
         source: "web",
         submitted_at: now,
         updated_at: now,
@@ -137,7 +208,7 @@ export async function createSubmission(
       });
     }
 
-    return { id: row.id, refNo: row.ref_no };
+    return { id: row.id, refNo: row.ref_no, assignedEditor };
   });
 }
 

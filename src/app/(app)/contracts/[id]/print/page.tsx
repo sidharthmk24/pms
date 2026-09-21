@@ -45,10 +45,10 @@ export default async function ContractPrintPage({
             className="h-10 w-auto object-contain"
           />
         </div>
-        <span className="text-xs font-mono font-bold uppercase tracking-widest text-gray-500 block mb-1">
+        <span className="text-xs font-mono font-bold   tracking-widest text-gray-500 block mb-1">
           Official Publishing Contract · {meta.contract_ref || "CON-2026-0001"}
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-wider font-sans text-gray-900">
+        <h1 className="text-2xl sm:text-3xl font-bold   tracking-wider font-sans text-gray-900">
           Book Publishing &amp; Royalty Agreement
         </h1>
         <p className="text-sm font-sans font-bold text-gray-800 mt-2">
@@ -77,7 +77,7 @@ export default async function ContractPrintPage({
         {/* Legal Articles */}
         <div className="space-y-5">
           <div>
-            <h2 className="font-sans font-bold text-sm uppercase tracking-wide text-gray-900 mb-1">
+            <h2 className="font-sans font-bold text-sm   tracking-wide text-gray-900 mb-1">
               Article 1 — Grant of Rights
             </h2>
             <p>
@@ -86,7 +86,7 @@ export default async function ContractPrintPage({
           </div>
 
           <div>
-            <h2 className="font-sans font-bold text-sm uppercase tracking-wide text-gray-900 mb-1">
+            <h2 className="font-sans font-bold text-sm   tracking-wide text-gray-900 mb-1">
               Article 2 — Commercial & Royalty Terms
             </h2>
             <ul className="list-disc pl-5 space-y-1.5 font-sans text-xs">
@@ -109,7 +109,7 @@ export default async function ContractPrintPage({
           </div>
 
           <div>
-            <h2 className="font-sans font-bold text-sm uppercase tracking-wide text-gray-900 mb-1">
+            <h2 className="font-sans font-bold text-sm   tracking-wide text-gray-900 mb-1">
               Article 3 — Term & Exclusivity
             </h2>
             <p>
@@ -118,7 +118,7 @@ export default async function ContractPrintPage({
           </div>
 
           <div>
-            <h2 className="font-sans font-bold text-sm uppercase tracking-wide text-gray-900 mb-1">
+            <h2 className="font-sans font-bold text-sm   tracking-wide text-gray-900 mb-1">
               Article 4 — Proofreading & Editorial Review
             </h2>
             <p>
@@ -127,7 +127,7 @@ export default async function ContractPrintPage({
           </div>
 
           <div>
-            <h2 className="font-sans font-bold text-sm uppercase tracking-wide text-gray-900 mb-1">
+            <h2 className="font-sans font-bold text-sm   tracking-wide text-gray-900 mb-1">
               Article 5 — Copyright & Reversion of Rights
             </h2>
             <p>
@@ -136,7 +136,7 @@ export default async function ContractPrintPage({
           </div>
 
           <div>
-            <h2 className="font-sans font-bold text-sm uppercase tracking-wide text-gray-900 mb-1">
+            <h2 className="font-sans font-bold text-sm   tracking-wide text-gray-900 mb-1">
               Article 6 — Indian Tax Compliance & Jurisdiction
             </h2>
             <p>
@@ -150,7 +150,7 @@ export default async function ContractPrintPage({
           {/* Publisher Signature Block */}
           <div className="border border-gray-300 rounded-xl p-5 bg-gray-50/75 flex flex-col justify-between">
             <div>
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-3">
+              <span className="text-[10px] font-bold text-gray-500   tracking-widest block mb-3">
                 Signed on Behalf of Publisher
               </span>
               
@@ -175,7 +175,7 @@ export default async function ContractPrintPage({
           {/* Author Signature Block */}
           <div className="border border-gray-300 rounded-xl p-5 bg-gray-50/75 flex flex-col justify-between">
             <div>
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-3">
+              <span className="text-[10px] font-bold text-gray-500   tracking-widest block mb-3">
                 Signed by Author
               </span>
               

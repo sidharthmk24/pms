@@ -380,7 +380,7 @@ export default function SigningClient({
       <div className="printable-contract overflow-hidden rounded-3xl border border-black/10 bg-surface shadow-2xl dark:border-white/10 dark:bg-surface">
         {/* Document Header */}
         <div className="border-b border-black/[0.06] bg-black/[0.02] p-8 text-center dark:border-white/[0.08] dark:bg-white/[0.02]">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-2">
+          <span className="text-[11px] font-bold   tracking-widest text-primary block mb-2">
             Kairali Books Publishing Agreement
           </span>
           <h1 className="text-2xl font-black text-foreground sm:text-3xl  ">
@@ -396,7 +396,7 @@ export default function SigningClient({
           <div className="p-4 text-center flex flex-col items-center justify-center">
             <span className="text-[11px] font-bold text-muted-foreground">Royalty Rate</span>
             <p className="mt-0.5 text-lg font-black text-foreground">{contract.royalty_pct}%</p>
-            <span className="text-[10px] text-muted-foreground uppercase">{contract.basis} basis</span>
+            <span className="text-[10px] text-muted-foreground  ">{contract.basis} basis</span>
           </div>
           <div className="p-4 text-center flex flex-col items-center justify-center">
             <span className="text-[11px] font-bold text-muted-foreground">Advance on Signing</span>
@@ -462,7 +462,7 @@ export default function SigningClient({
             <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-5 dark:border-white/10 dark:bg-white/[0.02]">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  <span className="text-xs font-bold text-muted-foreground   tracking-wider">
                     Publisher Digital Seal &amp; Authorization
                   </span>
                   <p className="mt-1 font-bold text-foreground">{meta.publisher_signatory || PUBLISHER_DETAILS.signatory}</p>
@@ -485,7 +485,7 @@ export default function SigningClient({
         {!isSignedSuccess && !isDeclined && (
           <div className="hidden print:block border-t border-black/10 p-8 font-sans break-inside-avoid">
             <div className="signature-box rounded-2xl border border-gray-400 p-5 bg-gray-50/50">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-3">
+              <span className="text-[10px] font-bold text-gray-500   tracking-widest block mb-3">
                 Signed by Author (Paper Execution Copy)
               </span>
               <div className="h-16 flex items-end pb-1 border-b border-gray-400 mb-2">
@@ -580,7 +580,7 @@ export default function SigningClient({
                   maxLength={10}
                   value={pan}
                   onChange={(e) => setPan(e.target.value.toUpperCase())}
-                  className="w-full rounded-xl border border-[#7e2562]/20 bg-white px-4 py-3 text-sm font-bold uppercase tracking-wider text-foreground outline-none transition-all placeholder:text-muted-foreground/50 placeholder:font-normal focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15 shadow-2xs"
+                  className="w-full rounded-xl border border-[#7e2562]/20 bg-white px-4 py-3 text-sm font-bold   tracking-wider text-foreground outline-none transition-all placeholder:text-muted-foreground/50 placeholder:font-normal focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15 shadow-2xs"
                 />
               </div>
 
@@ -607,7 +607,7 @@ export default function SigningClient({
                   maxLength={11}
                   value={ifsc}
                   onChange={(e) => setIfsc(e.target.value.toUpperCase())}
-                  className="w-full rounded-xl border border-[#7e2562]/20 bg-white px-4 py-3 text-sm font-bold uppercase tracking-wider text-foreground outline-none transition-all placeholder:text-muted-foreground/50 placeholder:font-normal focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15 shadow-2xs"
+                  className="w-full rounded-xl border border-[#7e2562]/20 bg-white px-4 py-3 text-sm font-bold   tracking-wider text-foreground outline-none transition-all placeholder:text-muted-foreground/50 placeholder:font-normal focus:border-[#7e2562] focus:ring-3 focus:ring-[#7e2562]/15 shadow-2xs"
                 />
               </div>
             </div>
@@ -719,7 +719,7 @@ export default function SigningClient({
                 {uploadedSigImage ? (
                   <div className="space-y-3">
                     <div className="inline-block rounded-2xl border-2 border-emerald-500/40 bg-white p-4 shadow-sm">
-                      <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider flex items-center justify-center gap-1 mb-1">
+                      <span className="text-[10px] font-bold text-emerald-700   tracking-wider flex items-center justify-center gap-1 mb-1">
                         <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
@@ -902,7 +902,7 @@ export default function SigningClient({
             <div className="rounded-2xl border border-success/20 bg-success/5 p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <span className="text-xs font-bold text-success uppercase tracking-wider">
+                  <span className="text-xs font-bold text-success   tracking-wider">
                     Author Signature Verified
                   </span>
                   <p className="mt-1 text-base font-extrabold text-foreground">{contract.authors.name}</p>

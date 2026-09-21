@@ -250,7 +250,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
       <div className="rounded-3xl border border-black/10 bg-surface p-8 shadow-xs dark:border-white/10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <span className="text-xs font-bold   tracking-widest text-muted-foreground">
               Documentation &amp; Manual
             </span>
             <h1 className="mt-1 text-3xl  tracking-tight text-foreground ">
@@ -341,7 +341,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <span className="text-[11px] font-bold text-muted-foreground   tracking-wider">
                         {item.sectionTitle}
                       </span>
                       <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary">
@@ -428,7 +428,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-5 dark:border-white/10 dark:bg-white/[0.02]">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-black uppercase text-foreground">Owner</span>
+                      <span className="text-xs font-black   text-foreground">Owner</span>
                       <span className="rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-bold text-foreground dark:bg-white/15">Full Access</span>
                     </div>
                     <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
@@ -438,7 +438,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
 
                   <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-5 dark:border-white/10 dark:bg-white/[0.02]">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-black uppercase text-foreground">Editor</span>
+                      <span className="text-xs font-black   text-foreground">Editor</span>
                       <span className="rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-bold text-foreground dark:bg-white/15">Editorial</span>
                     </div>
                     <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
@@ -448,7 +448,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
 
                   <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-5 dark:border-white/10 dark:bg-white/[0.02]">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-black uppercase text-foreground">Production</span>
+                      <span className="text-xs font-black   text-foreground">Production</span>
                       <span className="rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-bold text-foreground dark:bg-white/15">Press &amp; DTP</span>
                     </div>
                     <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
@@ -458,7 +458,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
 
                   <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-5 dark:border-white/10 dark:bg-white/[0.02]">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-black uppercase text-foreground">Author</span>
+                      <span className="text-xs font-black   text-foreground">Author</span>
                       <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">Portal</span>
                     </div>
                     <p className="mt-3 text-xs text-muted-foreground leading-relaxed">

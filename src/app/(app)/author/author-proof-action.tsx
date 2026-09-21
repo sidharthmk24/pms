@@ -69,7 +69,7 @@ export function AuthorProofAction({
 
       {showRework ? (
         <div className="space-y-2 rounded-xl border border-warning/30 bg-background p-3 animate-in fade-in">
-          <label htmlFor={`rework-${projectId}`} className="block text-xs font-semibold uppercase tracking-wider text-warning">
+          <label htmlFor={`rework-${projectId}`} className="block text-xs font-semibold   tracking-wider text-warning">
             Describe Requested Corrections / Re-Typesetting
           </label>
           <textarea

@@ -103,7 +103,7 @@ export default function ForgotPasswordForm() {
       <div>
         <label
           htmlFor="email"
-          className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+          className="mb-1.5 block text-xs font-semibold   tracking-wider text-muted-foreground"
         >
           Email address
         </label>

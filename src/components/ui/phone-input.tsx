@@ -170,7 +170,7 @@ export function PhoneInput({
         <div className="flex items-center justify-between mb-1">
           <label
             htmlFor={id}
-            className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-foreground select-none"
+            className="inline-flex items-center gap-1 text-xs font-bold   tracking-wider text-foreground select-none"
           >
            
             <span>{label}</span>
@@ -244,7 +244,7 @@ export function PhoneInput({
         {/* Real-time Country Code Suggestions Floating Dropdown */}
         {isOpen && isFocused && (
           <div className="absolute left-0 top-full z-50 mt-1.5 w-full rounded-xl border border-gray-200 bg-white p-2 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150 max-h-56 overflow-y-auto custom-scrollbar">
-            <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <div className="px-2 py-1 text-[10px] font-bold   tracking-wider text-muted-foreground">
               {inputValue.trim() ? "Suggested Country Codes" : "Popular Country Codes"}
             </div>
 

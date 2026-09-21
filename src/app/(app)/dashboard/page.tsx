@@ -118,11 +118,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <div>
           
             <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Good day, {firstName}
+              Welcome, {firstName}
             </h1>
-            <p className="mt-1 text-base font-medium text-muted-foreground">
-              Comprehensive telemetry, system audit logs &amp; inventory control
-            </p>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -230,7 +227,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
                 <div className="overflow-x-auto">
                   <table className="w-full text-base">
                     <thead>
-                      <tr className="border-b border-black/[0.08] text-left text-xs font-bold uppercase tracking-wider text-muted-foreground dark:border-white/[0.1]">
+                      <tr className="border-b border-black/[0.08] text-left text-xs font-bold   tracking-wider text-muted-foreground dark:border-white/[0.1]">
                         <th className="pb-3 pt-1">Title</th>
                         <th className="pb-3 pt-1 text-right">Current</th>
                         <th className="pb-3 pt-1 text-right">Reorder Level</th>
@@ -393,11 +390,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <div>
           
             <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Good day, {firstName}
+              Welcome, {firstName}
             </h1>
-            <p className="mt-1 text-base font-medium text-muted-foreground">
-              Manuscript assessments, editorial assignments &amp; review milestones
-            </p>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -506,7 +500,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-black/[0.08] text-left font-bold uppercase tracking-wider text-muted-foreground dark:border-white/[0.1]">
+                      <tr className="border-b border-black/[0.08] text-left font-bold   tracking-wider text-muted-foreground dark:border-white/[0.1]">
                         <th className="pb-3 pt-1">Book Title</th>
                         <th className="pb-3 pt-1">Author</th>
                         <th className="pb-3 pt-1">Current Stage</th>
@@ -650,11 +644,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
               <span>Cover Design Studio</span>
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Good day, {firstName}
+              Welcome, {firstName}
             </h1>
-            <p className="mt-1 text-base font-medium text-muted-foreground">
-              Book jacket artwork, front/back cover typography &amp; design deliverables
-            </p>
           </div>
           <Link
             href="/production"
@@ -698,7 +689,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-black/[0.08] text-left font-bold uppercase tracking-wider text-muted-foreground">
+                  <tr className="border-b border-black/[0.08] text-left font-bold   tracking-wider text-muted-foreground">
                     <th className="pb-3 pt-1">Book Title</th>
                     <th className="pb-3 pt-1">Author</th>
                     <th className="pb-3 pt-1">Deadline</th>
@@ -776,11 +767,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
               <span>DTP &amp; Typesetting Desk</span>
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Good day, {firstName}
+              Welcome, {firstName}
             </h1>
-            <p className="mt-1 text-base font-medium text-muted-foreground">
-              Interior page composition, Malayalam typography &amp; print-ready page layout
-            </p>
           </div>
           <Link
             href="/production"
@@ -824,7 +812,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-black/[0.08] text-left font-bold uppercase tracking-wider text-muted-foreground">
+                  <tr className="border-b border-black/[0.08] text-left font-bold   tracking-wider text-muted-foreground">
                     <th className="pb-3 pt-1">Book Title</th>
                     <th className="pb-3 pt-1">Author</th>
                     <th className="pb-3 pt-1">Deadline</th>
@@ -897,11 +885,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
             <span>{ROLE_LABEL[userRoles[0]] || "Staff Workspace"}</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Good day, {firstName}
+            Welcome, {firstName}
           </h1>
-          <p className="mt-1 text-base font-medium text-muted-foreground">
-            Operational pipeline tasks &amp; book production queue
-          </p>
         </div>
         <div className="flex items-center gap-2.5">
           <Link
@@ -962,7 +947,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-black/[0.08] text-left font-bold uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b border-black/[0.08] text-left font-bold   tracking-wider text-muted-foreground">
                   <th className="pb-3 pt-1">Book Title</th>
                   <th className="pb-3 pt-1">Author</th>
                   <th className="pb-3 pt-1">Current Stage</th>

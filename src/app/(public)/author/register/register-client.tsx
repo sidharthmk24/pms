@@ -212,7 +212,7 @@ export default function AuthorRegisterClient({
 
             {/* Author Name */}
             <div>
-              <label htmlFor="name" className="mb-2 block text-xs font-bold uppercase tracking-wider text-foreground">
+              <label htmlFor="name" className="mb-2 block text-xs font-bold   tracking-wider text-foreground">
                 Author Full Name / Username <span className="text-rose-600">*</span>
               </label>
               <div className="relative">
@@ -232,7 +232,7 @@ export default function AuthorRegisterClient({
 
             {/* Email Address */}
             <div>
-              <label htmlFor="email" className="mb-2 block text-xs font-bold uppercase tracking-wider text-foreground">
+              <label htmlFor="email" className="mb-2 block text-xs font-bold   tracking-wider text-foreground">
                 Email Address <span className="text-rose-600">*</span>
               </label>
               <div className="relative">
@@ -280,7 +280,7 @@ export default function AuthorRegisterClient({
             {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-foreground">
+                <label htmlFor="password" className="text-xs font-bold   tracking-wider text-foreground">
                   Password <span className="text-rose-600">*</span>
                 </label>
                 <button
@@ -308,7 +308,7 @@ export default function AuthorRegisterClient({
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="mb-2 block text-xs font-bold uppercase tracking-wider text-foreground">
+              <label htmlFor="confirmPassword" className="mb-2 block text-xs font-bold   tracking-wider text-foreground">
                 Confirm Password <span className="text-rose-600">*</span>
               </label>
               <div className="relative">

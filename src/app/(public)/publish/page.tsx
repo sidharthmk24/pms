@@ -325,7 +325,7 @@ export default async function PublishGuidelinesPage() {
             </div>
             <h3 className="text-xl font-bold text-foreground">01 — Full Manuscript</h3>
             <div className="mt-3 mb-3 flex flex-col items-center justify-center gap-1.5">
-              <span className="text-[11px] font-bold text-primary uppercase tracking-wider bg-[#7e2562]/8 px-2.5 py-1 rounded-sm">
+              <span className="text-[11px] font-bold text-primary   tracking-wider bg-[#7e2562]/8 px-2.5 py-1 rounded-sm">
                 Max {maxMb}MB · Single File
               </span>
               <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-sm border border-emerald-200">
@@ -360,7 +360,7 @@ export default async function PublishGuidelinesPage() {
             </div>
             <h3 className="text-xl font-bold text-foreground">02 — Synopsis &amp; Themes</h3>
             <div className="mt-3 mb-3 flex flex-col items-center justify-center gap-1.5">
-              <span className="text-[11px] font-bold text-primary uppercase tracking-wider bg-[#7e2562]/8 px-2.5 py-1 rounded-sm">
+              <span className="text-[11px] font-bold text-primary   tracking-wider bg-[#7e2562]/8 px-2.5 py-1 rounded-sm">
                 Min. 100 Characters
               </span>
               <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-sm border border-emerald-200">
@@ -395,7 +395,7 @@ export default async function PublishGuidelinesPage() {
             </div>
             <h3 className="text-xl font-bold text-foreground">03 — Author Profile</h3>
             <div className="mt-3 mb-3 flex flex-col items-center justify-center gap-1.5">
-              <span className="text-[11px] font-bold text-primary uppercase tracking-wider bg-[#7e2562]/8 px-2.5 py-1 rounded-sm">
+              <span className="text-[11px] font-bold text-primary   tracking-wider bg-[#7e2562]/8 px-2.5 py-1 rounded-sm">
                 Instant Confirmation
               </span>
               <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-sm border border-emerald-200">
@@ -464,7 +464,7 @@ export default async function PublishGuidelinesPage() {
           <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto italic">
             &ldquo;Words transform solitary thought into collective consciousness. Kairali Books remains committed to celebrating new voices while upholding the deep <br className="md:block hidden" /> heritage of Malayalam literature.&rdquo;
           </p>
-          <div className="mt-4 text-xs font-bold uppercase tracking-widest text-[#7e2562]">
+          <div className="mt-4 text-xs font-bold   tracking-widest text-[#7e2562]">
             — Kairali Books Editorial Board
           </div>
         </div>

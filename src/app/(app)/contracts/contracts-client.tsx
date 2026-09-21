@@ -423,7 +423,7 @@ export default function ContractsClient({
       <section className="relative z-10 overflow-hidden rounded-3xl border border-[#7e2562]/15 bg-white shadow-plum-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-[#7e2562]/10 bg-[#faf6f9]/60 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <thead className="border-b border-[#7e2562]/10 bg-[#faf6f9]/60 text-xs font-bold   tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-6 py-4 whitespace-nowrap">Contract / Title</th>
                 <th className="px-6 py-4 whitespace-nowrap">Author</th>
@@ -489,7 +489,7 @@ export default function ContractsClient({
                       {/* Track & Terms */}
                       <td className="px-6 py-4">
                         <div>
-                          <span className="inline-flex items-center rounded-lg bg-black/[0.05] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-foreground dark:bg-white/[0.08]">
+                          <span className="inline-flex items-center rounded-lg bg-black/[0.05] px-2 py-0.5 text-[11px] font-bold   tracking-wider text-foreground dark:bg-white/[0.08]">
                             {c.meta.publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali-Funded"}
                           </span>
                           <p className="mt-1 text-xs font-semibold text-muted-foreground">
@@ -649,10 +649,10 @@ export default function ContractsClient({
             <div className="printable-contract flex-1 overflow-y-auto p-8 space-y-6 text-sm text-foreground/90 leading-relaxed ">
               {/* Document Letterhead */}
               <div className="text-center pb-5 border-b border-black/15 dark:border-white/15">
-                <span className="text-[11px] font-mono font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                <span className="text-[11px] font-mono font-bold text-muted-foreground   tracking-widest block mb-1">
                   Contract Ref: {viewingContract.meta.contract_ref || "CON-2026-0001"}
                 </span>
-                <h2 className="text-xl font-bold uppercase tracking-wider font-sans text-foreground">
+                <h2 className="text-xl font-bold   tracking-wider font-sans text-foreground">
                   Book Publishing & Royalty Agreement
                 </h2>
                 <p className="text-xs text-muted-foreground font-sans mt-1">
@@ -678,12 +678,12 @@ export default function ContractsClient({
 
               {/* Articles */}
               <div className="space-y-4">
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 1 — Grant of Rights</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 1 — Grant of Rights</h4>
                 <p>
                   The Author hereby grants and assigns to the Publisher the exclusive license and right to print, publish, sell, and distribute the literary work provisionally titled <strong>"{viewingContract.titles.name}"</strong> in the Malayalam language throughout the world.
                 </p>
 
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 2 — Commercial & Royalty Terms</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 2 — Commercial & Royalty Terms</h4>
                 <ul className="list-disc pl-5 space-y-1.5 font-sans text-xs">
                   <li>
                     <strong>Publishing Model Track:</strong> {viewingContract.meta.publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali Books Publishing"}.
@@ -702,22 +702,22 @@ export default function ContractsClient({
                   </li>
                 </ul>
 
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 3 — Term & Exclusivity</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 3 — Term & Exclusivity</h4>
                 <p>
                   This Agreement shall remain in force for an initial period of <strong>{viewingContract.meta.term_years} years</strong> from the date of signing, and shall automatically renew for successive one-year terms unless either party gives 60 days prior written notice.
                 </p>
 
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 4 — Proofreading & Editorial Review</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 4 — Proofreading & Editorial Review</h4>
                 <p>
                   The Publisher shall undertake DTP typesetting, page layout, and cover design. Galley proofs shall be submitted to the Author, who will have a 14-day window to approve or submit editorial corrections prior to mass printing.
                 </p>
 
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 5 — Copyright & Reversion</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 5 — Copyright & Reversion</h4>
                 <p>
                   Copyright in the literary content of the Work remains solely with the Author © {new Date().getFullYear()} {viewingContract.authors.name}. If the Work remains out of print for a continuous period of 12 months after written demand by the Author, all publishing rights shall revert to the Author.
                 </p>
 
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 6 — Tax & Jurisdiction</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 6 — Tax & Jurisdiction</h4>
                 <p>
                   Royalties are subject to Indian Income Tax TDS under Section 194J. Any legal disputes arising out of this Agreement shall be subject to the exclusive jurisdiction of the Courts in <strong>Kozhikode (Calicut), Kerala</strong>.
                 </p>
@@ -726,7 +726,7 @@ export default function ContractsClient({
               {/* Signature Blocks */}
               <div className="pt-6 border-t border-black/10 grid grid-cols-2 gap-6 font-sans dark:border-white/10">
                 <div className="signature-box rounded-2xl border border-black/10 p-4 bg-black/[0.015] dark:border-white/10 dark:bg-white/[0.015]">
-                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Signed on Behalf of Publisher</span>
+                  <span className="text-[11px] font-bold text-muted-foreground   tracking-wider block">Signed on Behalf of Publisher</span>
                   <p className="mt-2 text-sm font-bold text-foreground">{viewingContract.meta.publisher_signatory || "Radhika Menon"}</p>
                   <p className="text-xs text-muted-foreground">Kairali Books, Kozhikode</p>
                   {viewingContract.meta.publisher_signed_at ? (
@@ -741,7 +741,7 @@ export default function ContractsClient({
                 </div>
 
                 <div className="signature-box rounded-2xl border border-black/10 p-4 bg-black/[0.015] dark:border-white/10 dark:bg-white/[0.015]">
-                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Signed by Author</span>
+                  <span className="text-[11px] font-bold text-muted-foreground   tracking-wider block">Signed by Author</span>
                   
                   {viewingContract.meta.author_signature?.startsWith("data:image/") ? (
                     <div className="my-2 p-1.5 bg-white border border-black/10 rounded-xl inline-block shadow-2xs">

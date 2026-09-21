@@ -137,7 +137,7 @@ export default function PostProductionForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <label htmlFor="post_received_qty" className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="post_received_qty" className="block text-xs font-bold   tracking-wider text-muted-foreground">
               Delivered at Warehouse (Copies) <span className="text-danger">*</span>
             </label>
             <input
@@ -155,7 +155,7 @@ export default function PostProductionForm({
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="post_damaged_qty" className="block text-xs font-bold uppercase tracking-wider text-danger">
+            <label htmlFor="post_damaged_qty" className="block text-xs font-bold   tracking-wider text-danger">
               Transit / Binder Damages (Copies)
             </label>
             <input
@@ -219,7 +219,7 @@ export default function PostProductionForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <label htmlFor="post_author_copies" className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="post_author_copies" className="block text-xs font-bold   tracking-wider text-muted-foreground">
               Author Allocation (Copies)
             </label>
             <input
@@ -237,7 +237,7 @@ export default function PostProductionForm({
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="post_courier_tracking" className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="post_courier_tracking" className="block text-xs font-bold   tracking-wider text-muted-foreground">
               Courier / Handover Tracking Docket Details
             </label>
             <input
@@ -257,7 +257,7 @@ export default function PostProductionForm({
 
       {/* Summary Matrix */}
       <div className="rounded-2xl border border-black/10 bg-background/80 p-4 dark:border-white/10">
-        <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+        <h5 className="text-xs font-bold   tracking-wider text-muted-foreground mb-3">
           Post-Production Intake Ledger Summary
         </h5>
         <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">

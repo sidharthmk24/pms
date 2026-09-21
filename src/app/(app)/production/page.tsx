@@ -181,7 +181,7 @@ export default async function ProductionListPage({
           <div className="overflow-x-auto">
             <table className="w-full text-base">
               <thead>
-                <tr className="border-b border-[#7e2562]/10 bg-[#faf6f9]/60 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b border-[#7e2562]/10 bg-[#faf6f9]/60 text-left text-xs font-bold   tracking-wider text-muted-foreground">
                   <th className="px-6 py-4 whitespace-nowrap">Book Title</th>
                   <th className="px-6 py-4 whitespace-nowrap">Author</th>
                   <th className="px-6 py-4 whitespace-nowrap">Active Stage</th>
@@ -213,7 +213,7 @@ export default async function ProductionListPage({
                     >
                       <td className="px-6 py-4.5">
                         <span className="block font-bold text-foreground">{proj.titles.name}</span>
-                        <span className="block text-xs uppercase tracking-wide text-muted-foreground">
+                        <span className="block text-xs   tracking-wide text-muted-foreground">
                           {proj.titles.category} · {proj.titles.language}
                         </span>
                       </td>

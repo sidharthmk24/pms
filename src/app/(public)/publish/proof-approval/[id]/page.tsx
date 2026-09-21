@@ -109,7 +109,7 @@ export default async function ProofApprovalPage({
       <section className="rounded-2xl border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-primary font-bold">
+            <span className="text-[11px] font-mono   tracking-wider text-primary font-bold">
               Publication Title
             </span>
             <h2 className="text-xl font-extrabold text-foreground  ">
@@ -124,7 +124,7 @@ export default async function ProofApprovalPage({
           </div>
 
           <div className="flex flex-col sm:items-end gap-1.5 border-t sm:border-t-0 pt-3 sm:pt-0 border-black/5 dark:border-white/5">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+            <span className="text-[11px] font-mono   tracking-wider text-muted-foreground">
               Allocated ISBN
             </span>
             <span className="font-mono text-sm font-bold text-foreground">

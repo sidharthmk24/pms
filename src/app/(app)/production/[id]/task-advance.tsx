@@ -79,7 +79,7 @@ function FileUploadBox({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <label htmlFor={id} className="block text-xs font-semibold   tracking-wider text-muted-foreground">
           {label} {required && <span className="text-danger">*</span>}
         </label>
         {file && (
@@ -438,7 +438,7 @@ export default function TaskAdvance({
           {isEditMode ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <label htmlFor="isbnInput" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <label htmlFor="isbnInput" className="block text-xs font-semibold   tracking-wider text-muted-foreground">
                   13-Digit ISBN Number
                 </label>
                 <input
@@ -451,7 +451,7 @@ export default function TaskAdvance({
                 />
               </div>
               <div className="space-y-1.5">
-                <label htmlFor="appRefInput" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <label htmlFor="appRefInput" className="block text-xs font-semibold   tracking-wider text-muted-foreground">
                   Agency Application Reference #
                 </label>
                 <input
@@ -473,7 +473,7 @@ export default function TaskAdvance({
                 </p>
               </div>
               <div className="space-y-1.5">
-                <label htmlFor="appRefInput" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <label htmlFor="appRefInput" className="block text-xs font-semibold   tracking-wider text-muted-foreground">
                   Agency Application Reference # (Optional)
                 </label>
                 <input
@@ -502,7 +502,7 @@ export default function TaskAdvance({
                 </p>
               </div>
               <div className="space-y-1.5">
-                <label htmlFor="isbnInput" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <label htmlFor="isbnInput" className="block text-xs font-semibold   tracking-wider text-muted-foreground">
                   Allocated 13-Digit ISBN <span className="text-danger">*</span>
                 </label>
                 <input
@@ -528,7 +528,7 @@ export default function TaskAdvance({
         <div className="space-y-3">
           {isEditMode ? (
             <div className="space-y-1.5">
-              <label htmlFor="proofFeedback" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label htmlFor="proofFeedback" className="block text-xs font-semibold   tracking-wider text-muted-foreground">
                 Author Proof Feedback &amp; Approval Notes
               </label>
               <textarea
@@ -583,7 +583,7 @@ export default function TaskAdvance({
 
           {!isEditMode && (showRework ? (
             <div className="space-y-2 rounded-xl border border-warning/30 bg-warning/5 p-4 animate-in fade-in">
-              <label htmlFor="reworkNotes" className="block text-xs font-semibold uppercase tracking-wider text-warning">
+              <label htmlFor="reworkNotes" className="block text-xs font-semibold   tracking-wider text-warning">
                 Revision Notes &amp; Required Changes
               </label>
               <textarea

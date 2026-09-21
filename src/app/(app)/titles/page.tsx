@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { requireCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasRole, hasAnyRole, parseUserRoles } from "@/lib/roles";
 import { TitlesClient, type TitleItem } from "./titles-client";
 
 export const metadata: Metadata = {
@@ -11,23 +12,112 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function TitlesPage() {
-  await requireCapability("titles.read");
+  const user = await requireCapability("titles.read");
+
+  const isOwner = hasRole(user.role, "owner");
+  const isFullAccess = isOwner || hasAnyRole(user.role, ["production", "accounts", "store"]);
+
+  let roleFilter: Record<string, unknown> | null = null;
+
+  if (!isFullAccess) {
+    const roles = parseUserRoles(user.role);
+
+    if (roles.includes("editor")) {
+      // Find submission IDs reviewed by this editor
+      const reviewedSubmissions = await prisma.submissions.findMany({
+        where: { reviewed_by: user.id },
+        select: { id: true, ref_no: true },
+      });
+      const subIds = reviewedSubmissions.map((s) => s.id);
+      const subRefs = reviewedSubmissions.map((s) => s.ref_no);
+
+      // Find contracts referencing those submissions
+      const contracts = subIds.length > 0
+        ? await prisma.contracts.findMany({
+            where: {
+              OR: [
+                ...subIds.map((id) => ({ term_notes: { contains: id } })),
+                ...subRefs.map((ref) => ({ term_notes: { contains: ref } })),
+              ],
+            },
+            select: { title_id: true },
+          })
+        : [];
+      const submissionTitleIds = contracts.map((c) => c.title_id);
+
+      roleFilter = {
+        OR: [
+          {
+            production_projects: {
+              OR: [
+                { editing_assigned_to: user.id },
+                { editing_assigned_to: user.name },
+                { editing_assignees: { contains: user.id } },
+                { editing_assignees: { contains: user.name } },
+              ],
+            },
+          },
+          ...(submissionTitleIds.length > 0
+            ? [{ id: { in: submissionTitleIds } }]
+            : []),
+        ],
+      };
+    } else if (roles.includes("designer")) {
+      roleFilter = {
+        production_projects: {
+          OR: [
+            { cover_assigned_to: user.id },
+            { cover_assigned_to: user.name },
+            { cover_assignees: { contains: user.id } },
+            { cover_assignees: { contains: user.name } },
+          ],
+        },
+      };
+    } else if (roles.includes("dtp")) {
+      roleFilter = {
+        production_projects: {
+          OR: [
+            { dtp_assigned_to: user.id },
+            { dtp_assigned_to: user.name },
+            { dtp_assignees: { contains: user.id } },
+            { dtp_assignees: { contains: user.name } },
+          ],
+        },
+      };
+    } else if (roles.includes("proofreader")) {
+      roleFilter = {
+        production_projects: {
+          OR: [
+            { proof_assigned_to: user.id },
+            { proof_assigned_to: user.name },
+            { proof_assignees: { contains: user.id } },
+            { proof_assignees: { contains: user.name } },
+          ],
+        },
+      };
+    }
+  }
 
   const titlesData = await prisma.titles.findMany({
     where: {
-      OR: [
+      AND: [
         {
-          production_projects: {
-            OR: [
-              { status: "completed" },
-              { print_completed_at: { not: null } },
-            ],
-          },
+          OR: [
+            {
+              production_projects: {
+                OR: [
+                  { status: "completed" },
+                  { print_completed_at: { not: null } },
+                ],
+              },
+            },
+            {
+              production_projects: null,
+              stock: { gt: 0 },
+            },
+          ],
         },
-        {
-          production_projects: null,
-          stock: { gt: 0 },
-        },
+        ...(roleFilter ? [roleFilter] : []),
       ],
     },
     include: {

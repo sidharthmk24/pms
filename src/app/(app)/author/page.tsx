@@ -194,12 +194,9 @@ export default async function AuthorDashboardPage({
 
 
               </div>
-              <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl  ">
+              <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
                 Welcome, {authorDisplayName}
               </h1>
-              <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
-                Track live editorial evaluation of your manuscripts with Amazon/Flipkart-style milestone tracking, view executed publishing agreements, and monitor real-time production stages.
-              </p>
             </div>
           </div>
 
@@ -220,7 +217,7 @@ export default async function AuthorDashboardPage({
       {/* KPI Metric Tiles */}
       <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
         <div className="rounded-2xl border border-black/10 bg-surface p-5 dark:border-white/10">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-xs font-bold   tracking-wider text-muted-foreground">
             In Review
           </span>
           <p className="mt-1.5 text-2xl font-black text-foreground sm:text-3xl">
@@ -230,7 +227,7 @@ export default async function AuthorDashboardPage({
         </div>
 
         <div className="rounded-2xl border border-black/10 bg-surface p-5 dark:border-white/10">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-xs font-bold   tracking-wider text-muted-foreground">
             Approved Titles
           </span>
           <p className="mt-1.5 text-2xl font-black text-success sm:text-3xl">
@@ -240,7 +237,7 @@ export default async function AuthorDashboardPage({
         </div>
 
         <div className="rounded-2xl border border-black/10 bg-surface p-5 dark:border-white/10">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-xs font-bold   tracking-wider text-muted-foreground">
             In Production
           </span>
           <p className="mt-1.5 text-2xl font-black text-warning sm:text-3xl">
@@ -250,7 +247,7 @@ export default async function AuthorDashboardPage({
         </div>
 
         <div className="rounded-2xl border border-black/10 bg-surface p-5 dark:border-white/10">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-xs font-bold   tracking-wider text-muted-foreground">
             Active Contracts
           </span>
           <p className="mt-1.5 text-2xl font-black text-foreground sm:text-3xl">
@@ -314,7 +311,7 @@ export default async function AuthorDashboardPage({
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                     <div>
-                      <span className="text-[11px] font-mono font-bold uppercase text-primary">
+                      <span className="text-[11px] font-mono font-bold   text-primary">
                         Production Track · {project.titles.language || "Malayalam"}
                       </span>
                       <h3 className="text-base font-extrabold text-foreground  ">
@@ -623,11 +620,11 @@ export default async function AuthorDashboardPage({
 
                     <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl border border-black/5 bg-surface p-3 text-xs dark:border-white/5">
                       <div>
-                        <span className="text-[10px] text-muted-foreground uppercase">Royalty Rate</span>
+                        <span className="text-[10px] text-muted-foreground  ">Royalty Rate</span>
                         <p className="font-extrabold text-foreground">{c.royalty_pct}%</p>
                       </div>
                       <div>
-                        <span className="text-[10px] text-muted-foreground uppercase">Advance</span>
+                        <span className="text-[10px] text-muted-foreground  ">Advance</span>
                         <p className="font-extrabold text-foreground">{formatPaise(c.advance_paise)}</p>
                       </div>
                     </div>
@@ -682,7 +679,7 @@ export default async function AuthorDashboardPage({
                   className="rounded-2xl border border-black/10 bg-background/50 p-5 dark:border-white/10 dark:bg-surface-muted/40 space-y-3"
                 >
                   <div>
-                    <span className="text-[10px] font-mono uppercase text-muted-foreground">
+                    <span className="text-[10px] font-mono   text-muted-foreground">
                       {t.category || "General"} · {t.language}
                     </span>
                     <h3 className="text-base font-extrabold text-foreground   mt-0.5">
@@ -718,7 +715,7 @@ export default async function AuthorDashboardPage({
 
                   {/* Channel Distribution Badges */}
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                    <span className="block text-[10px] font-bold   tracking-wider text-muted-foreground mb-1.5">
                       Available In Sales Channels
                     </span>
                     <div className="flex flex-wrap gap-1 text-[10px]">

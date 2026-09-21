@@ -430,7 +430,7 @@ export default function UserMenu({
                   <form onSubmit={handleSaveProfile} className="space-y-5">
                     {/* Author Full Name */}
                     <div>
-                      <label htmlFor="user-name" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
+                      <label htmlFor="user-name" className="mb-1.5 block text-xs font-bold   tracking-wider text-foreground">
                         Author Full Name / Username <span className="text-rose-600">*</span>
                       </label>
                       <input
@@ -450,7 +450,7 @@ export default function UserMenu({
                     {/* Email Address (Bound & Read-only) */}
                     <div>
                       <div className="mb-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        <label className="text-xs font-bold   tracking-wider text-muted-foreground">
                           Registered Email Address
                         </label>
                       </div>

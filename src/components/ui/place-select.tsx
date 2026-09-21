@@ -100,7 +100,7 @@ export function PlaceSelect({
         <div className="flex items-center justify-between mb-1">
           <label
             htmlFor={id}
-            className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-foreground select-none"
+            className="inline-flex items-center gap-1 text-xs font-bold   tracking-wider text-foreground select-none"
           >
             <span>{label}</span>
             {required && <span className="text-rose-600 font-bold ml-0.5">*</span>}
@@ -157,7 +157,7 @@ export function PlaceSelect({
             {inputValue.trim().length >= 1 ? (
               suggestions.length > 0 ? (
                 <div className="space-y-0.5">
-                  <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <div className="px-2 py-1 text-[10px] font-bold   tracking-wider text-muted-foreground">
                     Matching Places
                   </div>
                   {suggestions.map((item, index) => (
@@ -194,7 +194,7 @@ export function PlaceSelect({
               )
             ) : (
               <div className="space-y-0.5">
-                <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <div className="px-2 py-1 text-[10px] font-bold   tracking-wider text-muted-foreground">
                   Popular Districts &amp; Towns
                 </div>
                 {POPULAR_KERALA_DISTRICTS.slice(0, 8).map((district) => (

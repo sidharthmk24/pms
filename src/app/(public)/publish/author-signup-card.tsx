@@ -461,7 +461,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Author Full Name / Username */}
             <div>
-              <label htmlFor="reg-name" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
+              <label htmlFor="reg-name" className="mb-1.5 block text-xs font-bold   tracking-wider text-foreground">
                 Author Full Name / Username <span className="text-rose-600">*</span>
               </label>
               <input
@@ -478,7 +478,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
 
             {/* Email Address */}
             <div>
-              <label htmlFor="reg-email" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
+              <label htmlFor="reg-email" className="mb-1.5 block text-xs font-bold   tracking-wider text-foreground">
                 Email Address <span className="text-rose-600">*</span>
               </label>
               <input
@@ -495,7 +495,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
 
             {/* Password */}
             <div>
-              <label htmlFor="reg-password" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
+              <label htmlFor="reg-password" className="mb-1.5 block text-xs font-bold   tracking-wider text-foreground">
                 Password <span className="text-rose-600">*</span>
               </label>
               <div className="relative">
@@ -522,7 +522,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="reg-confirm" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
+              <label htmlFor="reg-confirm" className="mb-1.5 block text-xs font-bold   tracking-wider text-foreground">
                 Confirm Password <span className="text-rose-600">*</span>
               </label>
               <input
@@ -626,7 +626,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
           </div>
 
           <div>
-            <label htmlFor="login-email" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
+            <label htmlFor="login-email" className="mb-1.5 block text-xs font-bold   tracking-wider text-foreground">
               Registered Email Address <span className="text-rose-600">*</span>
             </label>
             <input
@@ -642,7 +642,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="login-password" className="text-xs font-bold uppercase tracking-wider text-foreground">
+              <label htmlFor="login-password" className="text-xs font-bold   tracking-wider text-foreground">
                 Password <span className="text-rose-600">*</span>
               </label>
               <button
@@ -765,7 +765,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
               </div>
 
               <div>
-                <label htmlFor="forgot-author-email" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
+                <label htmlFor="forgot-author-email" className="mb-1.5 block text-xs font-bold   tracking-wider text-foreground">
                   Registered Email Address <span className="text-rose-600">*</span>
                 </label>
                 <input

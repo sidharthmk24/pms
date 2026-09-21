@@ -206,7 +206,7 @@ export default function ContractActions({ contract, canManage }: ContractActions
       {!isSigned && !isDeclined && canManage && (
         <div className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs font-semibold text-muted-foreground   tracking-wider">
               {isRenegotiation ? "Author Negotiation Actions" : "Publishing Agreement Controls"}
             </span>
             {isRenegotiation && (

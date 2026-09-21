@@ -241,7 +241,7 @@ export default function AuthorAuthModal() {
         <div className="bg-gradient-to-r from-[#7E2562] via-[#651D4E] to-[#4F143D] text-white p-6 sm:p-7 relative overflow-hidden">
           <div className="absolute right-0 top-0 translate-x-6 -translate-y-6 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
-          {/* <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm bg-white/15 text-white/90 text-xs font-semibold tracking-wide uppercase mb-2">
+          {/* <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm bg-white/15 text-white/90 text-xs font-semibold tracking-wide   mb-2">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             Kairali Books Author Portal
           </div> */}
@@ -286,7 +286,7 @@ export default function AuthorAuthModal() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                <label className="block text-xs font-bold   tracking-wider text-neutral-700 mb-1.5">
                   Author Email Address
                 </label>
                 <div className="relative">
@@ -304,7 +304,7 @@ export default function AuthorAuthModal() {
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700">
+                  <label className="block text-xs font-bold   tracking-wider text-neutral-700">
                     Password
                   </label>
                   <button
@@ -415,7 +415,7 @@ export default function AuthorAuthModal() {
               ) : (
                 <form onSubmit={handleForgotSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                    <label className="block text-xs font-bold   tracking-wider text-neutral-700 mb-1.5">
                       Your Registered Email Address
                     </label>
                     <div className="relative">

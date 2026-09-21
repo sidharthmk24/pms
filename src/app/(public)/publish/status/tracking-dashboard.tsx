@@ -249,7 +249,7 @@ export default function TrackingDashboard({
       <div className="rounded-3xl border border-[#7e2562]/15 bg-white p-7 shadow-plum-sm sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <span className="numeric text-xs font-bold uppercase tracking-wider text-primary">
+            <span className="numeric text-xs font-bold   tracking-wider text-primary">
               Tracking Ref: {submission.ref_no}
             </span>
             <h2 className="mt-1 text-2xl font-bold text-foreground sm:text-3xl">{submission.title}</h2>
@@ -663,7 +663,7 @@ export default function TrackingDashboard({
                   </div>
 
                   <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1.5 shrink-0 bg-[#faf8fa] sm:bg-transparent p-3 sm:p-0 rounded-2xl border border-[#7e2562]/10 sm:border-0">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
                       Progress Tracker
                     </span>
                     <div className="flex items-center gap-2">
@@ -744,7 +744,7 @@ export default function TrackingDashboard({
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#7e2562]">
+                          <span className="text-[11px] font-extrabold   tracking-wider text-[#7e2562]">
                             Stage {currentStage.num} of 9
                           </span>
                           <span className="h-1 w-1 rounded-full bg-[#7e2562]" />
@@ -864,7 +864,7 @@ export default function TrackingDashboard({
 
                         {/* File Previews */}
                         <div className="rounded-2xl border border-[#7e2562]/15 bg-white p-4 space-y-3">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
+                          <span className="text-[11px] font-bold   tracking-wider text-muted-foreground block">
                             Manuscript Layout &amp; Cover Proofs
                           </span>
                           <div className="flex flex-wrap gap-3">

@@ -983,7 +983,7 @@ export default function ActivityClient({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-[#7e2562]/10 bg-[#faedf5]/40 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <thead className="border-b border-[#7e2562]/10 bg-[#faedf5]/40 text-xs font-bold   tracking-wider text-muted-foreground">
                 <tr>
                   <th
                     onClick={() => toggleSort("at")}
@@ -1129,7 +1129,7 @@ export default function ActivityClient({
                                 {resolvedEntity.name}
                               </p>
                               <div className="mt-0.5 flex items-center gap-1.5">
-                                <span className="inline-flex items-center rounded bg-[#7e2562]/8 px-1.5 py-0.2 text-[10px] font-bold uppercase text-[#7e2562]">
+                                <span className="inline-flex items-center rounded bg-[#7e2562]/8 px-1.5 py-0.2 text-[10px] font-bold   text-[#7e2562]">
                                   {row.entity}
                                 </span>
                                 {resolvedEntity.subtitle && (
@@ -1141,7 +1141,7 @@ export default function ActivityClient({
                             </div>
                           ) : (
                             <div>
-                              <span className="inline-flex items-center rounded-md border border-black/10 bg-black/[0.03] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                              <span className="inline-flex items-center rounded-md border border-black/10 bg-black/[0.03] px-2 py-0.5 text-[11px] font-bold   tracking-wider text-muted-foreground">
                                 {row.entity}
                               </span>
                               {row.entity_id && (
@@ -1294,7 +1294,7 @@ export default function ActivityClient({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {/* Event ID */}
                 <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
                     Audit Log ID
                   </span>
                   <div className="flex items-center justify-between gap-2 rounded-xl border border-black/8 bg-white px-3 py-2">
@@ -1317,7 +1317,7 @@ export default function ActivityClient({
 
                 {/* Timestamp */}
                 <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
                     Timestamp (IST / UTC)
                   </span>
                   <div className="rounded-xl border border-black/8 bg-white px-3 py-2">
@@ -1331,7 +1331,7 @@ export default function ActivityClient({
                 {/* Actor Card */}
                 <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
                       Actor Information
                     </span>
                     {inspectItem.users?.role && (
@@ -1353,10 +1353,10 @@ export default function ActivityClient({
                 {/* Target Entity with Resolved Human-Readable Name */}
                 <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
                       Target Entity
                     </span>
-                    <span className="inline-flex items-center rounded-md border border-black/10 bg-white px-2 py-0.5 text-[10px] font-bold uppercase text-foreground shadow-2xs">
+                    <span className="inline-flex items-center rounded-md border border-black/10 bg-white px-2 py-0.5 text-[10px] font-bold   text-foreground shadow-2xs">
                       {inspectItem.entity.replace(/_/g, " ")}
                     </span>
                   </div>
@@ -1408,7 +1408,7 @@ export default function ActivityClient({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    <span className="text-xs font-bold   tracking-wider text-muted-foreground">
                       Event Details &amp; Payload
                     </span>
                     {parsedDetailEntries && parsedDetailEntries.length > 0 && (

@@ -9,6 +9,9 @@ type Editor = {
   id: string;
   name: string;
   role: string;
+  orderPos?: number;
+  totalEditors?: number;
+  isNext?: boolean;
 };
 
 export default function ReassignSelect({
@@ -63,8 +66,10 @@ export default function ReassignSelect({
       : []),
     ...editors.map((e) => ({
       value: e.id,
-      label: e.name,
-      description: formatRoleLabel(e.role),
+      label: e.orderPos && e.totalEditors ? `${e.name} (${e.orderPos}/${e.totalEditors})` : e.name,
+      description: e.isNext
+        ? `Next in Rotation · ${formatRoleLabel(e.role)}`
+        : formatRoleLabel(e.role),
     })),
   ];
 

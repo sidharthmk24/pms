@@ -343,7 +343,7 @@ export default function AuthorsClient({
       {/* Bento KPI Summary Cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-sm border border-black/[0.08] bg-surface/90 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs font-semibold   tracking-wider text-muted-foreground">
             <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
@@ -354,7 +354,7 @@ export default function AuthorsClient({
         </div>
 
         <div className="rounded-sm border border-black/[0.08] bg-surface/90 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs font-semibold   tracking-wider text-muted-foreground">
             <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -367,7 +367,7 @@ export default function AuthorsClient({
 
 
         <div className="rounded-sm border border-black/[0.08] bg-surface/90 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs font-semibold   tracking-wider text-muted-foreground">
             <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
@@ -465,7 +465,7 @@ export default function AuthorsClient({
       <section className="overflow-hidden rounded-sm border border-black/[0.08] bg-surface/90 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-black/[0.06] bg-black/[0.02] text-xs font-bold uppercase tracking-wider text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.02]">
+            <thead className="border-b border-black/[0.06] bg-black/[0.02] text-xs font-bold   tracking-wider text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.02]">
               <tr>
                 <th className="px-6 py-4.5 whitespace-nowrap">Author</th>
                 <th className="px-6 py-4.5 whitespace-nowrap">Contact Details</th>
@@ -751,7 +751,7 @@ export default function AuthorsClient({
                     const notesInfo = parseAuthorNotes(currentSelectedAuthor.notes);
                     return (
                       <div className="rounded-2xl border border-border bg-background/50 p-4 space-y-3">
-                        <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">
+                        <h3 className="text-xs font-extrabold   tracking-wider text-muted-foreground">
                           Author Profile &amp; Biography
                         </h3>
                         {notesInfo.bio ? (
@@ -770,7 +770,7 @@ export default function AuthorsClient({
 
                         {notesInfo.interests && (
                           <div className="pt-2 border-t border-border/50">
-                            <span className="block text-[10px] font-bold uppercase text-muted-foreground mb-1">
+                            <span className="block text-[10px] font-bold   text-muted-foreground mb-1">
                               Literary Genres &amp; Interests
                             </span>
                             <div className="flex flex-wrap gap-1.5">
@@ -788,7 +788,7 @@ export default function AuthorsClient({
 
                         {notesInfo.pastPublications && (
                           <div className="pt-2 border-t border-border/50">
-                            <span className="block text-[10px] font-bold uppercase text-muted-foreground mb-1">
+                            <span className="block text-[10px] font-bold   text-muted-foreground mb-1">
                               Past Works &amp; Publications
                             </span>
                             <p className="text-xs text-foreground/80">{notesInfo.pastPublications}</p>
@@ -800,7 +800,7 @@ export default function AuthorsClient({
 
                   {/* Contact and Legal Details */}
                   <div className="rounded-2xl border border-border bg-background/50 p-4 space-y-3">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">
+                    <h3 className="text-xs font-extrabold   tracking-wider text-muted-foreground">
                       Contact &amp; Legal Details
                     </h3>
                     <div className="grid grid-cols-2 gap-3 text-xs">
@@ -839,7 +839,7 @@ export default function AuthorsClient({
 
                   {/* Portal User Credentials Status */}
                   <div className="rounded-2xl border border-border bg-background/50 p-4 space-y-3">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">
+                    <h3 className="text-xs font-extrabold   tracking-wider text-muted-foreground">
                       Web Portal Account
                     </h3>
                     {currentSelectedAuthor.userAccount ? (
@@ -940,7 +940,7 @@ export default function AuthorsClient({
               {/* TAB 3: Contracts & Royalties */}
               {drawerTab === "contracts" && (
                 <div className="mt-6 space-y-4 animate-in fade-in duration-150">
-                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">
+                  <h3 className="text-xs font-extrabold   tracking-wider text-muted-foreground">
                     Active Contracts ({currentSelectedAuthor.contracts.length})
                   </h3>
 
@@ -972,7 +972,7 @@ export default function AuthorsClient({
                         <div className="grid grid-cols-2 gap-2 text-xs border-t border-border/50 pt-2.5">
                           <div>
                             <span className="text-muted-foreground block text-[10px]">Calculation Basis</span>
-                            <span className="font-semibold text-foreground uppercase">{contract.basis}</span>
+                            <span className="font-semibold text-foreground  ">{contract.basis}</span>
                           </div>
                           <div>
                             <span className="text-muted-foreground block text-[10px]">Advance Amount</span>
@@ -1040,7 +1040,7 @@ export default function AuthorsClient({
 
                   {/* Payouts section */}
                   <div className="pt-4 border-t border-border">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3">
+                    <h3 className="text-xs font-extrabold   tracking-wider text-muted-foreground mb-3">
                       Royalty Payouts Ledger ({currentSelectedAuthor.payouts.length})
                     </h3>
                     {currentSelectedAuthor.payouts.length === 0 ? (
@@ -1250,7 +1250,7 @@ export default function AuthorsClient({
                     placeholder="ABCDE1234F"
                     value={formPan}
                     onChange={(e) => setFormPan(e.target.value.toUpperCase())}
-                    className="w-full rounded-xl border border-black/12 bg-black/[0.02] px-3.5 py-2.5 text-sm font-medium text-foreground outline-none uppercase transition-all focus:border-primary focus:bg-surface dark:border-white/15 dark:bg-white/[0.03]"
+                    className="w-full rounded-xl border border-black/12 bg-black/[0.02] px-3.5 py-2.5 text-sm font-medium text-foreground outline-none   transition-all focus:border-primary focus:bg-surface dark:border-white/15 dark:bg-white/[0.03]"
                   />
                 </div>
               </div>
@@ -1385,7 +1385,7 @@ export default function AuthorsClient({
                     type="text"
                     value={formPan}
                     onChange={(e) => setFormPan(e.target.value.toUpperCase())}
-                    className="w-full rounded-xl border border-black/12 bg-black/[0.02] px-3.5 py-2.5 text-sm font-medium text-foreground outline-none uppercase transition-all focus:border-primary focus:bg-surface dark:border-white/15 dark:bg-white/[0.03]"
+                    className="w-full rounded-xl border border-black/12 bg-black/[0.02] px-3.5 py-2.5 text-sm font-medium text-foreground outline-none   transition-all focus:border-primary focus:bg-surface dark:border-white/15 dark:bg-white/[0.03]"
                   />
                 </div>
               </div>
@@ -1457,10 +1457,10 @@ export default function AuthorsClient({
             <div className="printable-contract flex-1 overflow-y-auto p-8 space-y-6 text-sm text-foreground/90 leading-relaxed">
               {/* Document Letterhead */}
               <div className="text-center pb-5 border-b border-black/15 dark:border-white/15">
-                <span className="text-[11px] font-mono font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                <span className="text-[11px] font-mono font-bold text-muted-foreground   tracking-widest block mb-1">
                   Contract Ref: {parseContractNotes(viewingContract.contract.term_notes).contract_ref || "CON-2026-0001"}
                 </span>
-                <h2 className="text-xl font-bold uppercase tracking-wider font-sans text-foreground">
+                <h2 className="text-xl font-bold   tracking-wider font-sans text-foreground">
                   Book Publishing &amp; Royalty Agreement
                 </h2>
                 <p className="text-xs text-muted-foreground font-sans mt-1">
@@ -1486,12 +1486,12 @@ export default function AuthorsClient({
 
               {/* Articles */}
               <div className="space-y-4">
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 1 — Grant of Rights</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 1 — Grant of Rights</h4>
                 <p>
                   The Author hereby grants and assigns to the Publisher the exclusive license and right to print, publish, sell, and distribute the literary work provisionally titled <strong>&quot;{viewingContract.contract.titles?.name}&quot;</strong> in the Malayalam language throughout the world.
                 </p>
 
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 2 — Commercial &amp; Royalty Terms</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 2 — Commercial &amp; Royalty Terms</h4>
                 <ul className="list-disc pl-5 space-y-1.5 font-sans text-xs">
                   <li>
                     <strong>Publishing Model Track:</strong> {parseContractNotes(viewingContract.contract.term_notes).publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali Books Publishing"}.
@@ -1510,22 +1510,22 @@ export default function AuthorsClient({
                   </li>
                 </ul>
 
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 3 — Term &amp; Exclusivity</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 3 — Term &amp; Exclusivity</h4>
                 <p>
                   This Agreement shall remain in force for an initial period of <strong>{parseContractNotes(viewingContract.contract.term_notes).term_years ?? 3} years</strong> from the date of signing, and shall automatically renew for successive one-year terms unless either party gives 60 days prior written notice.
                 </p>
 
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 4 — Proofreading &amp; Editorial Review</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 4 — Proofreading &amp; Editorial Review</h4>
                 <p>
                   The Publisher shall undertake DTP typesetting, page layout, and cover design. Galley proofs shall be submitted to the Author, who will have a 14-day window to approve or submit editorial corrections prior to mass printing.
                 </p>
 
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 5 — Copyright &amp; Reversion</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 5 — Copyright &amp; Reversion</h4>
                 <p>
                   Copyright in the literary content of the Work remains solely with the Author © {new Date().getFullYear()} {viewingContract.author.name}. If the Work remains out of print for a continuous period of 12 months after written demand by the Author, all publishing rights shall revert to the Author.
                 </p>
 
-                <h4 className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">Article 6 — Tax &amp; Jurisdiction</h4>
+                <h4 className="font-bold font-sans text-foreground text-sm   tracking-wide">Article 6 — Tax &amp; Jurisdiction</h4>
                 <p>
                   Royalties are subject to Indian Income Tax TDS under Section 194J. Any legal disputes arising out of this Agreement shall be subject to the exclusive jurisdiction of the Courts in <strong>Kozhikode (Calicut), Kerala</strong>.
                 </p>
@@ -1534,7 +1534,7 @@ export default function AuthorsClient({
               {/* Signature Blocks */}
               <div className="pt-6 border-t border-black/10 grid grid-cols-2 gap-6 font-sans dark:border-white/10">
                 <div className="signature-box rounded-2xl border border-black/10 p-4 bg-black/[0.015] dark:border-white/10 dark:bg-white/[0.015]">
-                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Signed on Behalf of Publisher</span>
+                  <span className="text-[11px] font-bold text-muted-foreground   tracking-wider block">Signed on Behalf of Publisher</span>
                   <p className="mt-2 text-sm font-bold text-foreground">{parseContractNotes(viewingContract.contract.term_notes).publisher_signatory || "Radhika Menon"}</p>
                   <p className="text-xs text-muted-foreground">Kairali Books, Kozhikode</p>
                   {parseContractNotes(viewingContract.contract.term_notes).publisher_signed_at ? (
@@ -1549,7 +1549,7 @@ export default function AuthorsClient({
                 </div>
 
                 <div className="signature-box rounded-2xl border border-black/10 p-4 bg-black/[0.015] dark:border-white/10 dark:bg-white/[0.015]">
-                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Signed by Author</span>
+                  <span className="text-[11px] font-bold text-muted-foreground   tracking-wider block">Signed by Author</span>
                   {parseContractNotes(viewingContract.contract.term_notes).author_signature?.startsWith("data:image/") ? (
                     <div className="my-2 p-1.5 bg-white border border-black/10 rounded-xl inline-block shadow-2xs">
                       {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -160,7 +160,7 @@ export function AuthorBooksClient({
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-black/[0.08] bg-surface p-4 shadow-xs dark:border-white/[0.08]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">My Published Titles</span>
+            <span className="text-xs font-semibold text-muted-foreground   tracking-wider">My Published Titles</span>
             <span className="rounded-xl bg-primary/10 p-2.5 text-primary">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -173,7 +173,7 @@ export function AuthorBooksClient({
 
         <div className="rounded-2xl border border-black/[0.08] bg-surface p-4 shadow-xs dark:border-white/[0.08]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Copies In Circulation</span>
+            <span className="text-xs font-semibold text-muted-foreground   tracking-wider">Total Copies In Circulation</span>
             <span className="rounded-xl bg-emerald-500/10 p-2.5 text-emerald-600 dark:text-emerald-400">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -186,7 +186,7 @@ export function AuthorBooksClient({
 
         <div className="rounded-2xl border border-black/[0.08] bg-surface p-4 shadow-xs dark:border-white/[0.08]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Author Complimentary Copies</span>
+            <span className="text-xs font-semibold text-muted-foreground   tracking-wider">Author Complimentary Copies</span>
             <span className="rounded-xl bg-blue-500/10 p-2.5 text-blue-600 dark:text-blue-400">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
@@ -496,7 +496,7 @@ export function AuthorBooksClient({
           <div className="relative z-10 flex h-full w-full max-w-md flex-col border-l border-border bg-surface shadow-2xl p-6 overflow-y-auto animate-in slide-in-from-right duration-200">
             <div className="flex items-start justify-between gap-3 border-b border-border pb-4 mb-4">
               <div>
-                <span className="text-[10px] font-mono font-bold uppercase text-primary tracking-wider">
+                <span className="text-[10px] font-mono font-bold   text-primary tracking-wider">
                   Official Publication Specs
                 </span>
                 <h3 className="text-lg font-black text-foreground   leading-snug">
@@ -517,7 +517,7 @@ export function AuthorBooksClient({
 
             <div className="space-y-4 text-xs">
               <div className="rounded-xl border border-border bg-background/50 p-3.5 space-y-2">
-                <h4 className="font-bold text-foreground uppercase tracking-wider text-[10px]">Catalog Data</h4>
+                <h4 className="font-bold text-foreground   tracking-wider text-[10px]">Catalog Data</h4>
                 <div className="grid grid-cols-2 gap-2 text-muted-foreground">
                   <div>
                     <span className="block text-[10px]">ISBN-13</span>
@@ -548,7 +548,7 @@ export function AuthorBooksClient({
 
               {/* Commercial Terms */}
               <div className="rounded-xl border border-border bg-background/50 p-3.5 space-y-2">
-                <h4 className="font-bold text-foreground uppercase tracking-wider text-[10px]">Commercial &amp; Royalties</h4>
+                <h4 className="font-bold text-foreground   tracking-wider text-[10px]">Commercial &amp; Royalties</h4>
                 <div className="grid grid-cols-2 gap-2 text-muted-foreground">
                   <div>
                     <span className="block text-[10px]">Retail Price (MRP)</span>
@@ -578,7 +578,7 @@ export function AuthorBooksClient({
               {/* Author Copies Delivery */}
               {selectedBook.production_projects && (
                 <div className="rounded-xl border border-border bg-background/50 p-3.5 space-y-2">
-                  <h4 className="font-bold text-foreground uppercase tracking-wider text-[10px]">Author Complimentary Copies</h4>
+                  <h4 className="font-bold text-foreground   tracking-wider text-[10px]">Author Complimentary Copies</h4>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Allocated Copies:</span>
                     <strong className="text-foreground">{selectedBook.production_projects.author_copies_qty || 0} copies</strong>

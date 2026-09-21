@@ -198,7 +198,7 @@ export default function PrintReceiptForm({
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <label htmlFor="print_qty" className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="print_qty" className="block text-xs font-bold   tracking-wider text-muted-foreground">
               Print Run Quantity (Copies) <span className="text-danger">*</span>
             </label>
             <input
@@ -214,7 +214,7 @@ export default function PrintReceiptForm({
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="print_cost" className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="print_cost" className="block text-xs font-bold   tracking-wider text-muted-foreground">
               Total Printing Cost (₹) <span className="text-danger">*</span>
             </label>
             <input
@@ -232,7 +232,7 @@ export default function PrintReceiptForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <label htmlFor="print_vendor" className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="print_vendor" className="block text-xs font-bold   tracking-wider text-muted-foreground">
               Printing Press / Vendor <span className="text-danger">*</span>
             </label>
             <input
@@ -249,7 +249,7 @@ export default function PrintReceiptForm({
           {/* Paper Stock Dropdown with Custom GSM addition */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <label className="block text-xs font-bold   tracking-wider text-muted-foreground">
                 Paper &amp; Text Stock Specs <span className="text-danger">*</span>
               </label>
               {!showCustomInput && (
@@ -337,7 +337,7 @@ export default function PrintReceiptForm({
         <div className="grid gap-4 sm:grid-cols-2">
           {/* Binding Dropdown using common component */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <label className="block text-xs font-bold   tracking-wider text-muted-foreground">
               Binding Specification <span className="text-danger">*</span>
             </label>
             <SmoothDropdown
@@ -351,7 +351,7 @@ export default function PrintReceiptForm({
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="print_notes" className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <label htmlFor="print_notes" className="block text-xs font-bold   tracking-wider text-muted-foreground">
               Production Run Notes (Optional)
             </label>
             <input

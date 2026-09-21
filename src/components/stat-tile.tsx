@@ -33,7 +33,7 @@ export default function StatTile({
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-plum-md">
       <div>
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <p className="text-xs font-bold   tracking-wider text-muted-foreground">
             {label}
           </p>
           {icon && (

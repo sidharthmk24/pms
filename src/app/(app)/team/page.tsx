@@ -9,29 +9,54 @@ export const dynamic = "force-dynamic";
 export default async function TeamManagementPage() {
   const user = await requireCapability("users.manage");
 
-  const users = await prisma.users.findMany({
-    where: {
-      role: { not: "author" },
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      active: true,
-      created_at: true,
-      _count: {
-        select: {
-          submissions: true,
+  const [users, orderSetting, rrCounter] = await Promise.all([
+    prisma.users.findMany({
+      where: {
+        role: { not: "author" },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        active: true,
+        created_at: true,
+        _count: {
+          select: {
+            submissions: true,
+          },
         },
       },
-    },
-    orderBy: { created_at: "asc" },
-  });
+      orderBy: [
+        { active: "desc" },
+        { created_at: "asc" },
+      ],
+    }),
+    prisma.settings.findUnique({
+      where: { key: "editors.round_robin_order" },
+    }),
+    prisma.counters.findUnique({
+      where: { name: "submission_editor_rr" },
+    }),
+  ]);
+
+  let initialEditorOrder: string[] = [];
+  if (orderSetting?.value) {
+    try {
+      initialEditorOrder = JSON.parse(orderSetting.value);
+    } catch {
+      initialEditorOrder = [];
+    }
+  }
 
   return (
     <div className="space-y-6">
-      <TeamClient users={users} currentUserId={user.id} />
+      <TeamClient
+        users={users}
+        currentUserId={user.id}
+        initialEditorOrder={initialEditorOrder}
+        rrCounterValue={rrCounter?.value ?? 0}
+      />
     </div>
   );
 }

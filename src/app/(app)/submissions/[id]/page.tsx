@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { requireCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatIST } from "@/lib/time";
-import { can, hasRole } from "@/lib/roles";
+import { can, hasRole, parseUserRoles } from "@/lib/roles";
 import { parseContractNotes } from "@/lib/contracts";
 import ReviewForm from "./review-form";
 import ReassignSelect from "../reassign-select";
@@ -63,19 +63,58 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
   const isAssignedEditor = sub.reviewed_by === user.id;
   const canReview = isEditorOrOwner && (isAssignedEditor || hasRole(user.role, "owner")) && ["new", "pending_review", "under_review", "needs_revision"].includes(sub.status);
 
-  let editors: { id: string; name: string; role: string }[] = [];
+  let editors: { id: string; name: string; role: string; orderPos?: number; totalEditors?: number; isNext?: boolean }[] = [];
   if (isManager) {
-    const activeStaff = await prisma.users.findMany({
-      where: {
-        active: true,
-        role: { not: "author" },
-      },
-      select: { id: true, name: true, role: true },
-      orderBy: { name: "asc" },
-    });
-    editors = activeStaff.filter(
+    const [activeStaff, orderSetting, rrCounter] = await Promise.all([
+      prisma.users.findMany({
+        where: {
+          active: true,
+          role: { not: "author" },
+        },
+        select: { id: true, name: true, role: true },
+        orderBy: { name: "asc" },
+      }),
+      prisma.settings.findUnique({
+        where: { key: "editors.round_robin_order" },
+      }),
+      prisma.counters.findUnique({
+        where: { name: "submission_editor_rr" },
+      }),
+    ]);
+
+    let editorOrder: string[] = [];
+    if (orderSetting?.value) {
+      try {
+        editorOrder = JSON.parse(orderSetting.value);
+      } catch {
+        editorOrder = [];
+      }
+    }
+
+    const activeStaffEditors = activeStaff.filter(
       (u) => hasRole(u.role, "editor") || hasRole(u.role, "owner")
     );
+    const dedicatedEditors = activeStaffEditors.filter((u) => parseUserRoles(u.role).includes("editor"));
+    const sortedDedicated = (dedicatedEditors.length > 0 ? dedicatedEditors : activeStaffEditors).sort((a, b) => {
+      const idxA = editorOrder.indexOf(a.id);
+      const idxB = editorOrder.indexOf(b.id);
+      const sortA = idxA !== -1 ? idxA : 9999;
+      const sortB = idxB !== -1 ? idxB : 9999;
+      if (sortA !== sortB) return sortA - sortB;
+      return a.name.localeCompare(b.name);
+    });
+
+    const totalEditors = sortedDedicated.length;
+    const nextIdx = totalEditors > 0 ? ((rrCounter?.value ?? 0) % totalEditors) : 0;
+
+    editors = sortedDedicated.map((e, idx) => ({
+      id: e.id,
+      name: e.name,
+      role: e.role,
+      orderPos: idx + 1,
+      totalEditors,
+      isNext: idx === nextIdx,
+    }));
   }
 
   // Retrieve linked contract if it exists for this submission
@@ -166,7 +205,7 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
         {/* Left Side: Metadata Card */}
         <section className="space-y-6 md:col-span-1">
           <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
+            <h2 className="text-xs font-bold   tracking-wider text-muted-foreground mb-4">
               Author Details
             </h2>
             <div className="space-y-3.5 text-sm">
@@ -197,7 +236,7 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
           </div>
 
           <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
+            <h2 className="text-xs font-bold   tracking-wider text-muted-foreground mb-4">
               Metadata &amp; Assignment
             </h2>
             <div className="space-y-3.5 text-sm">
@@ -237,7 +276,7 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
           {sub.manuscript_filename && (
             <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm text-center">
               <div className="flex items-center justify-between mb-2">
-                <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <span className="block text-xs font-bold   tracking-wider text-muted-foreground">
                   Manuscript File
                 </span>
                 <span className="rounded-md bg-[#faedf5] px-2 py-0.5 text-[10px] font-bold text-[#7e2562]">
@@ -262,7 +301,7 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
           {sub.cover_filename && sub.cover_path ? (
             <div className="rounded-3xl border border-emerald-500/20 bg-white p-6 shadow-plum-sm text-center">
               <div className="flex items-center justify-between mb-2">
-                <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <span className="block text-xs font-bold   tracking-wider text-muted-foreground">
                   Cover Design Attachment
                 </span>
                 <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
@@ -325,7 +364,7 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
 
           {/* Synopsis Display */}
           <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+            <h2 className="text-xs font-bold   tracking-wider text-muted-foreground mb-3">
               Synopsis &amp; Abstract
             </h2>
             <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
@@ -336,7 +375,7 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
           {/* Feedback, Revisions or Decline Status details */}
           {(sub.review_notes || sub.status === "declined") && (
             <div className="rounded-3xl border border-[#7e2562]/12 bg-white p-6 shadow-plum-sm">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+              <h2 className="text-xs font-bold   tracking-wider text-muted-foreground mb-3">
                 {sub.status === "declined" ? "Decline Evaluation & Remarks" : "Review Notes & Editorial Feedback"}
               </h2>
               <RevisionFeedbackView notes={sub.review_notes} status={sub.status} />
@@ -345,7 +384,7 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
 
           {contract && (
             <div className="rounded-3xl border border-emerald-500/25 bg-emerald-50/40 p-6 shadow-plum-sm">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-3">
+              <h2 className="text-xs font-bold   tracking-wider text-emerald-800 mb-3">
                 Generated Contract &amp; Publishing Details
               </h2>
               <div className="space-y-3 text-sm text-foreground">

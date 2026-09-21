@@ -3,7 +3,7 @@ import Link from "next/link";
 import { requireCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatIST, formatTimeIST } from "@/lib/time";
-import { can, hasRole } from "@/lib/roles";
+import { can, hasRole, parseUserRoles } from "@/lib/roles";
 import { parseContractNotes } from "@/lib/contracts";
 import SubmissionsFilterBar from "./submissions-filter-bar";
 import ReassignSelect from "./reassign-select";
@@ -66,7 +66,7 @@ export default async function SubmissionsPage({
   if (filterSort === "title") orderBy = { title: "asc" };
   if (filterSort === "author") orderBy = { author_name: "asc" };
 
-  const [submissions, allActiveStaff] = await Promise.all([
+  const [submissions, allActiveStaff, orderSetting, rrCounter] = await Promise.all([
     prisma.submissions.findMany({
       where: {
         ...(isManager
@@ -103,7 +103,22 @@ export default async function SubmissionsPage({
       select: { id: true, name: true, role: true },
       orderBy: { name: "asc" },
     }),
+    prisma.settings.findUnique({
+      where: { key: "editors.round_robin_order" },
+    }),
+    prisma.counters.findUnique({
+      where: { name: "submission_editor_rr" },
+    }),
   ]);
+
+  let editorOrder: string[] = [];
+  if (orderSetting?.value) {
+    try {
+      editorOrder = JSON.parse(orderSetting.value);
+    } catch {
+      editorOrder = [];
+    }
+  }
 
   const acceptedSubIds = submissions.filter((s) => s.status === "accepted").map((s) => s.id);
   const acceptedSubRefs = submissions.filter((s) => s.status === "accepted").map((s) => s.ref_no);
@@ -124,9 +139,31 @@ export default async function SubmissionsPage({
       })
     : [];
 
-  const editors = allActiveStaff.filter(
+  const activeStaffEditors = allActiveStaff.filter(
     (u) => hasRole(u.role, "editor") || hasRole(u.role, "owner")
   );
+
+  const dedicatedEditors = activeStaffEditors.filter((u) => parseUserRoles(u.role).includes("editor"));
+  const sortedDedicated = (dedicatedEditors.length > 0 ? dedicatedEditors : activeStaffEditors).sort((a, b) => {
+    const idxA = editorOrder.indexOf(a.id);
+    const idxB = editorOrder.indexOf(b.id);
+    const sortA = idxA !== -1 ? idxA : 9999;
+    const sortB = idxB !== -1 ? idxB : 9999;
+    if (sortA !== sortB) return sortA - sortB;
+    return a.name.localeCompare(b.name);
+  });
+
+  const totalEditors = sortedDedicated.length;
+  const nextIdx = totalEditors > 0 ? ((rrCounter?.value ?? 0) % totalEditors) : 0;
+
+  const editors = sortedDedicated.map((e, idx) => ({
+    id: e.id,
+    name: e.name,
+    role: e.role,
+    orderPos: idx + 1,
+    totalEditors,
+    isNext: idx === nextIdx,
+  }));
 
   return (
     <div className="mx-auto max-w-6xl animate-apple-in space-y-6">
@@ -176,7 +213,7 @@ export default async function SubmissionsPage({
           <div className="overflow-x-auto">
             <table className="w-full text-base">
               <thead>
-                <tr className="border-b border-[#7e2562]/10 bg-[#faf6f9]/60 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b border-[#7e2562]/10 bg-[#faf6f9]/60 text-left text-xs font-bold   tracking-wider text-muted-foreground">
                   <th className="px-6 py-4 whitespace-nowrap min-w-[220px]">Ref # / Title</th>
                   <th className="px-6 py-4 whitespace-nowrap">Author</th>
                   <th className="px-6 py-4 whitespace-nowrap">Genre / Lang</th>

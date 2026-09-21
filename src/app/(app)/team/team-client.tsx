@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
@@ -64,9 +64,13 @@ function renderRoleBadges(roleStr: string) {
 export default function TeamClient({
   users,
   currentUserId,
+  initialEditorOrder = [],
+  rrCounterValue = 0,
 }: {
   users: TeamUser[];
   currentUserId: string;
+  initialEditorOrder?: string[];
+  rrCounterValue?: number;
 }) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -74,6 +78,12 @@ export default function TeamClient({
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<TeamUser | null>(null);
+
+  // Editor Round-Robin Order state
+  const [editorOrder, setEditorOrder] = useState<string[]>(initialEditorOrder);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [orderDraft, setOrderDraft] = useState<string[]>([]);
+  const [savingOrder, setSavingOrder] = useState(false);
 
   // Search and Role filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,6 +99,87 @@ export default function TeamClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Active Editors list sorted by the configured rotation order
+  const activeEditors = useMemo(() => {
+    let base = users.filter((u: TeamUser) => u.active && parseUserRoles(u.role).includes("editor"));
+    if (base.length === 0) {
+      base = users.filter((u: TeamUser) => u.active && hasRole(u.role, "editor"));
+    }
+    return [...base].sort((a: TeamUser, b: TeamUser) => {
+      const idxA = editorOrder.indexOf(a.id);
+      const idxB = editorOrder.indexOf(b.id);
+      const sortA = idxA !== -1 ? idxA : 9999;
+      const sortB = idxB !== -1 ? idxB : 9999;
+      if (sortA !== sortB) return sortA - sortB;
+      return a.created_at.localeCompare(b.created_at);
+    });
+  }, [users, editorOrder]);
+
+  const totalEditors = activeEditors.length;
+  const nextEditorIndex = totalEditors > 0 ? (rrCounterValue % totalEditors) : 0;
+
+  function openOrderModal() {
+    setOrderDraft(activeEditors.map((e: TeamUser) => e.id));
+    setIsOrderModalOpen(true);
+  }
+
+  function moveEditorInDraft(fromIdx: number, toIdx: number) {
+    if (toIdx < 0 || toIdx >= orderDraft.length) return;
+    const updated = [...orderDraft];
+    const [moved] = updated.splice(fromIdx, 1);
+    updated.splice(toIdx, 0, moved);
+    setOrderDraft(updated);
+  }
+
+  function setEditorPositionInDraft(editorId: string, newPos: number) {
+    const fromIdx = orderDraft.indexOf(editorId);
+    if (fromIdx === -1) return;
+    const targetIdx = Math.max(0, Math.min(newPos - 1, orderDraft.length - 1));
+    const updated = [...orderDraft];
+    const [moved] = updated.splice(fromIdx, 1);
+    updated.splice(targetIdx, 0, moved);
+    setOrderDraft(updated);
+  }
+
+  async function handleSaveEditorOrder(newOrderIds?: string[]) {
+    const idsToSave = newOrderIds || orderDraft;
+    if (idsToSave.length === 0) return;
+
+    setSavingOrder(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/team/editor-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ editorIds: idsToSave }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? "Failed to save editor rotation order");
+      } else {
+        setEditorOrder(idsToSave);
+        setIsOrderModalOpen(false);
+        setSuccess("Editor round-robin rotation sequence updated successfully!");
+        router.refresh();
+      }
+    } catch {
+      setError("Network error while saving editor order");
+    } finally {
+      setSavingOrder(false);
+    }
+  }
+
+  async function handleQuickSetPosition(editorId: string, targetPos: number) {
+    const currentIds = activeEditors.map((e: TeamUser) => e.id);
+    const fromIdx = currentIds.indexOf(editorId);
+    if (fromIdx === -1) return;
+    const targetIdx = Math.max(0, Math.min(targetPos - 1, currentIds.length - 1));
+    const updated = [...currentIds];
+    const [moved] = updated.splice(fromIdx, 1);
+    updated.splice(targetIdx, 0, moved);
+    await handleSaveEditorOrder(updated);
+  }
 
   function toggleRole(roleVal: StaffRole) {
     if (selectedRoles.includes(roleVal)) {
@@ -337,11 +428,80 @@ export default function TeamClient({
         </div>
       </div>
 
+      {/* Editor Assignment Rotation Queue Card */}
+      {totalEditors > 0 && (
+        <div className="relative overflow-hidden rounded-2xl border border-[#7e2562]/20 bg-gradient-to-br from-[#faedf5]/80 via-surface to-surface p-5 shadow-xs backdrop-blur-md dark:border-[#7e2562]/30 dark:from-[#7e2562]/10 dark:via-surface/50">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#7e2562]/15">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#7e2562] text-white shadow-2xs">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-foreground flex items-center gap-2">
+                  Editor Round-Robin Rotation Queue
+                  <span className="rounded-full bg-[#7e2562]/15 px-2 py-0.5 text-[11px] font-bold text-[#7e2562]">
+                    {totalEditors} Active Editor{totalEditors > 1 ? "s" : ""}
+                  </span>
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Manuscripts are assigned automatically in sequential rotation ({activeEditors.map((_: TeamUser, i: number) => `${i + 1}/${totalEditors}`).join(" → ")}).
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={openOrderModal}
+              className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/30 bg-white px-3.5 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#7e2562] hover:text-white transition-all cursor-pointer dark:bg-surface"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              </svg>
+              <span>Set Editor Order ({totalEditors})</span>
+            </button>
+          </div>
+
+          <div className="mt-3.5 flex flex-wrap items-center gap-2.5 overflow-x-auto pb-1">
+            {activeEditors.map((editor: TeamUser, idx: number) => {
+              const posLabel = `${idx + 1}/${totalEditors}`;
+              const isNext = idx === nextEditorIndex;
+              return (
+                <div
+                  key={editor.id}
+                  className={`flex items-center gap-2 rounded-xl px-3 py-2 border transition-all ${
+                    isNext
+                      ? "border-[#7e2562] bg-[#7e2562] text-white shadow-plum-sm ring-2 ring-[#7e2562]/25"
+                      : "border-black/8 bg-white/80 text-foreground dark:border-white/10 dark:bg-surface"
+                  }`}
+                >
+                  <span
+                    className={`flex h-6 min-w-[34px] items-center justify-center rounded-lg text-xs font-black ${
+                      isNext
+                        ? "bg-white/20 text-white"
+                        : "bg-[#7e2562]/10 text-[#7e2562]"
+                    }`}
+                  >
+                    {posLabel}
+                  </span>
+                  <span className="text-xs font-bold whitespace-nowrap">{editor.name}</span>
+                  {isNext && (
+                    <span className="rounded-full bg-white text-[#7e2562] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider">
+                      Next Up
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Team Members Bento Table */}
       <section className="overflow-hidden rounded-2xl border border-black/[0.08] bg-surface/90 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-surface/80">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-black/[0.06] bg-black/[0.02] text-xs font-bold uppercase tracking-wider text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.02]">
+            <thead className="border-b border-black/[0.06] bg-black/[0.02] text-xs font-bold tracking-wider text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.02]">
               <tr>
                 <th className="px-6 py-4.5 whitespace-nowrap">Member</th>
                 <th className="px-6 py-4.5 whitespace-nowrap">Assigned Roles</th>
@@ -353,14 +513,21 @@ export default function TeamClient({
             </thead>
             <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.06]">
               {(() => {
-                const filteredUsers = users.filter((user) => {
-                  const matchesSearch =
-                    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    user.email.toLowerCase().includes(searchQuery.toLowerCase());
-                  const matchesRole =
-                    selectedFilterRole === "all" || hasRole(user.role, selectedFilterRole as Role);
-                  return matchesSearch && matchesRole;
-                });
+                const filteredUsers = users
+                  .filter((user: TeamUser) => {
+                    const matchesSearch =
+                      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+                    const matchesRole =
+                      selectedFilterRole === "all" || hasRole(user.role, selectedFilterRole as Role);
+                    return matchesSearch && matchesRole;
+                  })
+                  .sort((a: TeamUser, b: TeamUser) => {
+                    if (a.active !== b.active) {
+                      return a.active ? -1 : 1;
+                    }
+                    return 0;
+                  });
 
                 if (filteredUsers.length === 0) {
                   return (
@@ -373,7 +540,7 @@ export default function TeamClient({
                   );
                 }
 
-                return filteredUsers.map((user) => {
+                return filteredUsers.map((user: TeamUser) => {
                   const initials = user.name
                     .split(" ")
                     .map((p) => p[0])
@@ -394,7 +561,7 @@ export default function TeamClient({
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-foreground">{user.name}</span>
                               {isCurrent && (
-                                <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground dark:bg-white/10">
+                                <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-bold tracking-wider text-muted-foreground dark:bg-white/10">
                                   You
                                 </span>
                               )}
@@ -463,10 +630,11 @@ export default function TeamClient({
                           {!isCurrent && (
                             <button
                               onClick={() => handleToggleActive(user)}
-                              className={`apple-button rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                              disabled={loading}
+                              className={`apple-button inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                                 user.active
-                                  ? "border-black/10 text-muted-foreground hover:border-danger/30 hover:bg-danger/10 hover:text-danger dark:border-white/15"
-                                  : "border-success/20 bg-success/5 text-success hover:bg-success/10"
+                                  ? "border-danger/20 text-danger hover:bg-danger hover:text-white dark:border-danger/30"
+                                  : "border-success/20 text-success hover:bg-success hover:text-white dark:border-success/30"
                               }`}
                             >
                               {user.active ? "Deactivate" : "Reactivate"}
@@ -761,6 +929,120 @@ export default function TeamClient({
                 </button>
               </div>
             </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL 3: Configure Editor Rotation Order */}
+      {isOrderModalOpen && mounted && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-black/10 bg-surface dark:border-white/15 shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-black/[0.06] px-6 py-4 dark:border-white/[0.08]">
+              <div>
+                <h3 className="text-lg font-bold tracking-tight text-foreground">Editor Assignment Order</h3>
+                <p className="text-xs text-muted-foreground">
+                  Configure the sequential round-robin queue (1/{totalEditors}, 2/{totalEditors}, etc.)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsOrderModalOpen(false)}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-muted-foreground transition-colors hover:bg-black/10 hover:text-foreground dark:bg-white/10 dark:hover:bg-white/20 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
+              <div className="rounded-2xl border border-[#7e2562]/20 bg-[#faedf5]/60 p-3.5 text-xs text-[#7e2562] leading-relaxed dark:bg-[#7e2562]/10">
+                Incoming manuscripts cycle automatically in this exact sequence:
+                <strong className="block mt-1 text-[11px] font-mono">
+                  {orderDraft.map((id, i) => {
+                    const u = users.find((usr) => usr.id === id);
+                    return `${i + 1}/${orderDraft.length} ${u?.name || "Editor"}`;
+                  }).join(" ➔ ")} ➔ (repeat)
+                </strong>
+              </div>
+
+              <div className="space-y-2">
+                {orderDraft.map((editorId, idx) => {
+                  const editor = users.find((u) => u.id === editorId);
+                  if (!editor) return null;
+                  const pos = idx + 1;
+                  const isFirst = idx === 0;
+                  const isLast = idx === orderDraft.length - 1;
+
+                  return (
+                    <div
+                      key={editorId}
+                      className="flex items-center justify-between p-3 rounded-2xl border border-black/8 bg-black/[0.02] dark:border-white/10 dark:bg-white/[0.02] gap-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="flex h-8 w-12 items-center justify-center rounded-xl bg-[#7e2562] text-white text-xs font-black shrink-0 shadow-2xs">
+                          {pos}/{orderDraft.length}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-foreground truncate">{editor.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{editor.email}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <select
+                          value={pos}
+                          onChange={(e) => setEditorPositionInDraft(editorId, Number(e.target.value))}
+                          className="rounded-lg border border-black/12 bg-surface px-2 py-1 text-xs font-bold text-foreground outline-none dark:border-white/15 cursor-pointer"
+                        >
+                          {Array.from({ length: orderDraft.length }, (_, i) => i + 1).map((n) => (
+                            <option key={n} value={n}>
+                              Pos {n}
+                            </option>
+                          ))}
+                        </select>
+
+                        <button
+                          type="button"
+                          disabled={isFirst}
+                          onClick={() => moveEditorInDraft(idx, idx - 1)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-foreground hover:bg-black/5 disabled:opacity-30 dark:border-white/10 dark:bg-surface cursor-pointer font-bold"
+                          title="Move up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isLast}
+                          onClick={() => moveEditorInDraft(idx, idx + 1)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-foreground hover:bg-black/5 disabled:opacity-30 dark:border-white/10 dark:bg-surface cursor-pointer font-bold"
+                          title="Move down"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 p-6 border-t border-black/[0.06] dark:border-white/[0.08]">
+              <button
+                type="button"
+                onClick={() => setIsOrderModalOpen(false)}
+                className="apple-button flex-1 rounded-xl border border-black/12 bg-black/[0.02] py-2.5 text-xs font-bold text-foreground hover:bg-black/[0.05] dark:border-white/15 dark:bg-white/[0.04] cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={savingOrder}
+                onClick={() => handleSaveEditorOrder()}
+                className="apple-button flex-1 rounded-xl bg-[#7e2562] py-2.5 text-xs font-bold text-white shadow-plum-sm hover:bg-[#681d50] disabled:opacity-50 cursor-pointer"
+              >
+                {savingOrder ? "Saving..." : "Save Order"}
+              </button>
+            </div>
           </div>
         </div>,
         document.body

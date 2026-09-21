@@ -215,7 +215,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-[#7e2562]/10 pb-5">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-xs font-black uppercase text-[#7e2562] bg-[#faedf5] px-2.5 py-0.5 rounded-md border border-[#7e2562]/20">
+            <span className="font-mono text-xs font-black   text-[#7e2562] bg-[#faedf5] px-2.5 py-0.5 rounded-md border border-[#7e2562]/20">
               REF: {data.refNo}
             </span>
             <span className="text-xs text-muted-foreground font-semibold">·</span>
@@ -342,7 +342,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
                     </p>
 
                     {isCurrent && (
-                      <span className="inline-block mt-0.5 rounded-full bg-[#faedf5] border border-[#7e2562]/25 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[#7e2562] shadow-2xs">
+                      <span className="inline-block mt-0.5 rounded-full bg-[#faedf5] border border-[#7e2562]/25 px-2 py-0.5 text-[9px] font-extrabold   tracking-wider text-[#7e2562] shadow-2xs">
                         Active Stage
                       </span>
                     )}
@@ -404,7 +404,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
                       {stage.title}
                     </p>
                     {isCurrent && (
-                      <span className="rounded-full bg-[#faedf5] border border-[#7e2562]/25 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[#7e2562]">
+                      <span className="rounded-full bg-[#faedf5] border border-[#7e2562]/25 px-2 py-0.5 text-[9px] font-extrabold   tracking-wider text-[#7e2562]">
                         CURRENT
                       </span>
                     )}
@@ -434,7 +434,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-900">
+                <span className="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-[10px] font-extrabold   tracking-wider text-amber-900">
                   Revision Required
                 </span>
                 <span className="text-xs text-muted-foreground font-semibold">·</span>
@@ -459,7 +459,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
           {/* Resubmission Form */}
           <form onSubmit={handleRevisionSubmit} className="mt-5 pt-4 border-t border-amber-200/60 space-y-4">
             <div className="flex items-center justify-between">
-              <h5 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+              <h5 className="text-xs font-bold   tracking-wider text-foreground flex items-center gap-2">
                 <svg className="h-4 w-4 text-[#7e2562]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.53-4.5h7.5m-7.5-4.5h4.5m-6.75-6h7.5c.621 0 1.125.504 1.125 1.125v17.25c0 .621-.504 1.125-1.125 1.125H5.625c-.621 0-1.125-.504-1.125-1.125V4.875c0-.621.504-1.125 1.125-1.125z" />
                 </svg>
@@ -681,7 +681,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
       {/* Expandable Activity Log Drawer */}
       {showHistory && (
         <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50/70 p-5 animate-in fade-in">
-          <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-4">
+          <h4 className="text-xs font-extrabold   tracking-wider text-muted-foreground mb-4">
             Timestamped Telemetry &amp; Event Logs
           </h4>
           <ol className="relative border-l border-gray-300 ml-3 space-y-5">

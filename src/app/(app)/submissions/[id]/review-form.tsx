@@ -314,7 +314,7 @@ export default function ReviewForm({ submissionId }: { submissionId: string }) {
           {/* Dynamic Section Cards */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700">
+              <label className="block text-xs font-bold   tracking-wider text-neutral-700">
                 Sections Requiring Revision ({sections.length})
               </label>
               <button

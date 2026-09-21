@@ -208,7 +208,7 @@ export default function ScheduleForm({
           {/* DTP */}
           <div className="rounded-xl border border-black/8 bg-black/[0.02] p-3 space-y-1.5 dark:border-white/8 dark:bg-white/[0.02]">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
                 DTP / Typesetting
               </span>
               <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
@@ -221,7 +221,7 @@ export default function ScheduleForm({
           {/* Editing */}
           <div className="rounded-xl border border-black/8 bg-black/[0.02] p-3 space-y-1.5 dark:border-white/8 dark:bg-white/[0.02]">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
                 Proofreading &amp; Editing
               </span>
               <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
@@ -234,7 +234,7 @@ export default function ScheduleForm({
           {/* Cover */}
           <div className="rounded-xl border border-black/8 bg-black/[0.02] p-3 space-y-1.5 dark:border-white/8 dark:bg-white/[0.02]">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
                 Cover Design
               </span>
               <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
@@ -247,7 +247,7 @@ export default function ScheduleForm({
           {/* ISBN */}
           <div className="rounded-xl border border-black/8 bg-black/[0.02] p-3 space-y-1.5 dark:border-white/8 dark:bg-white/[0.02]">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
                 ISBN Registration
               </span>
               <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
@@ -260,7 +260,7 @@ export default function ScheduleForm({
           {/* Final Proof */}
           <div className="rounded-xl border border-black/8 bg-black/[0.02] p-3 space-y-1.5 dark:border-white/8 dark:bg-white/[0.02] sm:col-span-2 lg:col-span-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
                 Author Final Proof
               </span>
               <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
@@ -303,7 +303,7 @@ export default function ScheduleForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="block text-xs font-semibold   tracking-wider text-muted-foreground">
                 DTP / Typesetting Assignees
               </label>
             </div>
@@ -317,7 +317,7 @@ export default function ScheduleForm({
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            <label className="block text-xs font-semibold   tracking-wider text-muted-foreground mb-1">
               DTP Deadline
             </label>
             <input
@@ -333,7 +333,7 @@ export default function ScheduleForm({
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="block text-xs font-semibold   tracking-wider text-muted-foreground">
                 Editing Assignees
               </label>
             </div>
@@ -347,7 +347,7 @@ export default function ScheduleForm({
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            <label className="block text-xs font-semibold   tracking-wider text-muted-foreground mb-1">
               Editing Deadline
             </label>
             <input
@@ -363,7 +363,7 @@ export default function ScheduleForm({
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="block text-xs font-semibold   tracking-wider text-muted-foreground">
                 Cover Design Assignees
               </label>
             </div>
@@ -377,7 +377,7 @@ export default function ScheduleForm({
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            <label className="block text-xs font-semibold   tracking-wider text-muted-foreground mb-1">
               Cover Deadline
             </label>
             <input
@@ -393,7 +393,7 @@ export default function ScheduleForm({
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="block text-xs font-semibold   tracking-wider text-muted-foreground">
                 ISBN Registration Assignees
               </label>
             </div>
@@ -407,7 +407,7 @@ export default function ScheduleForm({
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            <label className="block text-xs font-semibold   tracking-wider text-muted-foreground mb-1">
               ISBN Deadline
             </label>
             <input
@@ -422,7 +422,7 @@ export default function ScheduleForm({
         {/* Final Proof Sign-Off */}
         <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            <label className="block text-xs font-semibold   tracking-wider text-muted-foreground mb-1">
               Final Proof Sign-Off
             </label>
             <div className="flex items-center gap-2 rounded-xl border border-border bg-background/50 px-3 py-2 text-xs text-muted-foreground">
@@ -435,7 +435,7 @@ export default function ScheduleForm({
             </p>
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            <label className="block text-xs font-semibold   tracking-wider text-muted-foreground mb-1">
               Final Proof Deadline
             </label>
             <input

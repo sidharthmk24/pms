@@ -133,7 +133,7 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
 
             {/* Col 2: Author Links */}
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-4">
+              <h3 className="text-xs font-bold   tracking-wider text-primary mb-4">
                 Author Resources
               </h3>
               <ul className="space-y-2.5 text-sm">
@@ -167,7 +167,7 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
 
             {/* Col 3: Portal Access & Info */}
             {/* <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-4">
+              <h3 className="text-xs font-bold   tracking-wider text-primary mb-4">
                 Publisher Network
               </h3>
               <ul className="space-y-2.5 text-sm">
