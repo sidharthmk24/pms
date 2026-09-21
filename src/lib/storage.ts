@@ -50,6 +50,46 @@ export class UploadError extends Error {}
  * 4. Generates a random UUID filename and writes outside web root with stripped execute permissions (0o644).
  * 5. Logs audit trail.
  */
+async function saveToVercelBlob(
+  pathname: string,
+  buffer: Buffer,
+  contentType: string
+) {
+  const preferredAccess = (process.env.BLOB_ACCESS as "public" | "private") || "public";
+  try {
+    return await put(pathname, buffer, {
+      access: preferredAccess,
+      contentType,
+      addRandomSuffix: false,
+    });
+  } catch (err: any) {
+    const msg = String(err?.message || "").toLowerCase();
+    if (msg.includes("private store") || msg.includes("private access")) {
+      return await put(pathname, buffer, {
+        access: "private",
+        contentType,
+        addRandomSuffix: false,
+      });
+    }
+    if (msg.includes("public store") || msg.includes("public access")) {
+      return await put(pathname, buffer, {
+        access: "public",
+        contentType,
+        addRandomSuffix: false,
+      });
+    }
+    throw err;
+  }
+}
+
+/**
+ * Validates, scans, and safely writes a manuscript file to disk or cloud storage.
+ * 1. Checks size, double extensions, null bytes, SVG prohibition.
+ * 2. Inspects true binary magic bytes (e.g. %PDF-).
+ * 3. Scans for trojans, malware & EICAR test signatures.
+ * 4. Generates a random UUID filename and writes outside web root with stripped execute permissions (0o644).
+ * 5. Logs audit trail.
+ */
 export async function storeManuscript(
   file: File,
   userId?: string | null
@@ -72,11 +112,7 @@ export async function storeManuscript(
 
   // If Vercel Blob is configured
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(relativePath, validated.buffer, {
-      access: "public",
-      contentType: validated.detectedMime,
-      addRandomSuffix: false,
-    });
+    const blob = await saveToVercelBlob(relativePath, validated.buffer, validated.detectedMime);
 
     await auditUploadSuccess(userId, validated.originalFilename, storedId, validated.sizeBytes, validated.detectedExt);
 
@@ -135,11 +171,7 @@ export async function storeCoverDesign(
   const relativePath = `covers/${year}/${month}/${storedId}.${validated.detectedExt}`;
 
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(relativePath, validated.buffer, {
-      access: "public",
-      contentType: validated.detectedMime,
-      addRandomSuffix: false,
-    });
+    const blob = await saveToVercelBlob(relativePath, validated.buffer, validated.detectedMime);
 
     await auditUploadSuccess(userId, validated.originalFilename, storedId, validated.sizeBytes, validated.detectedExt);
 
@@ -196,11 +228,7 @@ export async function storeProductionFile(
   const relativePath = `production/${year}/${month}/${storedId}.${validated.detectedExt}`;
 
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(relativePath, validated.buffer, {
-      access: "public",
-      contentType: validated.detectedMime,
-      addRandomSuffix: false,
-    });
+    const blob = await saveToVercelBlob(relativePath, validated.buffer, validated.detectedMime);
     await auditUploadSuccess(userId, validated.originalFilename, storedId, validated.sizeBytes, validated.detectedExt);
     return blob.url;
   }

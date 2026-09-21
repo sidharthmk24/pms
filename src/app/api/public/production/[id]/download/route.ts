@@ -1,5 +1,6 @@
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
+import { get } from "@vercel/blob";
 import { fail, handler } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { resolveManuscript, buildSafeContentDisposition } from "@/lib/storage";
@@ -100,6 +101,23 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
 
   try {
     if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        try {
+          const blobRes = await get(filePath, { access: "private" });
+          if (blobRes && blobRes.statusCode === 200) {
+            return new Response(blobRes.stream, {
+              headers: {
+                ...secureHeaders,
+                ...(blobRes.blob?.contentType ? { "Content-Type": blobRes.blob.contentType } : {}),
+                ...(blobRes.blob?.size ? { "Content-Length": blobRes.blob.size.toString() } : {}),
+              },
+            });
+          }
+        } catch (privateErr) {
+          console.warn("[production-download] private blob get failed, falling back to public fetch:", privateErr);
+        }
+      }
+
       const res = await fetch(filePath);
       if (!res.ok) return fail(404, "Proof file not found at remote storage");
       return new Response(res.body, {

@@ -1,5 +1,6 @@
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
+import { get } from "@vercel/blob";
 import { fail, handler } from "@/lib/api";
 import { requireApiUser } from "@/lib/auth";
 import { can } from "@/lib/roles";
@@ -75,6 +76,23 @@ export const GET = handler(async (req: Request, { params }: { params: Promise<{ 
 
   if (targetPath.startsWith("http://") || targetPath.startsWith("https://")) {
     try {
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        try {
+          const blobRes = await get(targetPath, { access: "private" });
+          if (blobRes && blobRes.statusCode === 200) {
+            return new Response(blobRes.stream, {
+              headers: {
+                ...secureHeaders,
+                ...(blobRes.blob?.contentType ? { "Content-Type": blobRes.blob.contentType } : {}),
+                ...(blobRes.blob?.size ? { "Content-Length": blobRes.blob.size.toString() } : {}),
+              },
+            });
+          }
+        } catch (privateErr) {
+          console.warn("[download] private blob get failed, falling back to public fetch:", privateErr);
+        }
+      }
+
       const res = await fetch(targetPath);
       if (!res.ok) return fail(404, "File not found in remote storage");
       return new Response(res.body, {
