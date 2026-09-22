@@ -31,7 +31,6 @@ import {
   Send,
   SlidersHorizontal,
   X,
-  Code,
   Sparkles,
   Info,
   Tag,
@@ -177,10 +176,10 @@ export function categorizeLog(action: string, entity: string): CategoryKey {
 export function formatActionName(action: string): string {
   const map: Record<string, string> = {
     submission_received: "Submission Received",
-    decline_submission: "Submission Declined",
+    decline_submission: "Decline Submission",
     request_submission_revision: "Revision Requested",
-    accept_submission: "Submission Accepted",
-    reassign_submission: "Submission Reassigned",
+    accept_submission: "Accept Submission",
+    reassign_submission: "Reassign Submission",
     sign_contract_publisher: "Publisher Signed Contract",
     sign_contract_author: "Author Signed Contract",
     author_signed_contract: "Author Signed Contract",
@@ -203,15 +202,26 @@ export function formatActionName(action: string): string {
     dispatch_author_copies: "Dispatched Author Copies",
     send_proof_email: "Dispatched Proof Notification Email",
     update_production_schedule: "Updated Production Schedule",
+    record_print_receipt: "Recorded Print Receipt",
+    revise_contract: "Revised Contract Terms",
+    renegotiate_contract: "Contract Renegotiation",
     create_user: "Created Team Account",
     update_user: "Updated User Account",
+    delete_user: "Deleted User Account",
     reset_user_password: "Reset Account Password",
+    update_editor_order: "Updated Editor Assignment Order",
     update_profile: "Updated Profile",
     create_author: "Created Author Profile",
     update_author: "Updated Author Details",
     delete_author: "Deleted Author Record",
     login: "User Logged In",
     logout: "User Logged Out",
+    forgot_password_request: "Password Reset Requested",
+    reset_password_completed: "Password Successfully Reset",
+    file_upload_validated: "File Upload Validated",
+    file_upload_rejected: "File Upload Rejected",
+    file_quarantine: "File Quarantined",
+    file_security_scan: "File Security Scanned",
   };
 
   if (map[action]) return map[action];
@@ -478,9 +488,8 @@ export default function ActivityClient({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
-  // Inspector Modal state & payload view mode toggle
+  // Inspector Modal state
   const [inspectItem, setInspectItem] = useState<AuditLogRecord | null>(null);
-  const [payloadViewMode, setPayloadViewMode] = useState<"formatted" | "raw">("formatted");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Lock body scroll and handle Escape when modal is open
@@ -983,7 +992,7 @@ export default function ActivityClient({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-[#7e2562]/10 bg-[#faedf5]/40 text-xs font-bold   tracking-wider text-muted-foreground">
+              <thead className="border-b border-[#7e2562]/10 bg-[#faedf5]/40 text-xs font-bold tracking-wider text-muted-foreground">
                 <tr>
                   <th
                     onClick={() => toggleSort("at")}
@@ -1053,7 +1062,6 @@ export default function ActivityClient({
                       )}
                     </div>
                   </th>
-                  <th className="py-3.5 px-4">Detail Preview</th>
                   <th className="py-3.5 pl-4 pr-6 text-right">Inspect</th>
                 </tr>
               </thead>
@@ -1066,33 +1074,29 @@ export default function ActivityClient({
                   return (
                     <tr
                       key={row.id}
-                      className="group transition-colors hover:bg-[#faedf5]/30 cursor-pointer"
-                      onClick={() => setInspectItem(row)}
+                      className="group transition-colors hover:bg-[#faedf5]/25"
                     >
-                      {/* Timestamp */}
-                      <td className="py-4 pl-6 pr-4 align-top">
-                        <div className="flex items-start gap-2.5">
-                          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#7e2562] ring-4 ring-[#faedf5]" />
-                          <div>
-                            <p className="font-bold text-foreground text-xs">{formatIST(row.at)}</p>
-                            <p className="mt-0.5 text-[11px] font-mono text-muted-foreground/80">{row.at.slice(11, 19)} UTC</p>
-                          </div>
+                      {/* Timestamp (without UTC) */}
+                      <td className="py-3.5 pl-6 pr-4 align-middle whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-[#7e2562]" />
+                          <span className="font-semibold text-foreground text-xs">{formatIST(row.at)}</span>
                         </div>
                       </td>
 
                       {/* Actor */}
-                      <td className="py-4 px-4 align-top">
+                      <td className="py-3.5 px-4 align-middle">
                         <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#7e2562]/10 font-bold text-xs text-[#7e2562]">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#7e2562]/10 font-bold text-xs text-[#7e2562]">
                             {row.users?.name ? row.users.name.charAt(0).toUpperCase() : "S"}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-bold text-foreground text-xs truncate">
+                            <p className="font-semibold text-foreground text-xs truncate">
                               {row.users?.name ?? "System Automated"}
                             </p>
                             <p className="text-[11px] text-muted-foreground truncate">
                               {row.users ? (
-                                <span className="capitalize font-semibold text-primary/80">{row.users.role}</span>
+                                <span className="capitalize font-medium text-primary/80">{row.users.role}</span>
                               ) : (
                                 "System Cron / Daemon"
                               )}
@@ -1101,79 +1105,36 @@ export default function ActivityClient({
                         </div>
                       </td>
 
-                      {/* Action & Category */}
-                      <td className="py-4 px-4 align-top">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-bold text-foreground text-xs">
-                              {formatActionName(row.action)}
-                            </p>
-                          </div>
-                          <div className="mt-1 flex items-center gap-1.5">
-                            <span
-                              className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold ${catDef.badgeClass}`}
-                            >
-                              {catDef.label}
-                            </span>
-                            <span className="text-[10px] font-mono text-muted-foreground/60">{row.action}</span>
-                          </div>
+                      {/* Action & Category Tags */}
+                      <td className="py-3.5 px-4 align-middle">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span
+                            className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold ${catDef.badgeClass}`}
+                          >
+                            {formatActionName(row.action)}
+                          </span>
+                          <span className="inline-flex items-center rounded-md border border-[#7e2562]/15 bg-white px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            {catDef.label}
+                          </span>
                         </div>
                       </td>
 
-                      {/* Entity Target with Human-Readable Name */}
-                      <td className="py-4 px-4 align-top">
-                        <div className="max-w-[220px]">
-                          {resolvedEntity ? (
-                            <div>
-                              <p className="font-bold text-xs text-foreground truncate" title={resolvedEntity.name}>
-                                {resolvedEntity.name}
-                              </p>
-                              <div className="mt-0.5 flex items-center gap-1.5">
-                                <span className="inline-flex items-center rounded bg-[#7e2562]/8 px-1.5 py-0.2 text-[10px] font-bold   text-[#7e2562]">
-                                  {row.entity}
-                                </span>
-                                {resolvedEntity.subtitle && (
-                                  <span className="text-[10px] text-muted-foreground truncate">
-                                    {resolvedEntity.subtitle}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ) : (
-                            <div>
-                              <span className="inline-flex items-center rounded-md border border-black/10 bg-black/[0.03] px-2 py-0.5 text-[11px] font-bold   tracking-wider text-muted-foreground">
-                                {row.entity}
-                              </span>
-                              {row.entity_id && (
-                                <p className="font-mono text-[10px] text-muted-foreground truncate mt-0.5">
-                                  {row.entity_id}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                      {/* Target Entity Name only */}
+                      <td className="py-3.5 px-4 align-middle">
+                        <p
+                          className="font-semibold text-xs text-foreground truncate max-w-[240px]"
+                          title={resolvedEntity ? resolvedEntity.name : (row.entity_id ? `Record #${row.entity_id}` : row.entity.replace(/_/g, " "))}
+                        >
+                          {resolvedEntity ? resolvedEntity.name : (row.entity_id ? `Record #${row.entity_id.slice(0, 8)}` : row.entity.replace(/_/g, " "))}
+                        </p>
                       </td>
 
-                      {/* Detail Preview */}
-                      <td className="py-4 px-4 align-top">
-                        {row.detail ? (
-                          <div className="max-w-xs truncate font-mono text-[11px] text-muted-foreground bg-slate-50 border border-black/5 rounded-lg px-2.5 py-1">
-                            {row.detail}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground/50 italic">—</span>
-                        )}
-                      </td>
-
-                      {/* Inspect Action */}
-                      <td className="py-4 pl-4 pr-6 align-top text-right">
+                      {/* Inspect Action Button */}
+                      <td className="py-3.5 pl-4 pr-6 align-middle text-right">
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setInspectItem(row);
-                          }}
-                          className="apple-button inline-flex items-center gap-1 rounded-lg border border-[#7e2562]/20 bg-[#faedf5]/60 px-2.5 py-1 text-xs font-bold text-[#7e2562] opacity-80 group-hover:opacity-100 hover:bg-[#faedf5]"
+                          onClick={() => setInspectItem(row)}
+                          className="apple-button inline-flex items-center gap-1.5 rounded-lg border border-[#7e2562]/20 bg-[#faedf5]/60 px-3 py-1.5 text-xs font-bold text-[#7e2562] hover:bg-[#7e2562] hover:text-white transition-all shadow-2xs cursor-pointer"
                         >
                           <Eye className="h-3.5 w-3.5" />
                           <span>Inspect</span>
@@ -1202,7 +1163,7 @@ export default function ActivityClient({
               <button
                 onClick={() => setCurrentPage(1)}
                 disabled={currentPage === 1}
-                className="apple-button rounded-xl border border-black/10 bg-white p-2 text-xs font-bold text-muted-foreground disabled:opacity-40 hover:bg-slate-50 transition-colors"
+                className="apple-button rounded-xl border border-black/10 bg-white p-2 text-xs font-bold text-muted-foreground disabled:opacity-40 hover:bg-slate-50 transition-colors cursor-pointer"
                 title="First Page"
               >
                 <ChevronsLeft className="h-4 w-4" />
@@ -1210,7 +1171,7 @@ export default function ActivityClient({
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="apple-button rounded-xl border border-black/10 bg-white p-2 text-xs font-bold text-muted-foreground disabled:opacity-40 hover:bg-slate-50 transition-colors"
+                className="apple-button rounded-xl border border-black/10 bg-white p-2 text-xs font-bold text-muted-foreground disabled:opacity-40 hover:bg-slate-50 transition-colors cursor-pointer"
                 title="Previous Page"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -1223,7 +1184,7 @@ export default function ActivityClient({
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="apple-button rounded-xl border border-black/10 bg-white p-2 text-xs font-bold text-muted-foreground disabled:opacity-40 hover:bg-slate-50 transition-colors"
+                className="apple-button rounded-xl border border-black/10 bg-white p-2 text-xs font-bold text-muted-foreground disabled:opacity-40 hover:bg-slate-50 transition-colors cursor-pointer"
                 title="Next Page"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -1231,7 +1192,7 @@ export default function ActivityClient({
               <button
                 onClick={() => setCurrentPage(totalPages)}
                 disabled={currentPage === totalPages}
-                className="apple-button rounded-xl border border-black/10 bg-white p-2 text-xs font-bold text-muted-foreground disabled:opacity-40 hover:bg-slate-50 transition-colors"
+                className="apple-button rounded-xl border border-black/10 bg-white p-2 text-xs font-bold text-muted-foreground disabled:opacity-40 hover:bg-slate-50 transition-colors cursor-pointer"
                 title="Last Page"
               >
                 <ChevronsRight className="h-4 w-4" />
@@ -1276,15 +1237,15 @@ export default function ActivityClient({
                         );
                       })()}
                     </div>
-                    <p className="mt-0.5 text-xs font-mono text-muted-foreground">
-                      Action: {inspectItem.action}
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Action: <span className="font-semibold text-foreground">{formatActionName(inspectItem.action)}</span>
                     </p>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setInspectItem(null)}
-                  className="apple-button flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-muted-foreground hover:bg-slate-200 hover:text-foreground transition-colors"
+                  className="apple-button flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-muted-foreground hover:bg-slate-200 hover:text-foreground transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -1294,7 +1255,7 @@ export default function ActivityClient({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {/* Event ID */}
                 <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2">
-                  <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
+                  <span className="text-[11px] font-bold tracking-wider text-muted-foreground">
                     Audit Log ID
                   </span>
                   <div className="flex items-center justify-between gap-2 rounded-xl border border-black/8 bg-white px-3 py-2">
@@ -1303,7 +1264,7 @@ export default function ActivityClient({
                     </span>
                     <button
                       onClick={() => handleCopy(inspectItem.id, "modal-id")}
-                      className="shrink-0 p-1 text-muted-foreground hover:text-foreground rounded hover:bg-black/5 transition-colors"
+                      className="shrink-0 p-1 text-muted-foreground hover:text-foreground rounded hover:bg-black/5 transition-colors cursor-pointer"
                       title="Copy Log ID"
                     >
                       {copiedId === "modal-id" ? (
@@ -1317,8 +1278,8 @@ export default function ActivityClient({
 
                 {/* Timestamp */}
                 <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2">
-                  <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
-                    Timestamp (IST / UTC)
+                  <span className="text-[11px] font-bold tracking-wider text-muted-foreground">
+                    Timestamp
                   </span>
                   <div className="rounded-xl border border-black/8 bg-white px-3 py-2">
                     <p className="text-xs font-bold text-foreground">{formatIST(inspectItem.at)}</p>
@@ -1331,7 +1292,7 @@ export default function ActivityClient({
                 {/* Actor Card */}
                 <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
+                    <span className="text-[11px] font-bold tracking-wider text-muted-foreground">
                       Actor Information
                     </span>
                     {inspectItem.users?.role && (
@@ -1350,13 +1311,13 @@ export default function ActivityClient({
                   </div>
                 </div>
 
-                {/* Target Entity with Resolved Human-Readable Name */}
+                {/* Target Entity with Resolved Details */}
                 <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4 space-y-2 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold   tracking-wider text-muted-foreground">
+                    <span className="text-[11px] font-bold tracking-wider text-muted-foreground">
                       Target Entity
                     </span>
-                    <span className="inline-flex items-center rounded-md border border-black/10 bg-white px-2 py-0.5 text-[10px] font-bold   text-foreground shadow-2xs">
+                    <span className="inline-flex items-center rounded-md border border-black/10 bg-white px-2 py-0.5 text-[10px] font-bold text-foreground shadow-2xs">
                       {inspectItem.entity.replace(/_/g, " ")}
                     </span>
                   </div>
@@ -1404,36 +1365,16 @@ export default function ActivityClient({
                 </div>
               </div>
 
-              {/* Event Detail Payload - Human Friendly Card View + Toggle */}
+              {/* Event Detail Payload - Formatted Key-Value Cards */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold   tracking-wider text-muted-foreground">
-                      Event Details &amp; Payload
-                    </span>
-                    {parsedDetailEntries && parsedDetailEntries.length > 0 && (
-                      <div className="inline-flex items-center rounded-lg border border-black/10 bg-slate-100 p-0.5 text-[10px] font-bold">
-                        <button
-                          type="button"
-                          onClick={() => setPayloadViewMode("formatted")}
-                          className={`inline-flex items-center gap-1 rounded-md px-2 py-1 transition-all ${
-                            payloadViewMode === "formatted"
-                              ? "bg-white text-foreground shadow-2xs font-extrabold"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          <span></span>
-                        </button>
-                       
-                      </div>
-                    )}
-                  </div>
-
-         
+                  <span className="text-xs font-bold tracking-wider text-muted-foreground">
+                    Event Details &amp; Payload
+                  </span>
                 </div>
 
                 {inspectItem.detail ? (
-                  payloadViewMode === "formatted" && parsedDetailEntries && parsedDetailEntries.length > 0 ? (
+                  parsedDetailEntries && parsedDetailEntries.length > 0 ? (
                     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                       {parsedDetailEntries.map(([key, val]) => {
                         const { display, rawId } = resolveFieldValue(key, val, entityLookup);
@@ -1481,15 +1422,9 @@ export default function ActivityClient({
                       })}
                     </div>
                   ) : (
-                    <pre className="max-h-60 overflow-y-auto rounded-2xl border border-black/10 bg-slate-900 p-4 font-mono text-xs text-emerald-400 whitespace-pre-wrap break-all">
-                      {(() => {
-                        try {
-                          return JSON.stringify(JSON.parse(inspectItem.detail), null, 2);
-                        } catch {
-                          return inspectItem.detail;
-                        }
-                      })()}
-                    </pre>
+                    <div className="rounded-2xl border border-black/8 bg-slate-50/90 p-4">
+                      <p className="text-xs font-medium text-foreground break-words">{inspectItem.detail}</p>
+                    </div>
                   )
                 ) : (
                   <div className="rounded-2xl border border-dashed border-black/15 bg-slate-50/80 p-5 text-center text-xs text-muted-foreground">
@@ -1503,7 +1438,7 @@ export default function ActivityClient({
                 <button
                   type="button"
                   onClick={() => setInspectItem(null)}
-                  className="apple-button rounded-xl bg-slate-100 px-6 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors"
+                  className="apple-button rounded-xl bg-slate-100 px-6 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
                 >
                   Close
                 </button>
