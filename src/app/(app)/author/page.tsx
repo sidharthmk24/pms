@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 const STATUS_LABELS: Record<string, { label: string; class: string }> = {
   new: { label: "Pending Review", class: "bg-amber-50 text-amber-800 border-amber-300 font-bold" },
   pending_review: { label: "Pending Review", class: "bg-amber-50 text-amber-800 border-amber-300 font-bold" },
-  under_review: { label: "Under Review", class: "bg-blue-50 text-blue-800 border-blue-300 font-bold" },
+  under_review: { label: "Under Review", class: "bg-amber-50 text-amber-800 border-amber-300 font-bold" },
   needs_revision: { label: "Needs Revision", class: "bg-orange-50 text-orange-800 border-orange-300 font-bold" },
   accepted: { label: "Approved & Accepted", class: "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-2xs" },
   declined: { label: "Declined", class: "bg-rose-50 text-rose-700 border-rose-300 font-bold" },
