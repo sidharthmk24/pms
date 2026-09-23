@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DocumentPreviewModal } from "@/components/document-preview-modal";
+import ArrowRight from "@/components/ui/arrow-right";
 
 export default function ProofApprovalClient({
   projectId,
@@ -233,7 +234,7 @@ export default function ProofApprovalClient({
                 onClick={() => handleAction("approve")}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-sm hover:bg-primary-hover transition disabled:opacity-60 cursor-pointer"
               >
-                {submitting ? "Confirming Sign-Off..." : "✓ Accept & Approve Final Proof for Press →"}
+                {submitting ? "Confirming Sign-Off..." : <span className="inline-flex items-center gap-1.5">✓ Accept &amp; Approve Final Proof for Press <ArrowRight /></span>}
               </button>
 
               <button

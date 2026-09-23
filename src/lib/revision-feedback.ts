@@ -15,6 +15,22 @@ export interface SectionRevisionData {
   authorNote?: string;
 }
 
+export interface ParsedAuthorBrief {
+  title: string;
+  brief: string;
+  version?: string;
+  timestamp?: string;
+}
+
+export interface ParsedRevisionNotesResult {
+  isSectionWise: boolean;
+  overallSummary: string;
+  sections: RevisionSection[];
+  authorBriefs: ParsedAuthorBrief[];
+  createdAt?: string;
+  raw: string;
+}
+
 export const COMMON_BOOK_SECTIONS = [
   { label: "Book Title & Subtitle (ശീർഷകം / ഉപശീർഷകം)", value: "Book Title & Subtitle / ശീർഷകം", defaultSeverity: "minor" as RevisionSeverity },
   { label: "Cover Design & Visual Artwork (കവർ ഡിസൈൻ)", value: "Cover Design & Visual Artwork / കവർ ഡിസൈൻ", defaultSeverity: "minor" as RevisionSeverity },
@@ -29,58 +45,149 @@ export const COMMON_BOOK_SECTIONS = [
   { label: "Formatting & Typesetting (ഫോർമാറ്റിംഗ്)", value: "Formatting & Manuscript Layout / ഫോർമാറ്റിംഗ്", defaultSeverity: "minor" as RevisionSeverity },
 ];
 
-export function parseRevisionNotes(rawNotes: string | null | undefined): {
-  isSectionWise: boolean;
-  overallSummary: string;
-  sections: RevisionSection[];
-  raw: string;
-} {
+export function parseRevisionNotes(rawNotes: string | null | undefined): ParsedRevisionNotesResult {
   if (!rawNotes || typeof rawNotes !== "string") {
     return {
       isSectionWise: false,
       overallSummary: "",
       sections: [],
+      authorBriefs: [],
       raw: "",
     };
   }
 
   const trimmed = rawNotes.trim();
+  const authorBriefs: ParsedAuthorBrief[] = [];
+  let editorFeedbackText = trimmed;
 
-  // Try parsing JSON structure
-  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+  // 1. Check for Author Revision Brief blocks: e.g. [Author Revision Brief - v2 - 2026-09-22 06:13:22]:\n<brief>
+  const authorBriefRegex = /\[Author Revision Brief(?:[ -]+v?(\d+))?(?:[ -]+([^\]]+))?\]:?([\s\S]*?)(?=(?:\[Author Revision Brief|\[Previous Editor Feedback\]|$))/gi;
+  let match;
+  let hasAuthorBrief = false;
+
+  while ((match = authorBriefRegex.exec(trimmed)) !== null) {
+    hasAuthorBrief = true;
+    const version = match[1]?.trim();
+    const timestamp = match[2]?.trim();
+    const briefContent = match[3]?.trim();
+
+    if (briefContent) {
+      let title = "Author Revision Brief";
+      if (version) title += ` (v${version})`;
+      if (timestamp) title += ` · ${timestamp}`;
+      authorBriefs.push({
+        title,
+        brief: briefContent,
+        version,
+        timestamp,
+      });
+    }
+  }
+
+  // 2. Extract Previous Editor Feedback section if delimited
+  const prevFeedbackMarker = /\[Previous Editor Feedback\]:?/i;
+  if (prevFeedbackMarker.test(trimmed)) {
+    const parts = trimmed.split(prevFeedbackMarker);
+    if (parts.length > 1) {
+      editorFeedbackText = parts[parts.length - 1].trim();
+    }
+  } else if (hasAuthorBrief) {
+    editorFeedbackText = trimmed.replace(authorBriefRegex, "").trim();
+  }
+
+  // Helper to parse a JSON object
+  function tryParseJson(str: string): { isSectionWise: boolean; overallSummary: string; sections: RevisionSection[]; createdAt?: string } | null {
     try {
-      const parsed = JSON.parse(trimmed);
-      if (parsed.type === "section_wise" || Array.isArray(parsed.sections)) {
-        const sections: RevisionSection[] = (parsed.sections || []).map((s: any, idx: number) => ({
-          id: s.id || `sec-${idx}-${Date.now()}`,
-          section: String(s.section || `Section ${idx + 1}`),
-          severity: ["critical", "major", "minor", "suggestion"].includes(s.severity) ? s.severity : "major",
-          feedback: String(s.feedback || s.notes || ""),
-        }));
+      const parsed = JSON.parse(str);
+      if (parsed && typeof parsed === "object") {
+        if (parsed.type === "section_wise" || Array.isArray(parsed.sections)) {
+          const sections: RevisionSection[] = (parsed.sections || []).map((s: any, idx: number) => ({
+            id: s.id || `sec-${idx}-${Date.now()}`,
+            section: String(s.section || `Section ${idx + 1}`),
+            severity: ["critical", "major", "minor", "suggestion"].includes(s.severity) ? s.severity : "major",
+            feedback: String(s.feedback || s.notes || ""),
+          }));
 
-        return {
-          isSectionWise: sections.length > 0,
-          overallSummary: String(parsed.overallSummary || parsed.summary || ""),
-          sections,
-          raw: trimmed,
-        };
+          return {
+            isSectionWise: sections.length > 0,
+            overallSummary: String(parsed.overallSummary || parsed.summary || ""),
+            sections,
+            createdAt: parsed.createdAt ? String(parsed.createdAt) : undefined,
+          };
+        } else if (parsed.overallSummary || parsed.summary || parsed.feedback || parsed.notes || parsed.message) {
+          return {
+            isSectionWise: false,
+            overallSummary: String(parsed.overallSummary || parsed.summary || parsed.feedback || parsed.notes || parsed.message || ""),
+            sections: [],
+            createdAt: parsed.createdAt ? String(parsed.createdAt) : undefined,
+          };
+        }
       }
     } catch {
-      // Not JSON, fallback to plain text
+      // not JSON
     }
+    return null;
+  }
+
+  // Check if editorFeedbackText is JSON directly
+  const directJson = tryParseJson(editorFeedbackText);
+  if (directJson) {
+    return {
+      ...directJson,
+      authorBriefs,
+      raw: trimmed,
+    };
+  }
+
+  // Check if there is an embedded JSON block with "section_wise"
+  const jsonMatch = editorFeedbackText.match(/(\{[\s\S]*"type"\s*:\s*"section_wise"[\s\S]*\})/);
+  if (jsonMatch) {
+    const embeddedJson = tryParseJson(jsonMatch[1]);
+    if (embeddedJson) {
+      return {
+        ...embeddedJson,
+        authorBriefs,
+        raw: trimmed,
+      };
+    }
+  }
+
+  // Check any generic embedded JSON object with sections / overallSummary
+  const genericJsonMatch = editorFeedbackText.match(/(\{[\s\S]*"(?:sections|overallSummary|feedback)"[\s\S]*\})/);
+  if (genericJsonMatch) {
+    const embeddedJson = tryParseJson(genericJsonMatch[1]);
+    if (embeddedJson) {
+      return {
+        ...embeddedJson,
+        authorBriefs,
+        raw: trimmed,
+      };
+    }
+  }
+
+  // If text is "None" or empty
+  if (editorFeedbackText.toLowerCase() === "none" || !editorFeedbackText.trim()) {
+    return {
+      isSectionWise: false,
+      overallSummary: "",
+      sections: [],
+      authorBriefs,
+      raw: trimmed,
+    };
   }
 
   return {
     isSectionWise: false,
-    overallSummary: trimmed,
+    overallSummary: editorFeedbackText,
     sections: [],
+    authorBriefs,
     raw: trimmed,
   };
 }
 
 export function formatRevisionNotesAsPlainText(data: {
   overallSummary?: string;
-  sections: RevisionSection[];
+  sections?: RevisionSection[];
 }): string {
   const parts: string[] = [];
 

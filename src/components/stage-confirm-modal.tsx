@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { HelpCircle, X, RotateCcw } from "lucide-react";
+import type { ReactNode } from "react";
 
 export interface StageConfirmModalProps {
   isOpen: boolean;
@@ -12,8 +13,8 @@ export interface StageConfirmModalProps {
   title?: string;
   subtitle?: string;
   message?: string;
-  confirmText?: string;
-  cancelText?: string;
+  confirmText?: ReactNode;
+  cancelText?: ReactNode;
   confirmVariant?: "primary" | "warning";
   // Optional legacy props kept for backward compatibility
   currentStage?: string;

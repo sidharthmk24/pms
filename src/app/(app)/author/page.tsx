@@ -6,6 +6,7 @@ import { formatIST } from "@/lib/time";
 import { formatPaise } from "@/lib/money";
 import { parseContractNotes, type ContractMetadata } from "@/lib/contracts";
 import { ProofPreviewButtons } from "./proof-preview-button";
+import ArrowRight from "@/components/ui/arrow-right";
 import { AuthorProofAction } from "./author-proof-action";
 import { OrderTracker, type TrackerData } from "./order-tracker";
 
@@ -487,7 +488,7 @@ export default async function AuthorDashboardPage({
               className="apple-button mt-4 inline-flex items-center gap-2 rounded-xl bg-[#7e2562] px-6 py-2.5 text-xs font-extrabold text-white shadow-plum-sm hover:bg-[#681b50] transition-all"
             >
               <span>Submit Your First Manuscript</span>
-              <span>&rarr;</span>
+              <ArrowRight size={13} />
             </Link>
           </div>
         ) : (
@@ -639,7 +640,7 @@ export default async function AuthorDashboardPage({
                       className="apple-button inline-flex items-center gap-1 rounded-xl bg-foreground px-3.5 py-1.5 text-xs font-extrabold text-background shadow-xs hover:opacity-90"
                     >
                       <span>{isRenegotiation ? "View Status" : "View Agreement"}</span>
-                      <span>&rarr;</span>
+                      <ArrowRight size={12} />
                     </Link>
                   </div>
                 </div>
@@ -664,7 +665,7 @@ export default async function AuthorDashboardPage({
               className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/10 px-3.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition shadow-2xs"
             >
               <span>View Full Table &amp; Filter</span>
-              <span>&rarr;</span>
+              <ArrowRight size={12} />
             </Link>
           </div>
 

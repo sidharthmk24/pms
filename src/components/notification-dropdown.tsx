@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import ArrowRight from "@/components/ui/arrow-right";
 import { useRouter } from "next/navigation";
 import { 
   Bell, 
@@ -326,17 +327,6 @@ export default function NotificationDropdown({ userRole }: { userRole?: string }
                   }`}
                 >
                   <span>Read</span>
-                  {readCount > 0 && (
-                    <span
-                      className={`px-1.5 py-0.2 text-[10px] rounded-full font-medium ${
-                        activeTab === "read"
-                          ? "bg-white/20 text-white"
-                          : "bg-[#faedf5] text-[#7e2562]"
-                      }`}
-                    >
-                      {readCount}
-                    </span>
-                  )}
                 </button>
               </div>
             </div>
@@ -372,7 +362,7 @@ export default function NotificationDropdown({ userRole }: { userRole?: string }
                       onClick={() => setActiveTab("read")}
                       className="text-xs font-bold text-[#7e2562] hover:underline mt-1 cursor-pointer"
                     >
-                      View {readCount} past notification{readCount > 1 ? "s" : ""} &rarr;
+                      <span className="inline-flex items-center gap-1">View past notifications <ArrowRight size={11} /></span>
                     </button>
                   )}
                 </div>

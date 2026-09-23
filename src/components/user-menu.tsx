@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from "react";
 import { createPortal } from "react-dom";
+import ArrowRight from "@/components/ui/arrow-right";
 import { formatRoleLabel } from "@/lib/roles";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { PlaceSelect } from "@/components/ui/place-select";
@@ -543,7 +544,7 @@ export default function UserMenu({
                           ) : (
                             <>
                               <span>Save Profile Changes</span>
-                              <span className="group-hover:translate-x-0.5 transition-transform">&rarr;</span>
+                              <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
                             </>
                           )}
                         </button>

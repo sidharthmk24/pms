@@ -15,18 +15,24 @@ import {
   Globe,
   ArrowRight,
   ShieldCheck,
+  FileCheck,
 } from "lucide-react";
+import { ProofPreviewButtons } from "@/app/(app)/author/proof-preview-button";
 
 interface PostProductionDashboardProps {
   projectId: string;
   project: {
     id: string;
     status: string;
+    final_layout_path?: string | null;
+    final_cover_path?: string | null;
     proof_approved_at?: string | null;
     updated_at?: string | null;
     isbn_registered?: string | null;
     channels_activated?: string | null;
     handover_completed_at?: string | null;
+    author_copies_qty?: number | null;
+    author_dispatch_tracking?: string | null;
   };
   title: {
     name: string;
@@ -89,20 +95,12 @@ export default function PostProductionDashboard({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold tracking-wider text-emerald-700 dark:text-emerald-400">
-                  Production Complete
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
-                  <ShieldCheck className="h-3 w-3" />
-                  <span>PUBLISHED &amp; LIVE</span>
-                </span>
+           
               </div>
-              <h2 className="text-xl font-bold text-foreground mt-0.5">
+              <h2 className="text-xl font-bold text-foreground mt-2.5">
                 Book Published &amp; Active in Catalog
               </h2>
-              <p className="text-xs text-muted-foreground mt-0.5 max-w-xl">
-                All production stages finalized and author sign-off recorded. The title is officially active in the published catalog.
-              </p>
+
             </div>
           </div>
 
@@ -150,9 +148,7 @@ export default function PostProductionDashboard({
             <h3 className="text-xl font-extrabold text-foreground tracking-tight">
               Active &amp; Published
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Available in central database and commercial index
-            </p>
+       
           </div>
 
           <div className="border-t border-black/5 pt-3 dark:border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -186,9 +182,7 @@ export default function PostProductionDashboard({
             <h3 className="text-xl font-extrabold text-foreground tracking-tight">
               {title.authors?.name || "Author"}
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Digital proof consent and publication approval confirmed
-            </p>
+         
           </div>
 
           <div className="border-t border-black/5 pt-3 dark:border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -204,82 +198,117 @@ export default function PostProductionDashboard({
           </div>
         </div>
 
-        {/* Card 3: Commercial Pricing */}
+        {/* Card 3: Final Master Deliverables */}
         <div className="rounded-2xl border border-black/8 bg-surface p-5 shadow-2xs dark:border-white/10 flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#7e2562]/10 text-[#7e2562] dark:text-pink-300">
-                <Coins className="h-4 w-4" />
+                <FileCheck className="h-4 w-4" />
               </div>
               <span className="text-xs font-bold text-muted-foreground">
-                3. Commercial Pricing
+                3. Final Master Deliverables
               </span>
             </div>
-            <span className="inline-flex items-center rounded-full bg-slate-100 dark:bg-white/10 px-2.5 py-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 shrink-0">
-              Retail MRP
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 shrink-0">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+              <span>Press-Ready Files</span>
             </span>
           </div>
 
-          <div>
-            <div className="numeric text-2xl font-black text-foreground">
-              {title.mrp_paise > 0 ? formatPaise(title.mrp_paise) : "Locked"}
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Standard retail selling price locked for distribution
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground">
+              Finalized typeset interior &amp; full cover jacket artwork:
             </p>
+            <ProofPreviewButtons
+              projectId={projectId}
+              title={title.name}
+              hasLayout={Boolean(project.final_layout_path)}
+              hasCover={Boolean(project.final_cover_path)}
+            />
           </div>
 
           <div className="border-t border-black/5 pt-3 dark:border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
             <span className="text-[11px] text-muted-foreground">
-              Royalty calculation basis active
+              Master copy preserved
             </span>
-            <span className="text-[11px] font-medium text-foreground">
-              Point-of-Sale Live
+            <span className="text-[11px] font-semibold text-foreground">
+              Ready for Print &amp; Reprints
             </span>
           </div>
         </div>
 
-        {/* Card 4: Production Lifecycle */}
+        {/* Card 4: Sales & Distribution Channels */}
         <div className="rounded-2xl border border-black/8 bg-surface p-5 shadow-2xs dark:border-white/10 flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                <Layers className="h-4 w-4" />
+                <Globe className="h-4 w-4" />
               </div>
               <span className="text-xs font-bold text-muted-foreground">
-                4. Production Lifecycle
+                4. Distribution Channels
               </span>
             </div>
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 shrink-0">
-              <span>5 of 5 Completed</span>
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+              <span>4 Channels Active</span>
             </span>
           </div>
 
-          <div>
-            <h3 className="text-xl font-extrabold text-foreground tracking-tight">
-              All Milestones Met
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              DTP · Editorial Proof · Cover Design · ISBN · Final Proof
-            </p>
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="rounded-xl border border-emerald-500/15 bg-emerald-50/40 p-2.5 dark:border-emerald-500/20 dark:bg-emerald-950/20">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                <Store className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                <span>Retail Store</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                Stadium Store POS
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-emerald-500/15 bg-emerald-50/40 p-2.5 dark:border-emerald-500/20 dark:bg-emerald-950/20">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                <Truck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                <span>Wholesale</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                Regional Dealers
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-emerald-500/15 bg-emerald-50/40 p-2.5 dark:border-emerald-500/20 dark:bg-emerald-950/20">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                <Sparkles className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                <span>Book Fairs</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                Cultural Expos
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-emerald-500/15 bg-emerald-50/40 p-2.5 dark:border-emerald-500/20 dark:bg-emerald-950/20">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                <Globe className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                <span>Web Catalog</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                Direct Web Orders
+              </p>
+            </div>
           </div>
 
           <div className="border-t border-black/5 pt-3 dark:border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
             <span className="text-[11px] text-muted-foreground">
-              Completed on:{" "}
-              <strong className="text-foreground">
-                {completionDate ? formatIST(completionDate, false) : "Finished"}
-              </strong>
+              Commercial Reach: <strong className="text-foreground">Statewide &amp; Online</strong>
             </span>
             <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
-              Archived &amp; Locked
+              Live Everywhere
             </span>
           </div>
         </div>
       </div>
 
       {/* Multi-Channel Sales Distribution Status */}
-      <div className="rounded-2xl border border-black/8 bg-surface p-6 shadow-2xs dark:border-white/10 space-y-4">
+      {/* <div className="rounded-2xl border border-black/8 bg-surface p-6 shadow-2xs dark:border-white/10 space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-foreground">
@@ -327,7 +356,7 @@ export default function PostProductionDashboard({
             );
           })}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

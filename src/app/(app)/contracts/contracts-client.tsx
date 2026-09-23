@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
+import ArrowRight from "@/components/ui/arrow-right";
 import { SmoothDropdown } from "@/components/dropdown";
 import { formatPaise, paiseToRupees } from "@/lib/money";
 import {
@@ -493,7 +494,7 @@ export default function ContractsClient({
                             {c.meta.publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali-Funded"}
                           </span>
                           <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                            {c.royalty_pct}% on {c.basis.toUpperCase()} · {c.meta.term_years} Yrs · {c.meta.free_copies} Copies
+                            {c.royalty_pct}% Royalty · {c.meta.term_years} Yrs · {c.meta.free_copies} Copies
                           </p>
                         </div>
                       </td>
@@ -504,34 +505,34 @@ export default function ContractsClient({
                       </td>
 
                       {/* Signing Status */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         {isSigned && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-300 shadow-2xs">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-300 shadow-2xs">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 shrink-0" />
                             Dual-Signed
                           </span>
                         )}
                         {isRenegotiation && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900 border border-amber-300 shadow-2xs animate-pulse">
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-600" />
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900 border border-amber-300 shadow-2xs animate-pulse">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-600 shrink-0" />
                             Review Requested
                           </span>
                         )}
                         {isDeclined && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-800 border border-rose-300">
-                            <span className="h-1.5 w-1.5 rounded-full bg-rose-600" />
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-800 border border-rose-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-rose-600 shrink-0" />
                             Offer Declined
                           </span>
                         )}
                         {!isSigned && !isRenegotiation && !isDeclined && isAwaitingAuthor && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-300">
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-600" />
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-600 shrink-0" />
                             Awaiting Author
                           </span>
                         )}
                         {!isSigned && !isRenegotiation && !isDeclined && isAwaitingPublisher && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#faedf5] px-3 py-1 text-xs font-bold text-[#7e2562] border border-[#7e2562]/25">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#7e2562]" />
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#faedf5] px-3 py-1 text-xs font-bold text-[#7e2562] border border-[#7e2562]/25">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#7e2562] shrink-0" />
                             Awaiting Publisher
                           </span>
                         )}
@@ -574,7 +575,7 @@ export default function ContractsClient({
                               className="apple-button inline-flex items-center gap-1.5 rounded-xl bg-[#7e2562] px-3 py-1.5 text-xs font-extrabold text-white shadow-plum-sm hover:bg-[#681b50] transition-all cursor-pointer"
                             >
                               <span>Reassign Contract</span>
-                              <span>&rarr;</span>
+                              <ArrowRight size={12} />
                             </button>
                           )}
 
@@ -582,17 +583,23 @@ export default function ContractsClient({
                             <button
                               onClick={() => openReviseModal(c)}
                               title="Modify agreement terms"
-                              className="apple-button inline-flex items-center gap-1 rounded-xl border border-black/15 bg-white px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-black/5 transition-all cursor-pointer"
+                              className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-black/15 bg-white px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-black/5 transition-all cursor-pointer"
                             >
-                              Edit Terms
+                              <svg className="h-3.5 w-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                              <span>Edit Terms</span>
                             </button>
                           )}
 
                           <button
                             onClick={() => setViewingContract(c)}
-                            className="apple-button inline-flex items-center gap-1 rounded-xl border border-[#7e2562]/25 bg-white px-3 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition-all cursor-pointer"
+                            className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-[#7e2562]/25 bg-white px-3 py-1.5 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/40 transition-all cursor-pointer"
                           >
-                            View Agreement
+                            <svg className="h-3.5 w-3.5 text-[#7e2562]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span>View Agreement</span>
                           </button>
 
                           {isAwaitingPublisher && (
@@ -934,7 +941,7 @@ export default function ContractsClient({
                     <label className="mb-1 block font-semibold text-foreground">Royalty Basis</label>
                     <SmoothDropdown
                       options={[
-                        { value: "mrp", label: "Percentage of MRP (Printed Price)" },
+                        { value: "mrp", label: "Standard Royalty Basis" },
                         { value: "net", label: "Percentage of Net Receipts" },
                       ]}
                       value={revBasis}

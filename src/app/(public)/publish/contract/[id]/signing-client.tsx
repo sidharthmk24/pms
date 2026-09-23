@@ -258,14 +258,14 @@ export default function SigningClient({
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 font-sans">
-      {/* Top Banner / Breadcrumb & Print (Hidden on print) */}
-      <div className="no-print mb-8 flex flex-wrap items-center justify-between gap-3">
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 font-sans">
+      {/* Top Banner / Back to Author Dashboard & Print (Hidden on print) */}
+      <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#7e2562]/10 pb-4">
         <Link
           href="/author"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground group"
+          className="apple-button inline-flex items-center gap-2 rounded-xl border border-[#7e2562]/20 bg-white px-4 py-2 text-xs font-bold text-[#7e2562] shadow-2xs hover:bg-[#faedf5] hover:border-[#7e2562]/35 transition-all group cursor-pointer"
         >
-          <svg className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="h-4 w-4 text-[#7e2562] transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           <span>Back to Author Dashboard</span>
@@ -274,14 +274,14 @@ export default function SigningClient({
           <button
             type="button"
             onClick={() => window.open(`/publish/contract/${contract.id}/print`, "_blank")}
-            className="apple-button inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-surface px-3.5 py-1 text-xs font-bold text-foreground shadow-2xs hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5 cursor-pointer"
+            className="apple-button inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3.5 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-black/5 dark:border-white/10 dark:bg-surface dark:hover:bg-white/5 cursor-pointer"
           >
             <svg className="h-3.5 w-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
             <span>Print Agreement (Offline / Paper)</span>
           </button>
-          <span className="rounded-full bg-black/[0.05] px-3 py-1 text-xs font-mono font-bold text-foreground dark:bg-white/[0.08]">
+          <span className="rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-mono font-bold text-foreground dark:border-white/10 dark:bg-surface">
             {meta.contract_ref || "CON-2026-0001"}
           </span>
         </div>
@@ -433,7 +433,7 @@ export default function SigningClient({
 
             <h3 className="font-bold font-sans text-foreground text-base">2. Royalty &amp; Accounting Statements</h3>
             <p>
-              The Publisher shall pay the Author a royalty of <strong>{contract.royalty_pct}%</strong> on the {contract.basis === "mrp" ? "Maximum Retail Price (MRP)" : "Net Realized Receipts"} for all copies sold. Royalty statements and payouts shall be accounted semi-annually, with Income Tax TDS deducted under Section 194J as required by Indian law.
+              The Publisher shall pay the Author a royalty of <strong>{contract.royalty_pct}%</strong> for all copies sold. Royalty statements and payouts shall be accounted semi-annually, with Income Tax TDS deducted under Section 194J as required by Indian law.
             </p>
 
             <h3 className="font-bold font-sans text-foreground text-base">3. Editorial, Layout &amp; Proofreading</h3>
@@ -815,8 +815,11 @@ export default function SigningClient({
                     onTouchEnd={stopDrawing}
                   />
                   {!hasDrawn && (
-                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-[#7e2562]/40 font-medium italic">
-                      ✍️ Draw your signature here with your mouse, trackpad, or finger...
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-1.5 text-xs text-[#7e2562]/40 font-medium italic">
+                      <svg className="h-4 w-4 text-[#7e2562]/40 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                      <span>Draw your signature here with your mouse, trackpad, or finger...</span>
                     </div>
                   )}
                 </div>

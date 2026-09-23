@@ -83,7 +83,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
   });
 
   // In-app notifications
-  await notifyRoles(["owner", "accounts"], {
+  await notifyRoles(["owner"], {
     title: "Contract Revisions Requested",
     message: `"${contract.titles.name}" — ${contract.authors.name} requested changes to publishing terms.`,
     type: "CONTRACT",

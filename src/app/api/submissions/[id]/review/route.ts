@@ -327,8 +327,8 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       link: `/publish/contract/${contractId}`,
     });
 
-    // Notify owners and accounts
-    await notifyRoles(["owner", "accounts"], {
+    // Notify owners
+    await notifyRoles(["owner"], {
       title: "Manuscript Accepted",
       message: `"${sub.title}" by ${sub.author_name} was accepted by ${user.name}. Contract drafted.`,
       type: "CONTRACT",

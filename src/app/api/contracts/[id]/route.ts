@@ -1,7 +1,9 @@
 import { fail, handler, ok } from "@/lib/api";
+import { requireApiCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const GET = handler(async (_req: Request, { params }: { params: Promise<{ id: string }> }) => {
+  await requireApiCapability("contracts.read");
   const { id } = await params;
 
   const contract = await prisma.contracts.findUnique({

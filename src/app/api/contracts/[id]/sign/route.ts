@@ -7,6 +7,7 @@ import { getSessionUser } from "@/lib/session";
 import { encodeContractNotes, parseContractNotes } from "@/lib/contracts";
 import { prisma } from "@/lib/prisma";
 import { stamp } from "@/lib/time";
+import { hasRole } from "@/lib/roles";
 
 import { notifyRoles, notifyAuthorByEmail } from "@/lib/notifications";
 
@@ -49,6 +50,9 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     const user = await getSessionUser();
     if (!user) {
       return fail(401, "Authentication required for publisher signature");
+    }
+    if (!hasRole(user.role, "owner")) {
+      return fail(403, "Only the owner can sign contracts on behalf of publisher");
     }
 
     currentMeta.publisher_signatory = data.signerName;
@@ -138,7 +142,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     }
 
     // In-app notifications to staff
-    await notifyRoles(["owner", "accounts", "production"], {
+    await notifyRoles(["owner", "production"], {
       title: "Publishing Agreement Executed",
       message: `"${contract.titles.name}" is dual-signed! Title has entered the production pipeline.`,
       type: "PRODUCTION",
@@ -180,7 +184,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     }
   } else if (data.party === "author") {
     // Notify staff when author signs first
-    await notifyRoles(["owner", "accounts"], {
+    await notifyRoles(["owner"], {
       title: "Contract Signed by Author",
       message: `"${contract.titles.name}" signed by ${data.signerName}. Awaiting publisher execution.`,
       type: "CONTRACT",

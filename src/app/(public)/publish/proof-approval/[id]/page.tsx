@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import ProofApprovalClient from "./proof-approval-client";
+import ArrowRight from "@/components/ui/arrow-right";
 
 export const metadata: Metadata = {
   title: "Author Final Proof Approval · Kairali Books",
@@ -70,7 +71,7 @@ export default async function ProofApprovalPage({
               href="/author"
               className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary-hover transition"
             >
-              Go to Author Portal →
+              <span className="inline-flex items-center gap-1.5">Go to Author Portal <ArrowRight /></span>
             </Link>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatIST } from "@/lib/time";
 import { formatPaise } from "@/lib/money";
@@ -87,6 +87,7 @@ export default function ProductionFlowClient({
   proj,
   isOwner,
   canAdvance,
+  stagePermissions = {},
   publishingType,
   contractFreeCopies,
   activeUsers,
@@ -101,6 +102,7 @@ export default function ProductionFlowClient({
   proj: any;
   isOwner: boolean;
   canAdvance: boolean;
+  stagePermissions?: Record<string, boolean>;
   publishingType: "kairali_funded" | "self_publishing";
   contractFreeCopies: number;
   activeUsers: Array<{ id: string; name: string; role: string }>;
@@ -127,6 +129,15 @@ export default function ProductionFlowClient({
   );
   const [editingStage, setEditingStage] = useState<string | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
+
+  // Automatically update selectedStage when project status advances
+  useEffect(() => {
+    if (proj.status === "completed") {
+      setSelectedStage("completed");
+    } else if (PIPELINE_ORDER.includes(proj.status)) {
+      setSelectedStage(proj.status);
+    }
+  }, [proj.status]);
 
   const currentLiveIdx = isProjectCompleted
     ? PIPELINE_ORDER.length
@@ -558,7 +569,7 @@ export default function ProductionFlowClient({
           {/* 2. Active Stage Action Forms (when project is in-progress) */}
           {isLiveStageSelected && (
             <>
-              {canAdvance &&
+              {(isOwner || stagePermissions[proj.status]) ? (
                 ["dtp", "editing", "cover_design", "isbn_registration", "final_proof"].includes(
                   proj.status
                 ) && (
@@ -570,8 +581,43 @@ export default function ProductionFlowClient({
                     proofApprovedAt={proj.proof_approved_at}
                     proofEmailSentAt={proj.proof_email_sent_at}
                     hasLayout={Boolean(proj.final_layout_path)}
+                    onSuccess={(next?: string) => {
+                      if (next) setSelectedStage(next);
+                    }}
                   />
-                )}
+                )
+              ) : (
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-50/40 p-5 space-y-3 dark:border-amber-500/20 dark:bg-amber-950/20 animate-apple-in">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <h3 className="text-base font-bold text-foreground">
+                      {selectedMeta.label} — In Progress
+                    </h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {selectedMeta.activeDescription}. This step is currently assigned to and handled by the designated team member.
+                  </p>
+                  {selectedStepData?.staff && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-amber-500/10">
+                      <User className="h-4 w-4 opacity-70" />
+                      <span>
+                        Assigned to: <strong className="text-foreground">{selectedStepData.staff}</strong>
+                      </span>
+                    </div>
+                  )}
+                  {proj.final_layout_path && (
+                    <div className="pt-2">
+                      <p className="text-xs font-semibold text-foreground mb-2">Manuscript Layout Deliverable:</p>
+                      <ProofPreviewButtons
+                        projectId={proj.id}
+                        title={proj.titles.name}
+                        hasLayout={Boolean(proj.final_layout_path)}
+                        hasCover={Boolean(proj.final_cover_path)}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
@@ -636,7 +682,7 @@ export default function ProductionFlowClient({
                         </span>
                       )}
 
-                      {canAdvance &&
+                      {(isOwner || stagePermissions[selectedStage]) &&
                         !isProjectCompleted &&
                         ["dtp", "editing", "cover_design", "isbn_registration", "final_proof"].includes(
                           selectedStage

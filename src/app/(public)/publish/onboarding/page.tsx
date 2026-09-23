@@ -6,9 +6,10 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { PlaceSelect } from "@/components/ui/place-select";
+import ArrowRight from "@/components/ui/arrow-right";
 import {
   BookOpen,
-  ArrowRight,
+  ArrowRight as LucideArrowRight,
   ArrowLeft,
   Check,
   UploadCloud,
@@ -788,7 +789,7 @@ export default function AuthorOnboardingPage() {
                       }}
                       className="font-bold text-[#7E2562] hover:underline cursor-pointer ml-2"
                     >
-                      Log in here &rarr;
+                      <span className="inline-flex items-center gap-1">Log in here <ArrowRight size={11} /></span>
                     </button>
                   </div>
                 )}
@@ -869,7 +870,7 @@ export default function AuthorOnboardingPage() {
                 onClick={() => openAuthorModal({ mode: "login" })}
                 className="text-xs text-[#7E2562] font-semibold hover:underline"
               >
-                Already have an account? Sign in &rarr;
+                Already have an account? <span className="inline-flex items-center gap-1">Sign in <ArrowRight size={11} /></span>
               </button>
 
               <button
@@ -885,7 +886,7 @@ export default function AuthorOnboardingPage() {
                 ) : (
                   <>
                     Continue to Author Profile
-                    <ArrowRight className="w-4 h-4" />
+                    <LucideArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
@@ -1029,7 +1030,7 @@ export default function AuthorOnboardingPage() {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-sm bg-[#7E2562] hover:bg-[#681E51] text-white text-sm font-bold shadow-md shadow-[#7E2562]/20 transition-all hover:scale-[1.01]"
               >
                 Continue to Pathway
-                <ArrowRight className="w-4 h-4" />
+                <LucideArrowRight className="w-4 h-4" />
               </button>
             </div>
           </form>
@@ -1084,7 +1085,7 @@ export default function AuthorOnboardingPage() {
                   className="mt-6 w-full py-3 px-4 rounded-sm bg-[#7E2562] hover:bg-[#681E51] text-white text-xs font-bold tracking-wide flex items-center justify-center gap-2 shadow-sm shadow-[#7E2562]/20 transition-all hover:scale-[1.01]"
                 >
                   Upload Manuscript (Step 4)
-                  <ArrowRight className="w-4 h-4" />
+                  <LucideArrowRight className="w-4 h-4" />
                 </button>
               </div>
 
@@ -1130,7 +1131,7 @@ export default function AuthorOnboardingPage() {
                   ) : (
                     <>
                       Complete Setup & Enter Dashboard
-                      <ArrowRight className="w-4 h-4" />
+                      <LucideArrowRight className="w-4 h-4" />
                     </>
                   )}
                 </button>
@@ -1429,7 +1430,7 @@ export default function AuthorOnboardingPage() {
                 ) : (
                   <>
                     Submit Manuscript & Complete Registration
-                    <ArrowRight className="w-4 h-4" />
+                    <LucideArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
@@ -1507,7 +1508,7 @@ export default function AuthorOnboardingPage() {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-sm bg-[#7E2562] hover:bg-[#681E51] text-white text-sm font-bold shadow-md shadow-[#7E2562]/20 transition-all hover:scale-[1.01]"
               >
                 Enter Author Dashboard
-                <ArrowRight className="w-4 h-4" />
+                <LucideArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>

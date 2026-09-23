@@ -6,6 +6,7 @@ import { ALLOWED_LABEL, MAX_UPLOAD_BYTES } from "@/lib/storage";
 import { getSessionUser } from "@/lib/session";
 import { AuthorModalTrigger } from "@/components/author-auth-modal";
 import PublishFaq from "./publish-faq";
+import ArrowRight from "@/components/ui/arrow-right";
 import PublishProcessSteps from "./publish-process-steps";
 import AnimatedSection from "@/components/animated-section";
 
@@ -145,7 +146,7 @@ export default async function PublishGuidelinesPage() {
                       className="apple-button flex w-full items-center justify-center gap-2 rounded-sm bg-[#7e2562] py-2.5 text-xs font-bold text-white hover:bg-[#681b50] shadow-plum-xs transition-all"
                     >
                       <span>Submit Manuscript</span>
-                      <span aria-hidden="true">&rarr;</span>
+                      <ArrowRight size={13} aria-hidden="true" />
                     </Link>
                     <Link
                       href="/author"
@@ -162,7 +163,7 @@ export default async function PublishGuidelinesPage() {
                       className="apple-button flex w-full items-center justify-center gap-2 rounded-sm bg-[#7e2562] py-2.5 text-xs font-bold text-white hover:bg-[#681b50] shadow-plum-xs transition-all cursor-pointer"
                     >
                       <span>Submit Manuscript</span>
-                      <span aria-hidden="true">&rarr;</span>
+                      <ArrowRight size={13} aria-hidden="true" />
                     </AuthorModalTrigger>
                     <AuthorModalTrigger
                       mode="login"
@@ -280,7 +281,7 @@ export default async function PublishGuidelinesPage() {
                     className="inline-flex items-center gap-1 cursor-pointer"
                   >
                     <span>Submit Your Work</span>
-                    <span className="transition-transform group-hover:translate-x-1">&rarr;</span>
+                    <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
                   </AuthorModalTrigger>
                 </div>
               </div>

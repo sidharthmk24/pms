@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
 import { UploadCloud, CheckCircle2, X, FileText, Image as ImageIcon, Clock } from "lucide-react";
 import StageConfirmModal from "@/components/stage-confirm-modal";
+import ArrowRight from "@/components/ui/arrow-right";
 
 const STAGE_VERBS: Record<string, string> = {
   dtp: "Typesetting & Layout (Upload Proofreading PDF)",
@@ -188,7 +189,7 @@ export default function TaskAdvance({
   initialApplicationRef?: string;
   initialProofFeedback?: string;
   onCancelEdit?: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (nextStage?: string) => void;
 }) {
   const router = useRouter();
   const [isbn, setIsbn] = useState(initialIsbn || "");
@@ -235,12 +236,25 @@ export default function TaskAdvance({
   function handleFormSubmit(e: React.FormEvent, customAction?: "approve" | "rework") {
     e.preventDefault();
     if (isEditMode) {
-      // Direct save in edit mode
+      // Direct save in edit mode without modal
       executeSubmit(customAction);
-    } else {
-      // Show confirmation modal before advancing stage
+      return;
+    }
+
+    // Confirmation modal is only required for:
+    // 1. Author rework requests
+    // 2. Final proof completion / book publishing
+    // 3. Step 2 of ISBN Registration (ISBN allocation & proof email dispatch to author)
+    const requiresConfirmModal =
+      customAction === "rework" ||
+      status === "final_proof" ||
+      (status === "isbn_registration" && !isIsbnStep1);
+
+    if (requiresConfirmModal) {
       setPendingCustomAction(customAction);
       setShowConfirmModal(true);
+    } else {
+      executeSubmit(customAction);
     }
   }
 
@@ -297,8 +311,24 @@ export default function TaskAdvance({
         setShowConfirmModal(false);
       } else {
         setShowConfirmModal(false);
+        setFile(null);
         router.refresh();
-        if (onSuccess) onSuccess();
+
+        let nextStage = status;
+        if (!isEditMode) {
+          if (status === "dtp") nextStage = "editing";
+          else if (status === "editing") nextStage = "cover_design";
+          else if (status === "cover_design") nextStage = "isbn_registration";
+          else if (status === "isbn_registration") {
+            if (isIsbnStep1) nextStage = "isbn_registration";
+            else nextStage = "final_proof";
+          } else if (status === "final_proof") {
+            if (actionToUse === "rework") nextStage = "editing";
+            else nextStage = "completed";
+          }
+        }
+
+        if (onSuccess) onSuccess(nextStage);
       }
     } catch {
       setError("Failed to connect to server");
@@ -619,7 +649,7 @@ export default function TaskAdvance({
                 onClick={() => setShowRework(true)}
                 className="text-xs text-muted-foreground underline hover:text-foreground transition cursor-pointer"
               >
-                Author requested revisions? Click here to send for rework &rarr;
+                <span className="inline-flex items-center gap-1">Author requested revisions? Click here to send for rework <ArrowRight size={11} /></span>
               </button>
             </div>
           ))}
@@ -645,10 +675,10 @@ export default function TaskAdvance({
               ? "✓ Save & Update Deliverables"
               : status === "isbn_registration"
               ? isIsbnStep1
-                ? "Mark ISBN Request Sent to Agency →"
-                : "Confirm Allocation & Dispatch Proof Email to Author →"
+                ? <span className="inline-flex items-center gap-1.5">Mark ISBN Request Sent to Agency <ArrowRight /></span>
+                : <span className="inline-flex items-center gap-1.5">Confirm Allocation &amp; Dispatch Proof Email to Author <ArrowRight /></span>
               : status === "final_proof"
-              ? (proofApprovedAt ? "✓ Finish & Publish Book →" : "✓ Complete & Publish Book →")
+              ? (proofApprovedAt ? <span className="inline-flex items-center gap-1.5">✓ Finish &amp; Publish Book <ArrowRight /></span> : <span className="inline-flex items-center gap-1.5">✓ Complete &amp; Publish Book <ArrowRight /></span>)
               : `Complete ${verb}`}
           </button>
 
@@ -718,7 +748,7 @@ export default function TaskAdvance({
             ? "Yes, Send for Rework"
             : status === "final_proof"
             ? "Yes, Finish & Publish Book"
-            : "Yes, Move to Next Step →"
+            : <span className="inline-flex items-center gap-1.5">Yes, Move to Next Step <ArrowRight /></span>
         }
         confirmVariant={pendingCustomAction === "rework" ? "warning" : "primary"}
         iconType={pendingCustomAction === "rework" ? "rework" : "arrow"}

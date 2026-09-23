@@ -105,8 +105,8 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     if (emailMatch) authorEmail = emailMatch[0];
   }
 
-  // In-app notifications to store, accounts, and production
-  await notifyRoles(["store", "accounts", "production", "owner"], {
+  // In-app notifications to production and owner
+  await notifyRoles(["production", "owner"], {
     title: "Print Stock Received",
     message: `${data.qty} copies of "${proj.titles.name}" received from ${data.vendor || "printer"} into warehouse inventory.`,
     type: "STOCK",

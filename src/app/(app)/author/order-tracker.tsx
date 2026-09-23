@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { formatIST } from "@/lib/time";
 import { RevisionFeedbackView } from "@/components/revision-feedback-view";
 import { ManuscriptVersionHistory, SubmissionFileRecord } from "@/components/manuscript-version-history";
+import ArrowRight from "@/components/ui/arrow-right";
 
 export type TrackerStage = {
   key: string;
@@ -566,7 +567,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
                 ) : (
                   <>
                     <span>Submit Revised Manuscript &amp; Brief</span>
-                    <span>&rarr;</span>
+                    <ArrowRight size={12} />
                   </>
                 )}
               </button>
@@ -654,7 +655,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
                   ? "Review Requested · View Status"
                   : "Review & Sign Agreement"}
               </span>
-              <span>&rarr;</span>
+              <ArrowRight size={12} />
             </Link>
           ) : data.statusCode === "accepted" ? (
             <Link
@@ -662,7 +663,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
               className="apple-button inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-emerald-sm hover:bg-emerald-700 transition-all"
             >
               <span>Publishing Agreements</span>
-              <span>&rarr;</span>
+              <ArrowRight size={12} />
             </Link>
           ) : null}
 

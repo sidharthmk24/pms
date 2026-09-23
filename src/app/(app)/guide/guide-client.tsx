@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import ArrowRight from "@/components/ui/arrow-right";
 
 type SectionKey =
   | "overview"
@@ -56,7 +57,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
       "Editorial Filtering: Editors can filter submissions instantly by status (New, Under Review, Needs Revision, Accepted) and assigned editor.",
     ],
     linkHref: "/submissions",
-    linkLabel: "Go to Submissions →",
+    linkLabel: "Go to Submissions",
   },
   {
     id: "editorial-decisions",
@@ -72,7 +73,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
       "Decline: Sends a respectful editorial decline notification and archives the record.",
     ],
     linkHref: "/submissions",
-    linkLabel: "View Submissions →",
+    linkLabel: "View Submissions",
   },
   {
     id: "kairali-books-publishing",
@@ -83,13 +84,13 @@ const GUIDE_TOPICS: GuideTopic[] = [
     keywords: ["kairali books", "publishing", "royalty", "advance", "mrp", "net", "free copies", "discount", "commercial"],
     summary: "Kairali Books fully finances editing, layout typesetting, proofing, and print runs for selected literary and academic titles.",
     details: [
-      "Royalty Rate: Standard 10% to 15% calculated on book MRP (Maximum Retail Price) or Net realizations.",
+      "Royalty Rate: Standard 10% to 15% royalty on all published title sales.",
       "Author Advance: Advance royalty payment credited to the author upon contract execution.",
       "Complimentary Copies: 10 complimentary print copies provided upon release.",
       "Author Purchase Discount: 40% discount on additional copies purchased directly from the publisher.",
     ],
     linkHref: "/contracts",
-    linkLabel: "Go to Contracts →",
+    linkLabel: "Go to Contracts",
   },
   {
     id: "self-publishing",
@@ -105,7 +106,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
       "Print Distribution: The agreed print quantity is delivered to the author with options for store/online catalog listing.",
     ],
     linkHref: "/contracts",
-    linkLabel: "View Contracts →",
+    linkLabel: "View Contracts",
   },
   {
     id: "digital-signing",
@@ -121,7 +122,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
       "3. Official A4 PDF Print: Generates formatted legal agreement with official letterhead, terms, and dual cryptographic verification stamps.",
     ],
     linkHref: "/contracts",
-    linkLabel: "Contracts Dashboard →",
+    linkLabel: "Contracts Dashboard",
   },
   {
     id: "author-portal-workflow",
@@ -138,7 +139,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
       "Executed Contracts: Instant download and viewing of signed legal agreements.",
     ],
     linkHref: "/author",
-    linkLabel: "Go to Author Portal →",
+    linkLabel: "Go to Author Portal",
   },
   {
     id: "dtp-production-pipeline",
@@ -157,7 +158,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
       "6. Pre-Press Completion: File seal and transition to physical offset press delivery.",
     ],
     linkHref: "/production",
-    linkLabel: "Go to Production →",
+    linkLabel: "Go to Production",
   },
   {
     id: "flow-8b-post-production",
@@ -175,7 +176,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
       "PMS to BMS Handover: Final milestone seal marking title published, active in catalog, and ready for commercial sale.",
     ],
     linkHref: "/production",
-    linkLabel: "View Production Projects →",
+    linkLabel: "View Production Projects",
   },
   {
     id: "team-staff-management",
@@ -191,7 +192,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
       "Revocation: Deactivate staff instantly without deleting historical audit trails or past assignments.",
     ],
     linkHref: "/team",
-    linkLabel: "Go to Team Management →",
+    linkLabel: "Go to Team Management",
   },
   {
     id: "test-accounts-reference",
@@ -209,7 +210,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
       "Store: store@kairalibooks.in / kairali123 (Stock inventory & point-of-sale store receipts)",
     ],
     linkHref: "/login",
-    linkLabel: "Go to Login →",
+    linkLabel: "Go to Login",
   },
 ];
 
@@ -371,14 +372,17 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
                       }}
                       className="text-xs font-bold text-primary hover:underline"
                     >
-                      View in {item.badge} Tab &rarr;
+                      <span className="inline-flex items-center gap-1">View in {item.badge} Tab <ArrowRight size={11} /></span>
                     </button>
                     {item.linkHref && (
                       <Link
                         href={item.linkHref}
                         className="apple-button rounded-lg bg-foreground px-3 py-1 text-xs font-extrabold text-background shadow-xs hover:opacity-90"
                       >
-                        {item.linkLabel || "Open Section →"}
+                        <span className="inline-flex items-center gap-1.5">
+                          {item.linkLabel || "Open Section"}
+                          <ArrowRight size={11} />
+                        </span>
                       </Link>
                     )}
                   </div>
@@ -480,7 +484,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
                     href="/submissions"
                     className="text-xs font-bold text-foreground underline hover:opacity-80"
                   >
-                    Go to Submissions →
+                    <span className="inline-flex items-center gap-1.5">Go to Submissions <ArrowRight size={11} /></span>
                   </Link>
                 </div>
 
@@ -522,7 +526,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
                     href="/contracts"
                     className="text-xs font-bold text-foreground underline hover:opacity-80"
                   >
-                    Go to Contracts →
+                    <span className="inline-flex items-center gap-1.5">Go to Contracts <ArrowRight size={11} /></span>
                   </Link>
                 </div>
 
@@ -616,7 +620,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
                     href="/author"
                     className="text-xs font-bold text-foreground underline hover:opacity-80"
                   >
-                    Go to Author Portal →
+                    <span className="inline-flex items-center gap-1.5">Go to Author Portal <ArrowRight size={11} /></span>
                   </Link>
                 </div>
 
@@ -653,7 +657,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
                     href="/production"
                     className="text-xs font-bold text-foreground underline hover:opacity-80"
                   >
-                    Go to Production →
+                    <span className="inline-flex items-center gap-1.5">Go to Production <ArrowRight size={11} /></span>
                   </Link>
                 </div>
 
@@ -702,7 +706,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
                       href="/team"
                       className="text-xs font-bold text-foreground underline hover:opacity-80"
                     >
-                      Go to Team →
+                      <span className="inline-flex items-center gap-1.5">Go to Team <ArrowRight size={11} /></span>
                     </Link>
                   )}
                 </div>
@@ -742,7 +746,7 @@ export default function GuideClient({ currentUserRole }: { currentUserRole: stri
                     <tbody className="divide-y divide-black/[0.06] dark:divide-white/[0.08]">
                       <tr>
                         <td className="px-4 py-3 font-bold text-foreground">Owner</td>
-                        <td className="px-4 py-3 font-mono text-muted-foreground">owner@kairalibooks.in</td>
+                        <td className="px-4 py-3 font-mono text-muted-foreground">owner@kairalipms.in</td>
                         <td className="px-4 py-3 font-mono text-muted-foreground">kairali123</td>
                         <td className="px-4 py-3 text-muted-foreground">Full Publisher Access</td>
                       </tr>

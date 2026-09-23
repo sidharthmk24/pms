@@ -44,40 +44,13 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
 
   const now = stamp();
 
-  function isUserAssigned(assignedTo: string | null, assignees: string | null, userId: string): boolean {
-    if (assignedTo === userId) return true;
+  function isUserAssigned(assignedTo: string | null, assignees: string | null, userId: string, userName?: string): boolean {
+    if (assignedTo === userId || (userName && assignedTo === userName)) return true;
     if (assignees) {
       const list = assignees.split(",").map((s) => s.trim());
-      if (list.includes(userId)) return true;
+      if (list.includes(userId) || (userName && list.includes(userName))) return true;
     }
     return false;
-  }
-
-  // Validate that the user is authorized to advance the current stage (either assignee or production/owner/editor staff)
-  let isAuthorized = user.role === "owner" || user.role === "production" || user.role === "editor";
-  if (proj.status === "dtp" && isUserAssigned(proj.dtp_assigned_to, proj.dtp_assignees, user.id)) isAuthorized = true;
-  else if (proj.status === "editing" && isUserAssigned(proj.editing_assigned_to, proj.editing_assignees, user.id)) isAuthorized = true;
-  else if (proj.status === "cover_design" && isUserAssigned(proj.cover_assigned_to, proj.cover_assignees, user.id)) isAuthorized = true;
-  else if (proj.status === "isbn_registration" && isUserAssigned(proj.isbn_assigned_to, proj.isbn_assignees, user.id)) isAuthorized = true;
-  else if (proj.status === "final_proof") isAuthorized = user.role === "owner" || user.role === "production" || user.role === "editor";
-  else if (proj.status === "printing") isAuthorized = user.role === "owner" || user.role === "production";
-
-  if (!isAuthorized) {
-    return fail(403, "You are not assigned to the active stage of this production project");
-  }
-
-  const host = req.headers.get("host") || "localhost:3000";
-  const protoHeader = req.headers.get("x-forwarded-proto");
-  const protocol = protoHeader || (host.includes("localhost") ? "http" : "https");
-  const baseUrl = `${protocol}://${host}`;
-  const authorTrackingUrl = `${baseUrl}/author`;
-
-  // Resolve author email & name
-  let authorEmail = proj.titles.authors?.email || null;
-  const authorName = proj.titles.authors?.name || "Author";
-  if (!authorEmail && proj.titles.contracts?.term_notes) {
-    const emailMatch = proj.titles.contracts.term_notes.match(/[\w.-]+@[\w.-]+\.\w+/);
-    if (emailMatch) authorEmail = emailMatch[0];
   }
 
   const contentType = req.headers.get("content-type") || "";
@@ -98,6 +71,37 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     (formData?.get("target_stage") as string) ||
     jsonData?.target_stage ||
     proj.status;
+
+  const stageToCheck = isEditMode ? targetStage : proj.status;
+
+  // Validate that the user is authorized to edit or advance this specific stage
+  let isAuthorized = user.role === "owner";
+  if (!isAuthorized) {
+    if (stageToCheck === "dtp" && isUserAssigned(proj.dtp_assigned_to, proj.dtp_assignees, user.id, user.name)) isAuthorized = true;
+    else if (stageToCheck === "editing" && isUserAssigned(proj.editing_assigned_to, proj.editing_assignees, user.id, user.name)) isAuthorized = true;
+    else if (stageToCheck === "cover_design" && isUserAssigned(proj.cover_assigned_to, proj.cover_assignees, user.id, user.name)) isAuthorized = true;
+    else if (stageToCheck === "isbn_registration" && isUserAssigned(proj.isbn_assigned_to, proj.isbn_assignees, user.id, user.name)) isAuthorized = true;
+    else if (stageToCheck === "final_proof" && (isUserAssigned(proj.proof_assigned_to, proj.proof_assignees, user.id, user.name) || user.role === "editor")) isAuthorized = true;
+    else if (stageToCheck === "printing" && user.role === "production") isAuthorized = true;
+  }
+
+  if (!isAuthorized) {
+    return fail(403, `You are not assigned to edit or advance the ${stageToCheck} stage of this production project`);
+  }
+
+  const host = req.headers.get("host") || "localhost:3000";
+  const protoHeader = req.headers.get("x-forwarded-proto");
+  const protocol = protoHeader || (host.includes("localhost") ? "http" : "https");
+  const baseUrl = `${protocol}://${host}`;
+  const authorTrackingUrl = `${baseUrl}/author`;
+
+  // Resolve author email & name
+  let authorEmail = proj.titles.authors?.email || null;
+  const authorName = proj.titles.authors?.name || "Author";
+  if (!authorEmail && proj.titles.contracts?.term_notes) {
+    const emailMatch = proj.titles.contracts.term_notes.match(/[\w.-]+@[\w.-]+\.\w+/);
+    if (emailMatch) authorEmail = emailMatch[0];
+  }
 
   // --- EDIT MODE HANDLERS (Update files & metadata without altering pipeline progress) ---
   if (isEditMode) {
@@ -513,7 +517,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         link: `/production/${id}`,
       }, user.id);
     } else {
-      await notifyRoles(["isbn", "production"], {
+      await notifyRoles(["production"], {
         title: "Cover Art Complete — ISBN Registration Active",
         message: `Cover design finalized for "${proj.titles.name}". Ready for ISBN application.`,
         type: "TASK",
@@ -734,7 +738,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         link: `/production/${id}`,
       }, user.id);
     } else {
-      await notifyRoles(["proofreader", "production"], {
+      await notifyRoles(["production"], {
         title: "ISBN Registered — Final Proof Stage",
         message: `ISBN ${isbn.trim()} registered for "${proj.titles.name}". Final proof stage active.`,
         type: "TASK",
@@ -881,7 +885,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     }
 
     // In-app notifications to staff
-    await notifyRoles(["production", "store", "accounts", "owner"], {
+    await notifyRoles(["production", "owner"], {
       title: "Book Published & Production Complete",
       message: `"${proj.titles.name}" production complete. Book is now live in the catalog!`,
       type: "STOCK",
@@ -938,7 +942,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       });
     }
 
-    await notifyRoles(["store", "accounts", "production", "owner"], {
+    await notifyRoles(["production", "owner"], {
       title: "Printing Run Complete",
       message: `Printing completed for "${proj.titles.name}". Moving to warehouse intake & post-production.`,
       type: "PRINT",

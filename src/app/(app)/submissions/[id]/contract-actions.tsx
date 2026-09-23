@@ -506,7 +506,7 @@ export default function ContractActions({ contract, canManage }: ContractActions
                     <label className="mb-1 block font-semibold text-foreground">Royalty Basis</label>
                     <SmoothDropdown
                       options={[
-                        { value: "mrp", label: "Percentage of MRP (Printed Price)" },
+                        { value: "mrp", label: "Standard Royalty Basis" },
                         { value: "net", label: "Percentage of Net Receipts" },
                       ]}
                       value={basis}

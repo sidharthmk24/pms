@@ -2,12 +2,7 @@ export const ROLES = [
   "owner",
   "editor",
   "designer",
-  "dtp",
-  "proofreader",
-  "isbn",
   "production",
-  "accounts",
-  "store",
   "author",
 ] as const;
 
@@ -21,12 +16,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   owner: "Owner",
   editor: "Editor",
   designer: "Cover Designer",
-  dtp: "DTP / Typesetter",
-  proofreader: "Proofreader",
-  isbn: "ISBN Specialist",
   production: "Production Manager",
-  accounts: "Accounts",
-  store: "Store",
   author: "Author",
 };
 
@@ -61,46 +51,11 @@ export const STAFF_ROLE_DEFINITIONS: {
     dotClass: "bg-pink-500",
   },
   {
-    val: "dtp",
-    label: "DTP / Typesetter",
-    desc: "Handles interior page layouts, Malayalam typography, and print-ready typesetting.",
-    badgeClass: "border-indigo-500/25 bg-indigo-500/10 text-indigo-700 dark:border-indigo-400/25 dark:bg-indigo-500/20 dark:text-indigo-300",
-    dotClass: "bg-indigo-500",
-  },
-  {
-    val: "proofreader",
-    label: "Proofreader",
-    desc: "Conducts galley proof inspections, checks author corrections, and final QA.",
-    badgeClass: "border-teal-500/25 bg-teal-500/10 text-teal-700 dark:border-teal-400/25 dark:bg-teal-500/20 dark:text-teal-300",
-    dotClass: "bg-teal-500",
-  },
-  {
-    val: "isbn",
-    label: "ISBN Specialist",
-    desc: "Coordinates Raja Rammohun Roy ISBN/CIP applications and registrations.",
-    badgeClass: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:border-amber-400/25 dark:bg-amber-500/20 dark:text-amber-300",
-    dotClass: "bg-amber-500",
-  },
-  {
     val: "production",
     label: "Production Manager",
     desc: "Oversees print shop jobs, paper specifications, and post-production quality.",
     badgeClass: "border-orange-500/25 bg-orange-500/10 text-orange-700 dark:border-orange-400/25 dark:bg-orange-500/20 dark:text-orange-300",
     dotClass: "bg-orange-500",
-  },
-  {
-    val: "accounts",
-    label: "Accounts",
-    desc: "Manages financial ledgers, dealer transactions, and author royalty settlements.",
-    badgeClass: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:border-emerald-400/25 dark:bg-emerald-500/20 dark:text-emerald-300",
-    dotClass: "bg-emerald-500",
-  },
-  {
-    val: "store",
-    label: "Store",
-    desc: "Oversees warehouse stock movement, distribution, and inventory levels.",
-    badgeClass: "border-cyan-500/25 bg-cyan-500/10 text-cyan-700 dark:border-cyan-400/25 dark:bg-cyan-500/20 dark:text-cyan-300",
-    dotClass: "bg-cyan-500",
   },
 ];
 
@@ -176,42 +131,12 @@ const ROLE_CAPS: Record<Role, readonly Capability[]> = {
     "titles.read",
     "production_pipeline.read", "production_pipeline.write",
   ],
-  dtp: [
-    "titles.read",
-    "production_pipeline.read", "production_pipeline.write",
-  ],
-  proofreader: [
-    "titles.read",
-    "production_pipeline.read", "production_pipeline.write",
-  ],
-  isbn: [
-    "titles.read",
-    "production_pipeline.read", "production_pipeline.write",
-  ],
   production: [
     "titles.read",
     "stock.read", "stock.write",
     "print.read", "print.write",
     "reports.read",
     "production_pipeline.read", "production_pipeline.write", "production_pipeline.manage",
-  ],
-  accounts: [
-    "titles.read",
-    "contracts.read", "contracts.write",
-    "dealers.read", "dealers.write",
-    "sales.read", "sales.write",
-    "stock.read", "print.read",
-    "payouts.read", "payouts.write",
-    "reports.read",
-    "production_pipeline.read", "production_pipeline.write",
-  ],
-  store: [
-    "titles.read", "titles.write",
-    "authors.read", "dealers.read",
-    "sales.read", "sales.write",
-    "stock.read", "stock.write",
-    "print.read", "reports.read",
-    "production_pipeline.read", "production_pipeline.write",
   ],
   author: [
     "author_portal.access",

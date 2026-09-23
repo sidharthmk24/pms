@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import StageConfirmModal from "@/components/stage-confirm-modal";
+import ArrowRight from "@/components/ui/arrow-right";
 
 export default function PostProductionForm({
   projectId,
@@ -292,7 +293,7 @@ export default function PostProductionForm({
           disabled={pending || !qcPassed || usableCopies <= 0}
           className="rounded-xl bg-[#7e2562] px-6 py-3 text-sm font-bold text-white shadow-plum-sm hover:bg-[#681d50] hover:shadow-plum transition disabled:opacity-60 cursor-pointer text-center"
         >
-          {pending ? "Completing Post-Production..." : "Complete Post-Production & Mark Book Live →"}
+          {pending ? "Completing Post-Production..." : <span className="inline-flex items-center gap-1.5">Complete Post-Production &amp; Mark Book Live <ArrowRight /></span>}
         </button>
       </div>
 
@@ -313,7 +314,7 @@ export default function PostProductionForm({
           { label: "Author Advance Copies", value: `-${authorCopiesQty}`, isMono: true },
           { label: "Net Inventory Intake", value: `+${netWarehouseCopies.toLocaleString()} copies`, isMono: true, isPositive: true },
         ]}
-        confirmText="Yes, Complete & Publish →"
+        confirmText={<span className="inline-flex items-center gap-1.5">Yes, Complete &amp; Publish <ArrowRight size={12} /></span>}
         confirmVariant="primary"
         iconType="publish"
       />

@@ -32,7 +32,7 @@ const ReviseSchema = z.discriminatedUnion("action", [
 ]);
 
 export const POST = handler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
-  const user = await requireApiCapability("submissions.review");
+  const user = await requireApiCapability("contracts.write");
   const { id } = await params;
   const json = await req.json().catch(() => null);
   const data = ReviseSchema.parse(json);
@@ -267,7 +267,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
   <div style="background:#faf4f8;border:1px solid #e7d5e2;border-radius:14px;padding:16px;margin:16px 0;">
     <h4 style="margin:0 0 10px;color:#7e2562;font-size:14px;">Updated Terms Summary:</h4>
     <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.6;color:#1c1a17;">
-      <li><strong>Royalty:</strong> ${data.royaltyPct}% on ${data.basis.toUpperCase()}</li>
+      <li><strong>Royalty:</strong> ${data.royaltyPct}%</li>
       <li><strong>Advance on Signing:</strong> ₹${data.advanceRupees.toLocaleString("en-IN")}</li>
       <li><strong>Contract Term:</strong> ${data.termYears} Years</li>
       <li><strong>Complimentary Author Copies:</strong> ${data.freeCopies} Copies</li>

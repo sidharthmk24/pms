@@ -425,7 +425,7 @@ export default function ReviewForm({ submissionId }: { submissionId: string }) {
                 value={basis}
                 onChange={(val) => setBasis(val as any)}
                 options={[
-                  { value: "mrp", label: "Printed MRP Basis" },
+                  { value: "mrp", label: "Standard Royalty Basis" },
                   { value: "net", label: "Net Realized Receipts Basis" },
                 ]}
               />

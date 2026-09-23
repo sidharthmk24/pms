@@ -201,7 +201,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
   }
 
   // In-app notifications to staff
-  await notifyRoles(["store", "accounts", "production", "owner"], {
+  await notifyRoles(["production", "owner"], {
     title: "Title Officially Released",
     message: `"${proj.titles.name}" post-production complete. ${commercialWarehouseCopies} commercial copies added to stock; ${authorCopies} author copies allocated.`,
     type: "STOCK",

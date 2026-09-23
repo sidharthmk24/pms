@@ -117,7 +117,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         link: `/production/${id}`,
       });
     } else {
-      await notifyRoles(["editor", "proofreader", "production", "owner"], {
+      await notifyRoles(["editor", "production", "owner"], {
         title: "Proof Corrections Requested",
         message: `Author submitted proof correction notes for "${proj.titles.name}": "${feedbackNotes}"`,
         type: "PROOF",
@@ -177,7 +177,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
   });
 
   // In-app notifications to staff
-  await notifyRoles(["production", "proofreader", "store", "accounts", "owner"], {
+  await notifyRoles(["production", "owner"], {
     title: "Author Proof Sign-Off Received",
     message: `Author approved final proof for "${proj.titles.name}". Ready for staff to finish and publish.`,
     type: "PROOF",

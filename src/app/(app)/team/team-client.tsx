@@ -317,12 +317,7 @@ export default function TeamClient({
     { key: "owner", label: "Owner" },
     { key: "editor", label: "Editor" },
     { key: "designer", label: "Cover Designer" },
-    { key: "dtp", label: "DTP / Typesetter" },
-    { key: "proofreader", label: "Proofreader" },
-    { key: "isbn", label: "ISBN Specialist" },
     { key: "production", label: "Production" },
-    { key: "accounts", label: "Accounts" },
-    { key: "store", label: "Store" },
   ];
 
   return (

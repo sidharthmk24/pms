@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from "r
 import Link from "next/link";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { PlaceSelect } from "@/components/ui/place-select";
+import ArrowRight from "@/components/ui/arrow-right";
 
 interface AuthorSignupCardProps {
   currentUser?: {
@@ -264,7 +265,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
             className="apple-button inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-[#7e2562] px-8 py-4 text-base font-extrabold text-white shadow-plum-md hover:bg-[#681b50] hover:shadow-plum-lg transition-all"
           >
             <span>Submit Your Manuscript</span>
-            <span aria-hidden="true">&rarr;</span>
+            <ArrowRight size={14} aria-hidden="true" />
           </Link>
           <Link
             href="/author"
@@ -589,7 +590,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
                 }}
                 className="font-bold text-[#7e2562] hover:underline cursor-pointer"
               >
-                Sign in here &rarr;
+                <span className="inline-flex items-center gap-1">Sign in here <ArrowRight size={11} /></span>
               </button>
             </p>
 
@@ -609,7 +610,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
               ) : (
                 <>
                   <span>Create Account &amp; Submit Manuscript</span>
-                  <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
@@ -696,7 +697,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
                 }}
                 className="font-bold text-[#7e2562] hover:underline cursor-pointer"
               >
-                Register here &rarr;
+                <span className="inline-flex items-center gap-1">Register here <ArrowRight size={11} /></span>
               </button>
             </p>
 
@@ -716,7 +717,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
               ) : (
                 <>
                   <span>Sign In &amp; Submit Manuscript</span>
-                  <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
@@ -751,7 +752,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
                   }}
                   className="apple-button rounded-xl bg-[#7e2562] px-5 py-2 text-xs font-bold text-white shadow-plum-xs cursor-pointer"
                 >
-                  Back to Sign In &rarr;
+                  <span className="inline-flex items-center gap-1">Back to Sign In <ArrowRight size={11} /></span>
                 </button>
               </div>
             </div>
@@ -815,7 +816,7 @@ export default function AuthorSignupCard({ currentUser }: AuthorSignupCardProps)
                   ) : (
                     <>
                       <span>Send Password Reset Link</span>
-                      <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
                 </button>

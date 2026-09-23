@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ScrollButton } from "@/components/scroll-nav";
+import ArrowRight from "@/components/ui/arrow-right";
 
 interface PublicHeaderActionsProps {
   user: {
@@ -163,7 +164,7 @@ export function BannerSubmitAction({ user }: { user: boolean }) {
         href="/author/submit"
         className="underline decoration-[#7e2562]/40 hover:decoration-[#7e2562] font-bold ml-1"
       >
-        Submit Your Manuscript &rarr;
+        <span className="inline-flex items-center gap-1">Submit Your Manuscript <ArrowRight size={11} /></span>
       </Link>
     );
   }
@@ -174,7 +175,7 @@ export function BannerSubmitAction({ user }: { user: boolean }) {
       mode="login"
       className="underline decoration-[#7e2562]/40 hover:decoration-[#7e2562] font-bold ml-1 cursor-pointer"
     >
-      Sign In to Submit &rarr;
+      <span className="inline-flex items-center gap-1">Sign In to Submit <ArrowRight size={11} /></span>
     </ScrollButton>
   );
 }

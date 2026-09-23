@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import ArrowRight from "@/components/ui/arrow-right";
 import Link from "next/link";
 import { SmoothDropdown } from "@/components/dropdown";
 import { formatPaise } from "@/lib/money";
@@ -479,8 +480,10 @@ export default function AuthorsClient({
               {filteredAuthors.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center text-muted-foreground">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-black/5 text-2xl dark:bg-white/5">
-                      ✍️
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#7e2562]/10 text-[#7e2562] dark:bg-[#7e2562]/20">
+                      <svg className="h-6 w-6 text-[#7e2562]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
                     </div>
                     <p className="mt-3 text-base font-bold text-foreground">No authors match your criteria</p>
                     <p className="mt-1 text-xs">Try adjusting your search terms or filter tabs.</p>
@@ -928,7 +931,7 @@ export default function AuthorsClient({
                             href="/titles"
                             className="text-xs font-bold text-primary hover:underline"
                           >
-                            View in Books Catalog &rarr;
+                            <span className="inline-flex items-center gap-1">View in Books Catalog <ArrowRight size={11} /></span>
                           </Link>
                         </div>
                       </div>

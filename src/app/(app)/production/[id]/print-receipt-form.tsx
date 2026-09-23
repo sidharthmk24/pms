@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { SmoothDropdown, type DropdownOption } from "@/components/dropdown";
 import StageConfirmModal from "@/components/stage-confirm-modal";
+import ArrowRight from "@/components/ui/arrow-right";
 
 const DEFAULT_PAPER_SPECS = [
   "80gsm Natural Shade Cream (Standard Book)",
@@ -378,7 +379,7 @@ export default function PrintReceiptForm({
           disabled={pending || qty <= 0}
           className="rounded-xl bg-[#7e2562] px-6 py-3 text-sm font-bold text-white shadow-plum-sm hover:bg-[#681d50] hover:shadow-plum transition disabled:opacity-60 cursor-pointer text-center"
         >
-          {pending ? "Recording Press Order..." : "Confirm Print Run & Advance to Post-Production →"}
+          {pending ? "Recording Press Order..." : <span className="inline-flex items-center gap-1.5">Confirm Print Run &amp; Advance to Post-Production <ArrowRight /></span>}
         </button>
       </div>
 
@@ -401,7 +402,7 @@ export default function PrintReceiptForm({
           { label: "Binding Spec", value: binding },
           ...(notes ? [{ label: "Production Notes", value: notes }] : []),
         ]}
-        confirmText="Yes, Confirm & Advance →"
+        confirmText={<span className="inline-flex items-center gap-1.5">Yes, Confirm &amp; Advance <ArrowRight size={12} /></span>}
         confirmVariant="primary"
         iconType="print"
       />

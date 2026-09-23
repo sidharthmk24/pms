@@ -15,7 +15,7 @@ export default async function TitlesPage() {
   const user = await requireCapability("titles.read");
 
   const isOwner = hasRole(user.role, "owner");
-  const isFullAccess = isOwner || hasAnyRole(user.role, ["production", "accounts", "store"]);
+  const isFullAccess = isOwner || hasAnyRole(user.role, ["production"]);
 
   let roleFilter: Record<string, unknown> | null = null;
 
@@ -70,28 +70,6 @@ export default async function TitlesPage() {
             { cover_assigned_to: user.name },
             { cover_assignees: { contains: user.id } },
             { cover_assignees: { contains: user.name } },
-          ],
-        },
-      };
-    } else if (roles.includes("dtp")) {
-      roleFilter = {
-        production_projects: {
-          OR: [
-            { dtp_assigned_to: user.id },
-            { dtp_assigned_to: user.name },
-            { dtp_assignees: { contains: user.id } },
-            { dtp_assignees: { contains: user.name } },
-          ],
-        },
-      };
-    } else if (roles.includes("proofreader")) {
-      roleFilter = {
-        production_projects: {
-          OR: [
-            { proof_assigned_to: user.id },
-            { proof_assigned_to: user.name },
-            { proof_assignees: { contains: user.id } },
-            { proof_assignees: { contains: user.name } },
           ],
         },
       };

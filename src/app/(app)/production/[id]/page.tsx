@@ -81,35 +81,43 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
   const publishingType = contractMeta.publishing_type ?? "kairali_funded";
   const contractFreeCopies = contractMeta.free_copies ?? 10;
 
-  // Determine active stage assignees
-  let activeAssigneesStr: string | null = null;
-  let activeAssigneeId: string | null = null;
-  if (proj.status === "dtp") {
-    activeAssigneeId = proj.dtp_assigned_to;
-    activeAssigneesStr = proj.dtp_assignees;
-  } else if (proj.status === "editing") {
-    activeAssigneeId = proj.editing_assigned_to;
-    activeAssigneesStr = proj.editing_assignees;
-  } else if (proj.status === "cover_design") {
-    activeAssigneeId = proj.cover_assigned_to;
-    activeAssigneesStr = proj.cover_assignees;
-  } else if (proj.status === "isbn_registration") {
-    activeAssigneeId = proj.isbn_assigned_to;
-    activeAssigneesStr = proj.isbn_assignees;
-  } else if (proj.status === "final_proof") {
-    activeAssigneeId = proj.proof_assigned_to;
-    activeAssigneesStr = proj.proof_assignees;
+  // Helper to check if current user is assigned to a specific stage
+  function isUserAssignedToStage(stageKey: string): boolean {
+    if (isOwner) return true;
+    if (!proj) return false;
+    let assignedTo: string | null = null;
+    let assignees: string | null = null;
+    if (stageKey === "dtp") {
+      assignedTo = proj.dtp_assigned_to;
+      assignees = proj.dtp_assignees;
+    } else if (stageKey === "editing") {
+      assignedTo = proj.editing_assigned_to;
+      assignees = proj.editing_assignees;
+    } else if (stageKey === "cover_design") {
+      assignedTo = proj.cover_assigned_to;
+      assignees = proj.cover_assignees;
+    } else if (stageKey === "isbn_registration") {
+      assignedTo = proj.isbn_assigned_to;
+      assignees = proj.isbn_assignees;
+    } else if (stageKey === "final_proof") {
+      assignedTo = proj.proof_assigned_to;
+      assignees = proj.proof_assignees;
+    }
+    const list = assignees
+      ? assignees.split(",").map((s) => s.trim()).filter(Boolean)
+      : assignedTo ? [assignedTo] : [];
+    return list.includes(user.id) || list.includes(user.name);
   }
 
-  const activeAssigneeList = activeAssigneesStr
-    ? activeAssigneesStr.split(",").map((s) => s.trim()).filter(Boolean)
-    : activeAssigneeId
-    ? [activeAssigneeId]
-    : [];
+  const stagePermissions: Record<string, boolean> = {
+    dtp: isUserAssignedToStage("dtp"),
+    editing: isUserAssignedToStage("editing"),
+    cover_design: isUserAssignedToStage("cover_design"),
+    isbn_registration: isUserAssignedToStage("isbn_registration"),
+    final_proof: isUserAssignedToStage("final_proof"),
+  };
 
-  const isAssignee =
-    activeAssigneeList.includes(user.id) || activeAssigneeList.includes(user.name);
-  const canAdvance = isAssignee || isOwner;
+  const canAdvance = stagePermissions[proj.status] ?? isOwner;
 
   // Financial estimations (for managers)
   const mrp = proj.titles.mrp_paise;
@@ -149,6 +157,7 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
       proj={proj}
       isOwner={isOwner}
       canAdvance={canAdvance}
+      stagePermissions={stagePermissions}
       publishingType={publishingType}
       contractFreeCopies={contractFreeCopies}
       activeUsers={activeUsers}
