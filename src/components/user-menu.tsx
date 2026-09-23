@@ -272,19 +272,21 @@ export default function UserMenu({
 
             {/* Menu Actions */}
             <div className="mt-1 space-y-0.5">
-              <button
-                type="button"
-                onClick={openModal}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-[#faedf5]/60 hover:text-[#7e2562] transition-colors cursor-pointer text-left"
-              >
-                <svg className="h-4 w-4 text-[#7e2562]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-                <div className="flex-1 min-w-0">
-                  <span>Edit Profile</span>
-                  <span className="block text-[10px] font-medium text-muted-foreground">Account &amp; details</span>
-                </div>
-              </button>
+              {role?.toLowerCase() !== "author" && (
+                <button
+                  type="button"
+                  onClick={openModal}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-[#faedf5]/60 hover:text-[#7e2562] transition-colors cursor-pointer text-left"
+                >
+                  <svg className="h-4 w-4 text-[#7e2562]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  <div className="flex-1 min-w-0">
+                    <span>Edit Profile</span>
+                    <span className="block text-[10px] font-medium text-muted-foreground">Account &amp; details</span>
+                  </div>
+                </button>
+              )}
 
               <button
                 type="button"

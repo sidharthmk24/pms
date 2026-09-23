@@ -217,35 +217,53 @@ export default async function AuthorDashboardPage({
 
       {/* KPI Metric Tiles */}
       <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
-        <div className="rounded-2xl border border-black/10 bg-surface p-5 dark:border-white/10">
-          <span className="text-xs font-bold   tracking-wider text-muted-foreground">
-            In Review
-          </span>
-          <p className="mt-1.5 text-2xl font-black text-foreground sm:text-3xl">
+        <a
+          href="#manuscripts"
+          className="rounded-2xl border border-black/10 bg-surface p-5 dark:border-white/10 hover:border-amber-500/40 hover:bg-amber-500/5 transition-all group shadow-2xs block cursor-pointer"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold tracking-wider text-muted-foreground group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+              In Review
+            </span>
+            <ArrowRight size={13} className="text-amber-600 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          </div>
+          <p className="mt-1.5 text-2xl font-black text-amber-600 sm:text-3xl">
             {inReviewCount}
           </p>
-          <span className="text-[11px] text-muted-foreground">Manuscripts being evaluated</span>
-        </div>
+          <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">Manuscripts being evaluated</span>
+        </a>
 
-        <div className="rounded-2xl border border-black/10 bg-surface p-5 dark:border-white/10">
-          <span className="text-xs font-bold   tracking-wider text-muted-foreground">
-            Approved Titles
-          </span>
-          <p className="mt-1.5 text-2xl font-black text-success sm:text-3xl">
+        <a
+          href="#manuscripts"
+          className="rounded-2xl border border-black/10 bg-surface p-5 dark:border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group shadow-2xs block cursor-pointer"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold tracking-wider text-muted-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+              Approved Titles
+            </span>
+            <ArrowRight size={13} className="text-emerald-600 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          </div>
+          <p className="mt-1.5 text-2xl font-black text-emerald-600 sm:text-3xl">
             {approvedCount}
           </p>
-          <span className="text-[11px] text-muted-foreground">Accepted for publishing</span>
-        </div>
+          <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">Accepted for publishing</span>
+        </a>
 
-        <div className="rounded-2xl border border-black/10 bg-surface p-5 dark:border-white/10">
-          <span className="text-xs font-bold   tracking-wider text-muted-foreground">
-            In Production
-          </span>
+        <a
+          href="#production"
+          className="rounded-2xl border border-black/10 bg-surface p-5 dark:border-white/10 hover:border-purple-500/40 hover:bg-purple-500/5 transition-all group shadow-2xs block cursor-pointer"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold tracking-wider text-muted-foreground group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
+              In Production
+            </span>
+            <ArrowRight size={13} className="text-purple-600 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          </div>
           <p className="mt-1.5 text-2xl font-black text-warning sm:text-3xl">
             {inProductionCount}
           </p>
-          <span className="text-[11px] text-muted-foreground">DTP, ISBN &amp; Proofing</span>
-        </div>
+          <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">DTP, ISBN &amp; Proofing</span>
+        </a>
 
         <Link
           href="/author/contracts"
@@ -256,12 +274,12 @@ export default async function AuthorDashboardPage({
             <ArrowRight size={13} className="text-[#7e2562] group-hover:translate-x-0.5 transition-transform" />
           </div>
           <p className="mt-1.5 text-2xl font-black text-[#7e2562] sm:text-3xl">{contracts.length}</p>
-          <span className="text-[11px] font-bold text-[#7e2562]/80">View legal agreements &rarr;</span>
+          <span className="text-[11px] font-bold text-[#7e2562]/80">View legal agreements</span>
         </Link>
       </div>
 
       {/* SECTION 1: Live Production Pipeline (The Works Being Done) */}
-      <section id="production" className="rounded-[24px] border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10 sm:p-7">
+      <section id="production" className="scroll-mt-6 rounded-[24px] border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10 sm:p-7">
         <div className="flex items-center justify-between border-b border-black/[0.06] pb-4 dark:border-white/[0.08]">
           <div>
             <h2 className="text-lg font-bold text-foreground">Live Production Flow</h2>
@@ -460,7 +478,7 @@ export default async function AuthorDashboardPage({
       </section>
 
       {/* SECTION 2: Manuscript Submissions (Approved / In Review / Revision) */}
-      <section id="manuscripts" className="rounded-[24px] border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10 sm:p-7">
+      <section id="manuscripts" className="scroll-mt-6 rounded-[24px] border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10 sm:p-7">
         <div className="flex items-center justify-between border-b border-black/[0.06] pb-4 dark:border-white/[0.08]">
           <div>
             <h2 className="text-lg font-bold text-foreground">My Submitted Manuscripts</h2>
@@ -559,7 +577,7 @@ export default async function AuthorDashboardPage({
       </section>
 
       {/* SECTION 3: Dedicated Author Contracts Section Banner */}
-      <section className="rounded-[28px] border border-[#7e2562]/20 bg-[#faedf5]/60 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-2xs">
+      <section id="contracts" className="scroll-mt-6 rounded-[28px] border border-[#7e2562]/20 bg-[#faedf5]/60 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-2xs">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#7e2562] text-white shadow-plum-xs">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -193,7 +193,7 @@ export function OrderTracker({ data }: { data: TrackerData }) {
     estimatedDelivery = "Please review editorial comments below and re-submit";
   } else if (data.statusCode === "under_review") {
     mainHeadline = "Under Active Review by Literary Committee";
-    badgeColor = "bg-blue-600 text-white";
+    badgeColor = "bg-amber-500 text-white";
     estimatedDelivery = "Decision expected within 1–2 weeks";
   } else if (data.statusCode === "declined" || data.statusCode === "rejected") {
     mainHeadline = "Editorial Evaluation Concluded: Submission Declined";

@@ -931,7 +931,7 @@ export default function AuthorsClient({
                             href="/titles"
                             className="text-xs font-bold text-primary hover:underline"
                           >
-                            <span className="inline-flex items-center gap-1">View in Books Catalog <ArrowRight size={11} /></span>
+                            {/* <span className="inline-flex items-center gap-1">View in Books Catalog <ArrowRight size={11} /></span> */}
                           </Link>
                         </div>
                       </div>
