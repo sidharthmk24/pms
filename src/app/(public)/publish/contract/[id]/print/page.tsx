@@ -95,6 +95,9 @@ export default async function PublicContractPrintPage({
                 <strong>Publishing Model:</strong> {meta.publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali Books Publishing"}.
               </li>
               <li>
+                <strong>Agreed Book MRP:</strong> <strong>₹{(contract.titles?.mrp_paise ? contract.titles.mrp_paise / 100 : meta.agreed_mrp_rupees || 350).toLocaleString("en-IN")}</strong>.
+              </li>
+              <li>
                 <strong>Royalty Rate:</strong> <strong>{contract.royalty_pct}%</strong> calculated on the <strong>{contract.basis.toUpperCase()}</strong> of all printed copies sold.
               </li>
               <li>

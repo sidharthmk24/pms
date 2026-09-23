@@ -38,6 +38,7 @@ export default async function AuthorContractPage({
           name_ml: true,
           category: true,
           language: true,
+          mrp_paise: true,
           stock: true,
           status: true,
         },

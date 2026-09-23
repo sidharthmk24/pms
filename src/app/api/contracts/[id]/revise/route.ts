@@ -19,6 +19,7 @@ const ReviseSchema = z.discriminatedUnion("action", [
     royaltyPct: z.number().min(0).max(100),
     basis: z.enum(["mrp", "net"]),
     advanceRupees: z.number().nonnegative(),
+    mrpRupees: z.number().nonnegative().optional(),
     termYears: z.number().min(1).max(10).default(3),
     freeCopies: z.number().min(0).max(100).default(10),
     authorDiscountPct: z.number().min(0).max(100).default(40),
@@ -197,6 +198,9 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     if (data.publishingType) {
       currentMeta.publishing_type = data.publishingType;
     }
+    if (data.mrpRupees !== undefined) {
+      currentMeta.agreed_mrp_rupees = data.mrpRupees;
+    }
     currentMeta.term_years = data.termYears;
     currentMeta.free_copies = data.freeCopies;
     currentMeta.author_discount_pct = data.authorDiscountPct;
@@ -212,6 +216,13 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     currentMeta.status = "awaiting_author";
     if (data.editorNotes) {
       currentMeta.notes = data.editorNotes;
+    }
+
+    if (data.mrpRupees !== undefined && contract.title_id) {
+      await prisma.titles.update({
+        where: { id: contract.title_id },
+        data: { mrp_paise: rupeesToPaise(data.mrpRupees) },
+      }).catch(() => null);
     }
 
     const updated = await prisma.contracts.update({
@@ -258,7 +269,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
         to: contract.authors.email,
         toName: contract.authors.name,
         subject: `Revised Publishing Agreement Ready — "${contract.titles.name}" (${currentMeta.contract_ref || "Kairali Books"})`,
-        text: `Dear ${contract.authors.name},\n\nOur editorial team has reviewed your requested changes and re-assigned an updated publishing agreement for "${contract.titles.name}".\n\nUpdated Terms Summary:\n• Royalty: ${data.royaltyPct}% on ${data.basis.toUpperCase()}\n• Advance: ₹${data.advanceRupees}\n• Term: ${data.termYears} Years\n• Free Copies: ${data.freeCopies}\n\nPlease review and digitally sign your agreement at:\n${contractUrl}\n\nWarm regards,\nKairali Books Editorial Board`,
+        text: `Dear ${contract.authors.name},\n\nOur editorial team has reviewed your requested changes and re-assigned an updated publishing agreement for "${contract.titles.name}".\n\nUpdated Terms Summary:\n• Agreed Book MRP: ₹${(data.mrpRupees ?? currentMeta.agreed_mrp_rupees ?? 350).toLocaleString("en-IN")}\n• Royalty: ${data.royaltyPct}% on ${data.basis.toUpperCase()}\n• Advance: ₹${data.advanceRupees}\n• Term: ${data.termYears} Years\n• Free Copies: ${data.freeCopies}\n\nPlease review and digitally sign your agreement at:\n${contractUrl}\n\nWarm regards,\nKairali Books Editorial Board`,
         html: `
 <div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1c1a17;max-width:540px">
   <p>Dear ${contract.authors.name},</p>
@@ -267,6 +278,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
   <div style="background:#faf4f8;border:1px solid #e7d5e2;border-radius:14px;padding:16px;margin:16px 0;">
     <h4 style="margin:0 0 10px;color:#7e2562;font-size:14px;">Updated Terms Summary:</h4>
     <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.6;color:#1c1a17;">
+      <li><strong>Agreed Book MRP:</strong> ₹${(data.mrpRupees ?? currentMeta.agreed_mrp_rupees ?? 350).toLocaleString("en-IN")}</li>
       <li><strong>Royalty:</strong> ${data.royaltyPct}%</li>
       <li><strong>Advance on Signing:</strong> ₹${data.advanceRupees.toLocaleString("en-IN")}</li>
       <li><strong>Contract Term:</strong> ${data.termYears} Years</li>

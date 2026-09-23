@@ -18,6 +18,7 @@ export type ContractMetadata = {
   author_discount_pct: number;
   // Financial details
   package_cost_rupees?: number;
+  agreed_mrp_rupees?: number;
   gst_pct?: number;
   // Tax / Identification
   author_pan?: string | null;

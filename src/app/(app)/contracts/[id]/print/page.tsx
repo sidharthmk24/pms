@@ -87,11 +87,14 @@ export default async function ContractPrintPage({
 
           <div>
             <h2 className="font-sans font-bold text-sm   tracking-wide text-gray-900 mb-1">
-              Article 2 — Commercial & Royalty Terms
+              Article 2 — Commercial &amp; Royalty Terms
             </h2>
             <ul className="list-disc pl-5 space-y-1.5 font-sans text-xs">
               <li>
                 <strong>Publishing Model:</strong> {meta.publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali Books Publishing"}.
+              </li>
+              <li>
+                <strong>Agreed Book MRP:</strong> <strong>₹{(contract.titles?.mrp_paise ? contract.titles.mrp_paise / 100 : meta.agreed_mrp_rupees || 350).toLocaleString("en-IN")}</strong>.
               </li>
               <li>
                 <strong>Royalty Rate:</strong> <strong>{contract.royalty_pct}%</strong> calculated on the <strong>{contract.basis.toUpperCase()}</strong> of all printed copies sold.

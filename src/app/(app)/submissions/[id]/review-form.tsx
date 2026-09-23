@@ -62,6 +62,7 @@ export default function ReviewForm({ submissionId }: { submissionId: string }) {
   const [royaltyPct, setRoyaltyPct] = useState(10);
   const [basis, setBasis] = useState<"mrp" | "net">("mrp");
   const [advanceRupees, setAdvanceRupees] = useState(0);
+  const [mrpRupees, setMrpRupees] = useState(350);
   const [termYears, setTermYears] = useState(3);
   const [freeCopies, setFreeCopies] = useState(10);
   const [authorDiscountPct, setAuthorDiscountPct] = useState(40);
@@ -121,6 +122,7 @@ export default function ReviewForm({ submissionId }: { submissionId: string }) {
       payload.royaltyPct = Number(royaltyPct);
       payload.basis = basis;
       payload.advanceRupees = Number(advanceRupees);
+      payload.mrpRupees = Number(mrpRupees);
       payload.termYears = Number(termYears);
       payload.freeCopies = Number(freeCopies);
       payload.authorDiscountPct = Number(authorDiscountPct);
@@ -462,6 +464,25 @@ export default function ReviewForm({ submissionId }: { submissionId: string }) {
                 required
                 className="w-full rounded-xl border border-black/12 bg-surface px-3 py-2 text-sm font-semibold text-foreground outline-none transition-all"
               />
+            </div>
+
+            <div>
+              <label htmlFor="mrpRupees" className="mb-1.5 block text-xs font-bold text-foreground">
+                Agreed Book MRP (₹)
+              </label>
+              <input
+                id="mrpRupees"
+                type="number"
+                min="0"
+                step="10"
+                value={mrpRupees}
+                onChange={(e) => setMrpRupees(Number(e.target.value))}
+                required
+                className="w-full rounded-xl border border-black/12 bg-surface px-3 py-2 text-sm font-semibold text-foreground outline-none transition-all"
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Locked Maximum Retail Price (MRP) set during agreement signing &amp; used for BMS POs.
+              </p>
             </div>
 
             <div>

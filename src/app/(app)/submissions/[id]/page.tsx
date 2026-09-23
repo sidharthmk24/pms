@@ -126,7 +126,7 @@ export default async function SubmissionReviewPage({ params }: { params: Promise
       ],
     },
     include: {
-      titles: { select: { id: true, name: true } },
+      titles: { select: { id: true, name: true, mrp_paise: true } },
       authors: { select: { id: true, name: true, email: true } },
     },
   });

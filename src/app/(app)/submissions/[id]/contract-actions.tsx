@@ -14,7 +14,7 @@ interface ContractData {
   advance_paise: number;
   signed_on: string | Date | null;
   term_notes: string | null;
-  titles: { id: string; name: string };
+  titles: { id: string; name: string; mrp_paise?: number };
   authors: { id: string; name: string; email?: string | null };
 }
 
@@ -45,6 +45,9 @@ export default function ContractActions({ contract, canManage }: ContractActions
   const [royaltyPct, setRoyaltyPct] = useState<number>(contract.royalty_pct || 10);
   const [basis, setBasis] = useState<"mrp" | "net">(contract.basis === "net" ? "net" : "mrp");
   const [advanceRupees, setAdvanceRupees] = useState<number>(paiseToRupees(contract.advance_paise || 0));
+  const [mrpRupees, setMrpRupees] = useState<number>(
+    contract.titles?.mrp_paise ? contract.titles.mrp_paise / 100 : meta.agreed_mrp_rupees || 350
+  );
   const [termYears, setTermYears] = useState<number>(meta.term_years || 3);
   const [freeCopies, setFreeCopies] = useState<number>(meta.free_copies || 10);
   const [authorDiscountPct, setAuthorDiscountPct] = useState<number>(meta.author_discount_pct || 40);
@@ -61,6 +64,7 @@ export default function ContractActions({ contract, canManage }: ContractActions
     setRoyaltyPct(contract.royalty_pct || 10);
     setBasis(contract.basis === "net" ? "net" : "mrp");
     setAdvanceRupees(paiseToRupees(contract.advance_paise || 0));
+    setMrpRupees(contract.titles?.mrp_paise ? contract.titles.mrp_paise / 100 : meta.agreed_mrp_rupees || 350);
     setTermYears(meta.term_years || 3);
     setFreeCopies(meta.free_copies || 10);
     setAuthorDiscountPct(meta.author_discount_pct || 40);
@@ -142,6 +146,7 @@ export default function ContractActions({ contract, canManage }: ContractActions
           royaltyPct,
           basis,
           advanceRupees,
+          mrpRupees,
           termYears,
           freeCopies,
           authorDiscountPct,
@@ -516,7 +521,7 @@ export default function ContractActions({ contract, canManage }: ContractActions
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="mb-1 block font-semibold text-foreground">
                       Royalty Rate (%) <span className="text-rose-600">*</span>
@@ -548,6 +553,24 @@ export default function ContractActions({ contract, canManage }: ContractActions
                         step={500}
                         value={advanceRupees}
                         onChange={(e) => setAdvanceRupees(parseInt(e.target.value, 10) || 0)}
+                        className="w-full rounded-lg border border-input bg-white pl-7 pr-3 py-2 text-xs font-medium text-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block font-semibold text-foreground">
+                      Agreed Book MRP (₹)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₹</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={10}
+                        required
+                        value={mrpRupees}
+                        onChange={(e) => setMrpRupees(parseFloat(e.target.value) || 0)}
                         className="w-full rounded-lg border border-input bg-white pl-7 pr-3 py-2 text-xs font-medium text-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20"
                       />
                     </div>

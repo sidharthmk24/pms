@@ -40,6 +40,7 @@ type ContractItem = {
     name_ml: string | null;
     category: string | null;
     language: string | null;
+    mrp_paise?: number;
     stock: number;
     status: string;
   };
@@ -75,6 +76,7 @@ export default function ContractsClient({
   const [revRoyaltyPct, setRevRoyaltyPct] = useState<number>(10);
   const [revBasis, setRevBasis] = useState<"mrp" | "net">("mrp");
   const [revAdvanceRupees, setRevAdvanceRupees] = useState<number>(0);
+  const [revMrpRupees, setRevMrpRupees] = useState<number>(350);
   const [revTermYears, setRevTermYears] = useState<number>(3);
   const [revFreeCopies, setRevFreeCopies] = useState<number>(10);
   const [revAuthorDiscountPct, setRevAuthorDiscountPct] = useState<number>(40);
@@ -96,6 +98,7 @@ export default function ContractsClient({
     setRevRoyaltyPct(c.royalty_pct || 10);
     setRevBasis((c.basis === "net" ? "net" : "mrp"));
     setRevAdvanceRupees(paiseToRupees(c.advance_paise || 0));
+    setRevMrpRupees(c.titles?.mrp_paise ? c.titles.mrp_paise / 100 : c.meta?.agreed_mrp_rupees || 350);
     setRevTermYears(c.meta.term_years || 3);
     setRevFreeCopies(c.meta.free_copies || 10);
     setRevAuthorDiscountPct(c.meta.author_discount_pct || 40);
@@ -224,6 +227,7 @@ export default function ContractsClient({
           royaltyPct: Number(revRoyaltyPct),
           basis: revBasis,
           advanceRupees: Number(revAdvanceRupees) || 0,
+          mrpRupees: Number(revMrpRupees) || 0,
           termYears: Number(revTermYears) || 3,
           freeCopies: Number(revFreeCopies) || 10,
           authorDiscountPct: Number(revAuthorDiscountPct) || 40,
@@ -696,6 +700,9 @@ export default function ContractsClient({
                     <strong>Publishing Model Track:</strong> {viewingContract.meta.publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali Books Publishing"}.
                   </li>
                   <li>
+                    <strong>Agreed Book MRP:</strong> <strong>₹{(viewingContract.titles?.mrp_paise ? viewingContract.titles.mrp_paise / 100 : viewingContract.meta?.agreed_mrp_rupees || 350).toLocaleString("en-IN")}</strong>.
+                  </li>
+                  <li>
                     <strong>Royalty Rate:</strong> <strong>{viewingContract.royalty_pct}%</strong> calculated on the <strong>{viewingContract.basis.toUpperCase()}</strong> of all printed copies sold.
                   </li>
                   <li>
@@ -951,7 +958,7 @@ export default function ContractsClient({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="mb-1 block font-semibold text-foreground">
                       Royalty Rate (%) <span className="text-rose-600">*</span>
@@ -983,6 +990,24 @@ export default function ContractsClient({
                         step={500}
                         value={revAdvanceRupees}
                         onChange={(e) => setRevAdvanceRupees(parseInt(e.target.value, 10) || 0)}
+                        className="w-full rounded-lg border border-input bg-white pl-7 pr-3 py-2 text-xs font-medium text-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block font-semibold text-foreground">
+                      Agreed Book MRP (₹)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₹</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={10}
+                        required
+                        value={revMrpRupees}
+                        onChange={(e) => setRevMrpRupees(parseFloat(e.target.value) || 0)}
                         className="w-full rounded-lg border border-input bg-white pl-7 pr-3 py-2 text-xs font-medium text-foreground outline-none focus:border-[#7e2562] focus:ring-2 focus:ring-[#7e2562]/20"
                       />
                     </div>

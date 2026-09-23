@@ -31,6 +31,7 @@ type ContractData = {
     name_ml: string | null;
     category: string | null;
     language: string | null;
+    mrp_paise?: number;
     stock: number;
     status: string;
   };
@@ -392,7 +393,14 @@ export default function SigningClient({
         </div>
 
         {/* Commercial Terms Summary Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-black/[0.06] border-b border-black/[0.06] bg-surface-muted/30 dark:divide-white/[0.08] dark:border-white/[0.08]">
+        <div className="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-black/[0.06] border-b border-black/[0.06] bg-surface-muted/30 dark:divide-white/[0.08] dark:border-white/[0.08]">
+          <div className="p-4 text-center flex flex-col items-center justify-center">
+            <span className="text-[11px] font-bold text-muted-foreground">Agreed Book MRP</span>
+            <p className="mt-0.5 text-lg font-black text-foreground">
+              ₹{(contract.titles.mrp_paise ? contract.titles.mrp_paise / 100 : meta.agreed_mrp_rupees || 350).toLocaleString("en-IN")}
+            </p>
+            <span className="text-[10px] text-muted-foreground">Retail Price</span>
+          </div>
           <div className="p-4 text-center flex flex-col items-center justify-center">
             <span className="text-[11px] font-bold text-muted-foreground">Royalty Rate</span>
             <p className="mt-0.5 text-lg font-black text-foreground">{contract.royalty_pct}%</p>
@@ -433,7 +441,7 @@ export default function SigningClient({
 
             <h3 className="font-bold font-sans text-foreground text-base">2. Royalty &amp; Accounting Statements</h3>
             <p>
-              The Publisher shall pay the Author a royalty of <strong>{contract.royalty_pct}%</strong> for all copies sold. Royalty statements and payouts shall be accounted semi-annually, with Income Tax TDS deducted under Section 194J as required by Indian law.
+              The Maximum Retail Price (MRP) of the book is set at <strong>₹{(contract.titles.mrp_paise ? contract.titles.mrp_paise / 100 : meta.agreed_mrp_rupees || 350).toLocaleString("en-IN")}</strong>. The Publisher shall pay the Author a royalty of <strong>{contract.royalty_pct}%</strong> calculated on the <strong>{contract.basis.toUpperCase()}</strong> for all copies sold. Royalty statements and payouts shall be accounted semi-annually, with Income Tax TDS deducted under Section 194J as required by Indian law.
             </p>
 
             <h3 className="font-bold font-sans text-foreground text-base">3. Editorial, Layout &amp; Proofreading</h3>
