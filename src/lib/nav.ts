@@ -11,6 +11,7 @@ export type NavItem = {
 
 export const AUTHOR_NAV: NavItem[] = [
   { label: "Author Dashboard", href: "/author", capability: "author_portal.access", ready: true },
+  { label: "My Contracts", href: "/author/contracts", capability: "author_portal.access", ready: true },
   { label: "My Published Books", href: "/author/books", capability: "author_portal.access", ready: true },
   { label: "Submit Manuscript", href: "/author/submit", capability: "author_portal.access", ready: true },
   // { label: "User Guide", href: "/guide", capability: null, ready: true },

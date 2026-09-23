@@ -66,10 +66,10 @@ export default async function StatusTrackingPage({ searchParams }: PageProps<"/p
 
       {/* Header */}
       <header className="mb-8">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#7e2562]/20 bg-[#faedf5] px-3.5 py-1 text-xs font-bold text-[#7e2562]">
+        {/* <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#7e2562]/20 bg-[#faedf5] px-3.5 py-1 text-xs font-bold text-[#7e2562]">
           <span className="h-2 w-2 rounded-full bg-[#7e2562]" />
           <span>Author Tracking Portal</span>
-        </div>
+        </div> */}
         <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
           Track Your Manuscript
         </h1>

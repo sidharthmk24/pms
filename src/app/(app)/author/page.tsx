@@ -247,15 +247,17 @@ export default async function AuthorDashboardPage({
           <span className="text-[11px] text-muted-foreground">DTP, ISBN &amp; Proofing</span>
         </div>
 
-        <div className="rounded-2xl border border-black/10 bg-surface p-5 dark:border-white/10">
-          <span className="text-xs font-bold   tracking-wider text-muted-foreground">
-            Active Contracts
-          </span>
-          <p className="mt-1.5 text-2xl font-black text-foreground sm:text-3xl">
-            {contracts.length}
-          </p>
-          <span className="text-[11px] text-muted-foreground">Signed legal agreements</span>
-        </div>
+        <Link
+          href="/author/contracts"
+          className="rounded-2xl border border-[#7e2562]/20 bg-[#faedf5]/40 p-5 hover:bg-[#faedf5] transition-all group shadow-2xs block"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold tracking-wider text-[#7e2562]">My Contracts</span>
+            <ArrowRight size={13} className="text-[#7e2562] group-hover:translate-x-0.5 transition-transform" />
+          </div>
+          <p className="mt-1.5 text-2xl font-black text-[#7e2562] sm:text-3xl">{contracts.length}</p>
+          <span className="text-[11px] font-bold text-[#7e2562]/80">View legal agreements &rarr;</span>
+        </Link>
       </div>
 
       {/* SECTION 1: Live Production Pipeline (The Works Being Done) */}
@@ -554,100 +556,29 @@ export default async function AuthorDashboardPage({
         )}
       </section>
 
-      {/* SECTION 3: Publishing Contracts & Digital Agreements */}
-      <section id="contracts" className="rounded-[24px] border border-black/10 bg-surface p-6 shadow-sm dark:border-white/10 sm:p-7">
-        <div className="flex items-center justify-between border-b border-black/[0.06] pb-4 dark:border-white/[0.08]">
+      {/* SECTION 3: Dedicated Author Contracts Section Banner */}
+      <section className="rounded-[28px] border border-[#7e2562]/20 bg-[#faedf5]/60 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-2xs">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#7e2562] text-white shadow-plum-xs">
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
           <div>
-            <h2 className="text-lg font-bold text-foreground">Signed Publishing Contracts</h2>
-            <p className="text-xs text-muted-foreground">
-              Access your legally executed agreements, royalty terms, and digital certificate copies.
+            <h3 className="text-lg font-black text-foreground">My Author Contracts &amp; Agreements</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Contracts are now located in a dedicated section for your author account ({contracts.length} contract{contracts.length === 1 ? "" : "s"}). View dual-signed agreements, royalty terms, and pending offers.
             </p>
           </div>
-          <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-extrabold text-success">
-            {contracts.length} Contract{contracts.length === 1 ? "" : "s"}
-          </span>
         </div>
 
-        {contracts.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">No contracts on file.</p>
-            <p className="text-xs mt-1">When an editorial offer is accepted, your signed contract will appear here.</p>
-          </div>
-        ) : (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {contracts.map((c) => {
-              const meta: ContractMetadata = parseContractNotes(c.term_notes);
-              const isFullySigned = !!(meta.author_signed_at && meta.publisher_signed_at);
-              const isRenegotiation = meta.renegotiation_requested;
-              const isDeclined = meta.status === "declined" || !!meta.declined_at;
-
-              return (
-                <div
-                  key={c.id}
-                  className="rounded-2xl border border-black/10 bg-background/50 p-5 dark:border-white/10 dark:bg-surface-muted/40 flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-mono text-xs font-bold text-muted-foreground">
-                        {meta.contract_ref || "CON-2026"}
-                      </span>
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-                          isFullySigned
-                            ? "bg-success/10 text-success border border-success/20"
-                            : isRenegotiation
-                            ? "bg-amber-100 text-amber-900 border border-amber-300"
-                            : isDeclined
-                            ? "bg-rose-100 text-rose-800 border border-rose-300"
-                            : "bg-warning/10 text-warning border border-warning/20"
-                        }`}
-                      >
-                        {isFullySigned
-                          ? "Fully Dual-Signed"
-                          : isRenegotiation
-                          ? "Terms Review in Progress"
-                          : isDeclined
-                          ? "Offer Concluded"
-                          : "Awaiting Signature"}
-                      </span>
-                    </div>
-
-                    <h3 className="text-base font-extrabold text-foreground  ">
-                      {c.titles.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Track: {meta.publishing_type === "self_publishing" ? "Self-Publishing" : "Kairali Books Publishing"}
-                    </p>
-
-                    <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl border border-black/5 bg-surface p-3 text-xs dark:border-white/5">
-                      <div>
-                        <span className="text-[10px] text-muted-foreground  ">Royalty Rate</span>
-                        <p className="font-extrabold text-foreground">{c.royalty_pct}%</p>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-muted-foreground  ">Advance</span>
-                        <p className="font-extrabold text-foreground">{formatPaise(c.advance_paise)}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 pt-3 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground">
-                      Signed: {c.signed_on ? c.signed_on.slice(0, 10) : "Pending"}
-                    </span>
-                    <Link
-                      href={`/publish/contract/${c.id}`}
-                      className="apple-button inline-flex items-center gap-1 rounded-xl bg-foreground px-3.5 py-1.5 text-xs font-extrabold text-background shadow-xs hover:opacity-90"
-                    >
-                      <span>{isRenegotiation ? "View Status" : "View Agreement"}</span>
-                      <ArrowRight size={12} />
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <Link
+          href="/author/contracts"
+          className="apple-button inline-flex items-center gap-2 shrink-0 rounded-2xl bg-[#7e2562] px-6 py-3 text-xs font-extrabold text-white shadow-plum-sm hover:bg-[#681b50] transition-all"
+        >
+          <span>Open My Contracts Page</span>
+          <ArrowRight size={13} />
+        </Link>
       </section>
 
       {/* SECTION 4: Published Titles & Royalties */}

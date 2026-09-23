@@ -589,7 +589,7 @@ export function TitlesClient({
             {/* Header */}
             <div className="flex items-start justify-between gap-3 border-b border-border pb-4 mb-4">
               <div>
-                <span className="text-[10px] font-mono font-bold   text-primary tracking-wider">
+                <span className="text-[12px] font-bold   text-primary tracking-wider">
                   Book Specifications · {selectedBook.language}
                 </span>
                 <h3 className="text-lg font-black text-foreground   leading-snug">
