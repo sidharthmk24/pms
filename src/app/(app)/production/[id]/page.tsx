@@ -15,6 +15,7 @@ const STATUS_LABELS: Record<string, string> = {
   editing: "Editing & Proofreading",
   cover_design: "Cover Design",
   isbn_registration: "ISBN Registration",
+  printing: "Press Printing & Stock",
   final_proof: "Author Final Proof",
   completed: "Completed / Published",
   cancelled: "Cancelled",
@@ -59,7 +60,7 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
     allProjectAssignees.includes(user.id) ||
     allProjectAssignees.includes(user.name);
 
-  if (!isOwner && !isAssignedToProject) {
+  if (!isOwner && !isAssignedToProject && user.role !== "production") {
     notFound();
   }
 
@@ -85,6 +86,7 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
   function isUserAssignedToStage(stageKey: string): boolean {
     if (isOwner) return true;
     if (!proj) return false;
+    if (stageKey === "printing") return user.role === "production";
     let assignedTo: string | null = null;
     let assignees: string | null = null;
     if (stageKey === "dtp") {
@@ -114,6 +116,7 @@ export default async function ProductionDetailPage({ params }: PageProps<"/produ
     editing: isUserAssignedToStage("editing"),
     cover_design: isUserAssignedToStage("cover_design"),
     isbn_registration: isUserAssignedToStage("isbn_registration"),
+    printing: isUserAssignedToStage("printing"),
     final_proof: isUserAssignedToStage("final_proof"),
   };
 

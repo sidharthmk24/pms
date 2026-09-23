@@ -33,6 +33,7 @@ const PIPELINE_ORDER = [
   "editing",
   "cover_design",
   "isbn_registration",
+  "printing",
   "final_proof",
 ];
 
@@ -68,6 +69,12 @@ const STAGE_META: Record<
     description: "Preparing and filing official ISBN application",
     icon: Layers,
     activeDescription: "Filing and allocating official 13-digit ISBN",
+  },
+  printing: {
+    label: "Press Printing & Stock",
+    description: "Print quantity specifications & fixed author copies allocation",
+    icon: Printer,
+    activeDescription: "Configuring print quantity & author copies allocation before author proofing",
   },
   final_proof: {
     label: "Author Final Proof",
@@ -194,6 +201,14 @@ export default function ProductionFlowClient({
               proj.isbn_request_ref ? ` (Ref: ${proj.isbn_request_ref})` : ""
             }`
           : null,
+    },
+    {
+      key: "printing",
+      label: "Press Printing & Stock",
+      completedAt: proj.print_completed_at,
+      deadline: proj.print_deadline,
+      staff: resolveStaffNames(proj.print_assigned_to, proj.print_assignees) || "Press Production Team",
+      detail: proj.print_copies ? `${proj.print_copies} Total Copies` : null,
     },
     {
       key: "final_proof",
@@ -570,7 +585,7 @@ export default function ProductionFlowClient({
           {isLiveStageSelected && (
             <>
               {(isOwner || stagePermissions[proj.status]) ? (
-                ["dtp", "editing", "cover_design", "isbn_registration", "final_proof"].includes(
+                ["dtp", "editing", "cover_design", "isbn_registration", "printing", "final_proof"].includes(
                   proj.status
                 ) && (
                   <TaskAdvance
@@ -581,6 +596,8 @@ export default function ProductionFlowClient({
                     proofApprovedAt={proj.proof_approved_at}
                     proofEmailSentAt={proj.proof_email_sent_at}
                     hasLayout={Boolean(proj.final_layout_path)}
+                    authorCopiesQty={contractFreeCopies}
+                    initialPrintCopies={proj.print_jobs?.qty || 1000}
                     onSuccess={(next?: string) => {
                       if (next) setSelectedStage(next);
                     }}
@@ -646,6 +663,8 @@ export default function ProductionFlowClient({
                     initialApplicationRef={proj.isbn_request_ref || ""}
                     initialProofFeedback={proj.proof_feedback || ""}
                     hasLayout={Boolean(proj.final_layout_path)}
+                    authorCopiesQty={contractFreeCopies}
+                    initialPrintCopies={proj.print_jobs?.qty || 1000}
                     onCancelEdit={() => setEditingStage(null)}
                     onSuccess={() => setEditingStage(null)}
                   />
@@ -684,7 +703,7 @@ export default function ProductionFlowClient({
 
                       {(isOwner || stagePermissions[selectedStage]) &&
                         !isProjectCompleted &&
-                        ["dtp", "editing", "cover_design", "isbn_registration", "final_proof"].includes(
+                        ["dtp", "editing", "cover_design", "isbn_registration", "printing", "final_proof"].includes(
                           selectedStage
                         ) && (
                           <button

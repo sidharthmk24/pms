@@ -5,7 +5,8 @@ import { fail, handler, ok } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { requireApiCapability } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { stamp } from "@/lib/time";
+import { stamp, dateOnly } from "@/lib/time";
+import { nextDocNo } from "@/lib/counters";
 import { resolveManuscript, storeProductionFile } from "@/lib/storage";
 import {
   queueEmail,
@@ -251,6 +252,57 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       });
 
       return ok({ success: true, is_edit: true, stage: "isbn_registration" });
+    }
+
+    if (targetStage === "printing") {
+      let printCopies = 1000;
+      if (formData) {
+        const val = formData.get("print_copies") || formData.get("print_quantity");
+        if (val) printCopies = Math.max(1, parseInt(val as string) || 1000);
+      } else if (jsonData) {
+        const val = jsonData.print_copies || jsonData.print_quantity;
+        if (val) printCopies = Math.max(1, parseInt(val as string) || 1000);
+      }
+
+      let printJobId = proj.print_job_id;
+      if (printJobId) {
+        await prisma.print_jobs.update({
+          where: { id: printJobId },
+          data: { qty: printCopies },
+        });
+      } else {
+        const today = dateOnly();
+        const jobNo = await nextDocNo(prisma, "print_job", "PRT");
+        const pj = await prisma.print_jobs.create({
+          data: {
+            id: randomUUID(),
+            job_no: jobNo,
+            title_id: proj.title_id,
+            qty: printCopies,
+            paper: "80 GSM Natural Shade",
+            binding: "Soft Cover / Perfect Bound",
+            status: "printing",
+            raised_on: today,
+            created_by: user.id,
+            created_at: now,
+          },
+        });
+        printJobId = pj.id;
+        await prisma.production_projects.update({
+          where: { id },
+          data: { print_job_id: printJobId, updated_at: now },
+        });
+      }
+
+      await audit({
+        userId: user.id,
+        action: "update_production_printing_data",
+        entity: "production_project",
+        entityId: id,
+        detail: { project_id: id, print_copies: printCopies },
+      });
+
+      return ok({ success: true, is_edit: true, stage: "printing" });
     }
 
     if (targetStage === "final_proof") {
@@ -630,15 +682,13 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
 
     try {
       await prisma.$transaction(async (tx) => {
-        // 1. Update production project stage
+        // 1. Update production project stage to printing
         await tx.production_projects.update({
           where: { id },
           data: {
-            status: "final_proof",
+            status: "printing",
             isbn_completed_at: now,
             isbn_registered: trimmedIsbn,
-            proof_token: proofToken,
-            proof_email_sent_at: now,
             updated_at: now,
           },
         });
@@ -665,6 +715,85 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       entity: "production_project",
       entityId: id,
       detail: { project_id: id, isbn: isbn.trim() },
+    });
+
+    // Notify production managers & author
+    await notifyRoles(["production"], {
+      title: "ISBN Registered — Press Printing Stage Active",
+      message: `ISBN ${isbn.trim()} registered for "${proj.titles.name}". Press printing & order quantity stage is active.`,
+      type: "TASK",
+      link: `/production/${id}`,
+    }, user.id);
+
+    if (authorEmail) {
+      await notifyAuthorByEmail(authorEmail, {
+        title: "ISBN Assigned — Press Printing Stage Active",
+        message: `ISBN ${isbn.trim()} assigned to "${proj.titles.name}". Production has progressed to Press Printing & Stock Allocation.`,
+        type: "PRODUCTION",
+        link: `/author`,
+      });
+    }
+
+    return ok({ success: true, step: "number_allocated" });
+  }
+
+  // --- STAGE 5: PRINTING (Press Printing & Order Quantity) ---
+  if (proj.status === "printing") {
+    let printCopies = 1000;
+    if (formData) {
+      const val = formData.get("print_copies") || formData.get("print_quantity");
+      if (val) printCopies = Math.max(1, parseInt(val as string) || 1000);
+    } else if (jsonData) {
+      const val = jsonData.print_copies || jsonData.print_quantity;
+      if (val) printCopies = Math.max(1, parseInt(val as string) || 1000);
+    }
+
+    const proofToken = proj.proof_token || randomUUID();
+    let printJobId = proj.print_job_id;
+
+    if (!printJobId) {
+      const today = dateOnly();
+      const jobNo = await nextDocNo(prisma, "print_job", "PRT");
+      const pj = await prisma.print_jobs.create({
+        data: {
+          id: randomUUID(),
+          job_no: jobNo,
+          title_id: proj.title_id,
+          qty: printCopies,
+          paper: "80 GSM Natural Shade",
+          binding: "Soft Cover / Perfect Bound",
+          status: "printing",
+          raised_on: today,
+          created_by: user.id,
+          created_at: now,
+        },
+      });
+      printJobId = pj.id;
+    } else {
+      await prisma.print_jobs.update({
+        where: { id: printJobId },
+        data: { qty: printCopies },
+      });
+    }
+
+    await prisma.production_projects.update({
+      where: { id },
+      data: {
+        status: "final_proof",
+        print_job_id: printJobId,
+        print_completed_at: now,
+        proof_token: proofToken,
+        proof_email_sent_at: now,
+        updated_at: now,
+      },
+    });
+
+    await audit({
+      userId: user.id,
+      action: "complete_production_printing",
+      entity: "production_project",
+      entityId: id,
+      detail: { project_id: id, print_copies: printCopies, author_copies_qty: proj.author_copies_qty },
     });
 
     // Prepare PDF attachment for Author Final Proof sign-off email
@@ -702,7 +831,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
       const mail = proofApprovalEmail({
         authorName,
         title: proj.titles.name,
-        isbn: isbn.trim(),
+        isbn: proj.isbn_registered || proj.titles.isbn || "",
         approvalUrl,
         hasAttachment,
         trackingUrl: authorTrackingUrl,
@@ -722,7 +851,7 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
 
       await notifyAuthorByEmail(authorEmail, {
         title: "Book Proof Ready for Approval",
-        message: `ISBN ${isbn.trim()} assigned to "${proj.titles.name}". Digital proof layout is ready for your sign-off!`,
+        message: `Press print run configured for "${proj.titles.name}". Digital proof layout is ready for your sign-off!`,
         type: "PROOF",
         link: `/author`,
       });
@@ -732,21 +861,21 @@ export const POST = handler(async (req: Request, { params }: { params: Promise<{
     const proofAssignees = getAssigneeList(proj.proof_assigned_to, proj.proof_assignees);
     if (proofAssignees.length > 0) {
       await notifyUsers(proofAssignees, {
-        title: "ISBN Registered — Final Proof Stage",
-        message: `ISBN ${isbn.trim()} registered for "${proj.titles.name}". Final proof stage active.`,
+        title: "Print Run Configured — Final Proof Stage Active",
+        message: `Print order of ${printCopies} copies set for "${proj.titles.name}". Final proof stage active.`,
         type: "TASK",
         link: `/production/${id}`,
       }, user.id);
     } else {
       await notifyRoles(["production"], {
-        title: "ISBN Registered — Final Proof Stage",
-        message: `ISBN ${isbn.trim()} registered for "${proj.titles.name}". Final proof stage active.`,
+        title: "Print Run Configured — Final Proof Stage Active",
+        message: `Print order of ${printCopies} copies set for "${proj.titles.name}". Final proof stage active.`,
         type: "TASK",
         link: `/production/${id}`,
       }, user.id);
     }
 
-    return ok({ success: true, step: "number_allocated" });
+    return ok({ success: true });
   }
 
   // --- STAGE 5: FINAL PROOF (Author & Editorial Sign-Off) ---

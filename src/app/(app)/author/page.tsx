@@ -288,6 +288,7 @@ export default async function AuthorDashboardPage({
                 "editing",
                 "cover_design",
                 "isbn_registration",
+                "printing",
                 "final_proof",
                 "completed",
               ];
@@ -299,6 +300,7 @@ export default async function AuthorDashboardPage({
                 { key: "editing", name: "Editorial Review" },
                 { key: "cover_design", name: "Cover Design" },
                 { key: "isbn_registration", name: "ISBN Assigned", extra: project.isbn_registered },
+                { key: "printing", name: "Press Printing", extra: project.print_jobs?.qty ? `${project.print_jobs.qty} copies` : (project.author_copies_qty ? `${project.author_copies_qty} author copies` : null) },
                 { key: "final_proof", name: "Final Proof" },
               ].map((st) => {
                 const stepIdx = PIPELINE_ORDER.indexOf(st.key);

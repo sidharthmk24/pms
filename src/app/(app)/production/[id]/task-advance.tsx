@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
-import { UploadCloud, CheckCircle2, X, FileText, Image as ImageIcon, Clock } from "lucide-react";
+import { UploadCloud, CheckCircle2, X, FileText, Image as ImageIcon, Clock, Lock } from "lucide-react";
 import StageConfirmModal from "@/components/stage-confirm-modal";
 import ArrowRight from "@/components/ui/arrow-right";
 
@@ -11,6 +11,7 @@ const STAGE_VERBS: Record<string, string> = {
   editing: "Editing & Proofreading Review",
   cover_design: "Cover Design",
   isbn_registration: "ISBN Application & Registration",
+  printing: "Press Printing & Order Quantity Specifications",
   final_proof: "Author & Editorial Final Proof Sign-Off",
   post_production: "Post-Production Intake & Handover",
 };
@@ -33,8 +34,13 @@ const STAGE_TRANSITIONS: Record<string, { current: string; next: string; descrip
   },
   isbn_registration: {
     current: "ISBN Allocation",
+    next: "Press Printing & Stock Setup",
+    description: "The allocated ISBN will be registered and the project will proceed to Press Printing & Order Quantity setup.",
+  },
+  printing: {
+    current: "Press Printing & Stock Setup",
     next: "Author Final Proof",
-    description: "The allocated ISBN will be registered on the title record and an automated proof review email will be dispatched to the author.",
+    description: "Print run quantity and fixed author copies allocation will be saved, and digital proof review will be dispatched to the author.",
   },
   final_proof: {
     current: "Author Final Proof",
@@ -170,6 +176,8 @@ export default function TaskAdvance({
   proofApprovedAt,
   proofEmailSentAt,
   hasLayout,
+  authorCopiesQty = 10,
+  initialPrintCopies = 1000,
   isEditMode = false,
   initialIsbn = "",
   initialApplicationRef = "",
@@ -184,6 +192,8 @@ export default function TaskAdvance({
   proofApprovedAt?: string | null;
   proofEmailSentAt?: string | null;
   hasLayout?: boolean;
+  authorCopiesQty?: number;
+  initialPrintCopies?: number;
   isEditMode?: boolean;
   initialIsbn?: string;
   initialApplicationRef?: string;
@@ -194,6 +204,8 @@ export default function TaskAdvance({
   const router = useRouter();
   const [isbn, setIsbn] = useState(initialIsbn || "");
   const [applicationRef, setApplicationRef] = useState(initialApplicationRef || isbnRequestRef || "");
+  const [printQuantity, setPrintQuantity] = useState<number>(initialPrintCopies || 1000);
+  const authorCopies = authorCopiesQty ?? 10;
   const [proofFeedbackText, setProofFeedbackText] = useState(initialProofFeedback || "");
   const [file, setFile] = useState<File | null>(null);
   const [authorConsentVerified, setAuthorConsentVerified] = useState(false);
@@ -272,6 +284,8 @@ export default function TaskAdvance({
       if (status === "isbn_registration") {
         fd.append("isbn", isbn);
         fd.append("application_ref", applicationRef);
+      } else if (status === "printing") {
+        fd.append("print_copies", String(printQuantity));
       } else if (status === "final_proof") {
         fd.append("proof_feedback", proofFeedbackText);
       } else if ((status === "dtp" || status === "editing") && file) {
@@ -288,6 +302,8 @@ export default function TaskAdvance({
           fd.append("step", "number_allocated");
           fd.append("isbn", isbn);
         }
+      } else if (status === "printing") {
+        fd.append("print_copies", String(printQuantity));
       } else if (status === "final_proof") {
         fd.append("action", actionToUse || "approve");
         if (actionToUse === "rework") {
@@ -321,7 +337,9 @@ export default function TaskAdvance({
           else if (status === "cover_design") nextStage = "isbn_registration";
           else if (status === "isbn_registration") {
             if (isIsbnStep1) nextStage = "isbn_registration";
-            else nextStage = "final_proof";
+            else nextStage = "printing";
+          } else if (status === "printing") {
+            nextStage = "final_proof";
           } else if (status === "final_proof") {
             if (actionToUse === "rework") nextStage = "editing";
             else nextStage = "completed";
@@ -343,6 +361,8 @@ export default function TaskAdvance({
   const isFormValid = isEditMode
     ? status === "isbn_registration"
       ? isbn.trim().length >= 5 || applicationRef.trim().length > 0
+      : status === "printing"
+      ? printQuantity > 0
       : status === "final_proof"
       ? true
       : file !== null // In edit mode for files, user selects new file to replace
@@ -350,6 +370,8 @@ export default function TaskAdvance({
     ? isIsbnStep1
       ? true
       : isbn.trim().length >= 5
+    : status === "printing"
+    ? printQuantity > 0
     : status === "final_proof"
     ? Boolean(proofApprovedAt || authorConsentVerified)
     : status === "dtp"
@@ -550,6 +572,83 @@ export default function TaskAdvance({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Press Printing & Stock Allocation Stage */}
+      {status === "printing" && (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* 1. Author Free Copies (Fixed from Contract - Non Editable) */}
+            <div className="space-y-1.5 rounded-xl border border-black/10 bg-black/[0.02] p-3.5 dark:border-white/10 dark:bg-white/[0.02]">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-foreground">
+                  Author Complimentary Copies
+                </label>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#faedf5] px-2.5 py-0.5 text-[10px] font-bold text-[#7e2562] border border-[#7e2562]/20">
+                  <Lock className="h-3 w-3 text-[#7e2562]" /> Fixed in Contract
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  readOnly
+                  disabled
+                  value={authorCopies}
+                  className="w-full rounded-xl border border-black/10 bg-slate-100 px-3.5 py-2 text-sm font-extrabold text-foreground opacity-80 cursor-not-allowed dark:bg-white/10"
+                />
+                <span className="text-xs font-bold text-muted-foreground shrink-0">Copies</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Fixed complimentary copy quantity specified in the signed contract agreement.
+              </p>
+            </div>
+
+            {/* 2. Total Print Run Quantity */}
+            <div className="space-y-1.5 rounded-xl border border-[#7e2562]/20 bg-[#faedf5]/30 p-3.5">
+              <div className="flex items-center justify-between">
+                <label htmlFor="printQuantityInput" className="block text-xs font-extrabold text-foreground">
+                  Total Print Run Quantity <span className="text-rose-600">*</span>
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="printQuantityInput"
+                  type="number"
+                  required
+                  min={authorCopies || 1}
+                  value={printQuantity}
+                  onChange={(e) => setPrintQuantity(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-full rounded-xl border border-black/15 bg-white px-3.5 py-2 text-sm font-extrabold text-foreground focus:ring-2 focus:ring-[#7e2562]/20"
+                />
+                <span className="text-xs font-bold text-muted-foreground shrink-0">Copies</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Total physical copies to print in press run (includes author copies &amp; retail stock).
+              </p>
+            </div>
+          </div>
+
+          {/* Simple Stock Breakdown Summary */}
+          <div className="rounded-xl border border-black/10 bg-surface p-4 text-xs space-y-2 dark:border-white/10">
+            <span className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+              Press Print Run Allocation Summary
+            </span>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-lg bg-black/[0.03] p-2 dark:bg-white/[0.04]">
+                <span className="text-[10px] text-muted-foreground block">Total Print Run</span>
+                <strong className="text-foreground text-sm font-black">{printQuantity} Copies</strong>
+              </div>
+              <div className="rounded-lg bg-[#faedf5] p-2 border border-[#7e2562]/20">
+                <span className="text-[10px] text-[#7e2562] block font-bold">Author Copies (Fixed)</span>
+                <strong className="text-[#7e2562] text-sm font-black">{authorCopies} Copies</strong>
+              </div>
+              <div className="rounded-lg bg-emerald-50 p-2 border border-emerald-300">
+                <span className="text-[10px] text-emerald-800 block font-bold">Retail &amp; Catalog Stock</span>
+                <strong className="text-emerald-900 text-sm font-black">{Math.max(0, printQuantity - authorCopies)} Copies</strong>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
